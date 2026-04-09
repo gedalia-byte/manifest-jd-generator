@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifest - Job Description Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --sand: #F5F1EA;
+            --stone: #DCD6CD;
+            --warm-gray: #B4ADA3;
+            --charcoal: #2A2826;
+            --deep: #1E1C1A;
+            --amber: #B47844;
+            --amber-light: #D2AA78;
+            --amber-glow: #FCF5EB;
+            --cream: #FAF7F2;
+            --white: #FFFDF9;
+            --text: #2A2826;
+            --text-secondary: #7A746C;
+            --text-muted: #B4ADA3;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow-sm: 0 1px 3px rgba(42,40,38,0.04), 0 1px 2px rgba(42,40,38,0.03);
+            --shadow-md: 0 4px 16px rgba(42,40,38,0.06), 0 2px 4px rgba(42,40,38,0.04);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--sand);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Top bar ===== */
+        .topbar {
+            background: var(--deep);
+            padding: 0 48px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        .topbar::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--amber), var(--amber-light));
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+        }
+        .topbar-brand h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--white);
+        }
+        .topbar-brand span {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--warm-gray);
+            letter-spacing: 0.3px;
+        }
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .save-status {
+            font-family: 'Geist Mono', monospace;
+            font-size: 11px;
+            color: var(--amber-light);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        .save-status.visible { opacity: 1; }
+
+        /* ===== Tabs ===== */
+        .tabs {
+            background: var(--white);
+            border-bottom: 1px solid var(--stone);
+            padding: 0 48px;
+            display: flex;
+            gap: 0;
+        }
+        .tab {
+            padding: 16px 28px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition);
+            user-select: none;
+            letter-spacing: 0.2px;
+        }
+        .tab:hover { color: var(--text-secondary); }
+        .tab.active {
+            color: var(--charcoal);
+            border-bottom-color: var(--amber);
+        }
+
+        /* ===== Layout ===== */
+        .container {
+            max-width: 860px;
+            margin: 36px auto;
+            padding: 0 24px;
+        }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ===== Cards ===== */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition);
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 2px;
+            letter-spacing: 0.1px;
+        }
+        .card .subtitle {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* ===== Form elements ===== */
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--charcoal);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        label .optional {
+            font-weight: 400;
+            color: var(--text-muted);
+            text-transform: none;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--cream);
+            color: var(--text);
+            transition: all var(--transition);
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--amber);
+            background: var(--white);
+            box-shadow: 0 0 0 3px var(--amber-glow);
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.6;
+        }
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23B4ADA3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 36px;
+        }
+
+        .field { margin-bottom: 18px; }
+        .field:last-child { margin-bottom: 0; }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            padding: 11px 22px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+            letter-spacing: 0.2px;
+        }
+        .btn-primary {
+            background: var(--charcoal);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background: var(--deep);
+            box-shadow: 0 2px 8px rgba(42,40,38,0.15);
+        }
+        .btn-accent {
+            background: var(--amber);
+            color: var(--white);
+        }
+        .btn-accent:hover {
+            background: #A06A3A;
+            box-shadow: 0 2px 8px rgba(180,120,68,0.25);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--stone);
+        }
+        .btn-secondary:hover {
+            background: var(--cream);
+            border-color: var(--warm-gray);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        /* ===== Boilerplate toggles ===== */
+        .boilerplate-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .boilerplate-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--amber);
+            cursor: pointer;
+        }
+        .boilerplate-toggle label {
+            margin-bottom: 0;
+            font-weight: 400;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .default-badge {
+            display: inline-block;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: var(--sand);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* ===== Collapsible sections ===== */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .section-header .chevron {
+            transition: transform var(--transition);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .section-header .chevron.open { transform: rotate(90deg); }
+        .section-body { margin-top: 18px; }
+        .section-body.collapsed { display: none; }
+
+        /* ===== Smart Format button ===== */
+        .field-with-ai {
+            display: flex;
+            flex-direction: column;
+        }
+        .ai-bottom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+        .btn-ai {
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border: 1px solid var(--amber-light);
+            border-radius: 5px;
+            background: var(--amber-glow);
+            color: var(--amber);
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .btn-ai:hover {
+            background: var(--amber);
+            color: var(--white);
+            border-color: var(--amber);
+            box-shadow: 0 2px 8px rgba(180,120,68,0.2);
+        }
+        .btn-ai.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .btn-ai .spark { font-size: 12px; }
+
+        .ai-spinner {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border: 2px solid var(--amber-light);
+            border-top-color: var(--amber);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .ai-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ===== Preview ===== */
+        .preview-container {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius);
+            padding: 48px 56px;
+            line-height: 1.75;
+            box-shadow: var(--shadow-md);
+        }
+        .preview-container h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--charcoal);
+        }
+        .preview-container .preview-location {
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--stone);
+        }
+        .preview-container h2 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 10px;
+            color: var(--charcoal);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--stone);
+        }
+        .preview-container p,
+        .preview-container li {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .preview-container p {
+            margin-bottom: 8px;
+        }
+        .preview-container ul {
+            padding-left: 20px;
+            margin-top: 6px;
+        }
+        .preview-container li {
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+        .preview-container li::marker {
+            color: var(--amber);
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: var(--charcoal);
+            color: var(--white);
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(42,40,38,0.2);
+            border-left: 3px solid var(--amber);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 640px) {
+            .field-row { grid-template-columns: 1fr; }
+            .container { padding: 0 16px; }
+            .preview-container { padding: 28px 24px; }
+            .topbar { padding: 0 20px; }
+            .tabs { padding: 0 20px; }
+            .tab { padding: 14px 16px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-brand">
+        <h1>MANIFEST</h1>
+        <span>Job Description Generator</span>
+    </div>
+    <div class="topbar-right">
+        <span class="save-status" id="saveStatus">Saved</span>
+    </div>
+</div>
+
+<div class="tabs">
+    <div class="tab active" data-tab="builder">Create</div>
+    <div class="tab" data-tab="defaults">Admin</div>
+    <div class="tab" data-tab="preview">Preview & Export</div>
+</div>
+
+<!-- ==================== BUILDER PANEL ==================== -->
+<div class="container">
+<div class="panel active" id="panel-builder">
+
+    <div class="card">
+        <h2>Role Details</h2>
+        <p class="subtitle">Basic information about the position</p>
+        <div class="field-row">
+            <div class="field">
+                <label>Job Title</label>
+                <input type="text" id="jobTitle" placeholder="e.g. Senior Product Designer">
+            </div>
+            <div class="field">
+                <label>Department / Team</label>
+                <input type="text" id="department" placeholder="e.g. Design">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label>Location</label>
+                <input type="text" id="location" placeholder="e.g. New York, NY (Hybrid)">
+            </div>
+            <div class="field">
+                <label>Employment Type</label>
+                <select id="employmentType">
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Internship">Internship</option>
+                </select>
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label>Reports To <span class="optional">(optional)</span></label>
+                <input type="text" id="reportsTo" placeholder="e.g. VP of Design">
+            </div>
+            <div class="field">
+                <label>Salary Range <span class="optional">(optional)</span></label>
+                <input type="text" id="salaryRange" placeholder="e.g. $120,000 - $150,000">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header" data-section="aboutCompany">
+            <div>
+                <h2>About Manifest <span class="default-badge">Default</span></h2>
+                <p class="subtitle">Company overview — uses your saved default unless you edit it here</p>
+            </div>
+            <span class="chevron open">&#9654;</span>
+        </div>
+        <div class="section-body" id="section-aboutCompany">
+            <div class="boilerplate-toggle">
+                <input type="checkbox" id="useDefaultAbout" checked>
+                <label for="useDefaultAbout">Use saved default</label>
+            </div>
+            <div class="field">
+                <textarea id="aboutCompany" rows="5" disabled></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>About the Team</h2>
+        <p class="subtitle">Describe the team — or just chat naturally and hit Smart Format</p>
+        <div class="field field-with-ai">
+            <textarea id="aboutTeam" rows="4" placeholder="e.g. &quot;it's the growth team, about 8 people, we focus on acquisition and activation, work closely with product and marketing&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-hint">Type rough notes or full sentences — Smart Format will polish it</div>
+                <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')"><span class="spark">&#9889;</span> Smart Format</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>About the Role</h2>
+        <p class="subtitle">High-level summary — casual input is fine</p>
+        <div class="field field-with-ai">
+            <textarea id="aboutRole" rows="4" placeholder="e.g. &quot;this person will own our onboarding flow end to end, big impact on retention, reports to the head of growth&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-hint">Type rough notes or full sentences — Smart Format will polish it</div>
+                <button class="btn-ai" onclick="smartFormat('aboutRole','prose')"><span class="spark">&#9889;</span> Smart Format</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Responsibilities</h2>
+        <p class="subtitle">List them out or describe them casually</p>
+        <div class="field field-with-ai">
+            <textarea id="responsibilities" rows="6" placeholder="e.g. &quot;they'll design user flows, work with engineers on implementation, do user research, own the design system, present to stakeholders&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-hint">One per line or free-form — Smart Format will create clean bullet points</div>
+                <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Qualifications</h2>
+        <p class="subtitle">List them or describe the ideal candidate</p>
+        <div class="field field-with-ai">
+            <label>Required</label>
+            <textarea id="qualRequired" rows="5" placeholder="e.g. &quot;need someone senior, at least 5 years in product design, strong portfolio, knows figma well, has shipped real products&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-hint">Describe what you need — Smart Format will structure it</div>
+                <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+            </div>
+        </div>
+        <div class="field field-with-ai">
+            <label>Nice to Have <span class="optional">(optional)</span></label>
+            <textarea id="qualNice" rows="4" placeholder="e.g. &quot;b2b saas experience would be great, if they know design systems that's a plus&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-hint"></div>
+                <button class="btn-ai" onclick="smartFormat('qualNice','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header" data-section="benefits">
+            <div>
+                <h2>Benefits & Perks <span class="default-badge">Default</span></h2>
+                <p class="subtitle">Uses your saved default unless you edit it here</p>
+            </div>
+            <span class="chevron open">&#9654;</span>
+        </div>
+        <div class="section-body" id="section-benefits">
+            <div class="boilerplate-toggle">
+                <input type="checkbox" id="useDefaultBenefits" checked>
+                <label for="useDefaultBenefits">Use saved default</label>
+            </div>
+            <div class="field">
+                <textarea id="benefits" rows="5" disabled></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header" data-section="eeo">
+            <div>
+                <h2>Equal Opportunity Statement <span class="default-badge">Default</span></h2>
+                <p class="subtitle">Uses your saved default unless you edit it here</p>
+            </div>
+            <span class="chevron open">&#9654;</span>
+        </div>
+        <div class="section-body" id="section-eeo">
+            <div class="boilerplate-toggle">
+                <input type="checkbox" id="useDefaultEEO" checked>
+                <label for="useDefaultEEO">Use saved default</label>
+            </div>
+            <div class="field">
+                <textarea id="eeo" rows="3" disabled></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
+        <button class="btn btn-accent" onclick="generatePreview()">Generate Job Description</button>
+        <button class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+    </div>
+
+</div>
+
+<!-- ==================== DEFAULTS PANEL ==================== -->
+<div class="panel" id="panel-defaults">
+
+    <div class="card">
+        <h2>Admin Settings</h2>
+        <p class="subtitle">Set the default boilerplate text. These auto-fill when creating a new job description. Anyone creating a JD can choose to use these defaults or edit them for a specific posting.</p>
+    </div>
+
+    <div class="card">
+        <h2>About Manifest</h2>
+        <p class="subtitle">Your standard company description</p>
+        <div class="field">
+            <textarea id="defaultAbout" rows="6" placeholder="Manifest is... (paste your company blurb here)"></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Benefits & Perks</h2>
+        <p class="subtitle">Standard benefits list — one per line</p>
+        <div class="field">
+            <textarea id="defaultBenefits" rows="6" placeholder="Competitive salary and equity&#10;Health, dental, and vision insurance&#10;Flexible PTO&#10;Remote-friendly work environment&#10;Professional development budget"></textarea>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Equal Opportunity Statement</h2>
+        <p class="subtitle">Your standard EEO / diversity statement</p>
+        <div class="field">
+            <textarea id="defaultEEO" rows="4" placeholder="Manifest is an equal opportunity employer. We celebrate diversity and are committed to creating an inclusive environment for all employees."></textarea>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-accent" onclick="saveDefaults()">Save Defaults</button>
+        <button class="btn btn-secondary" onclick="resetDefaults()">Reset to Empty</button>
+    </div>
+
+</div>
+
+<!-- ==================== PREVIEW PANEL ==================== -->
+<div class="panel" id="panel-preview">
+
+    <div class="card" style="padding: 12px 24px;">
+        <div class="btn-row" style="margin:0; justify-content: flex-end; flex-wrap: wrap;">
+            <button class="btn btn-secondary" onclick="copyToClipboard()">Copy as Text</button>
+            <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
+            <button class="btn btn-secondary" onclick="downloadAsHTML()">Download</button>
+            <button class="btn btn-accent" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
+            <button class="btn btn-primary" onclick="switchTab('builder')">Edit</button>
+        </div>
+    </div>
+
+    <div class="preview-container" id="previewOutput">
+        <p style="color: var(--text-muted); text-align: center; padding: 72px 0; font-size: 14px;">
+            Fill out the form and click "Generate Job Description" to see a preview here.
+        </p>
+    </div>
+
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // ===== Tab navigation =====
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+
+    function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+    }
+
+    // ===== Collapsible sections =====
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const sectionId = header.dataset.section;
+            const body = document.getElementById(`section-${sectionId}`);
+            const chevron = header.querySelector('.chevron');
+            body.classList.toggle('collapsed');
+            chevron.classList.toggle('open');
+        });
+    });
+
+    // ===== Default toggle logic =====
+    function setupDefaultToggle(checkboxId, textareaId, defaultKey) {
+        const cb = document.getElementById(checkboxId);
+        const ta = document.getElementById(textareaId);
+
+        cb.addEventListener('change', () => {
+            if (cb.checked) {
+                ta.disabled = true;
+                ta.value = getDefault(defaultKey);
+            } else {
+                ta.disabled = false;
+                ta.focus();
+            }
+        });
+
+        if (cb.checked) {
+            ta.disabled = true;
+            ta.value = getDefault(defaultKey);
+        }
+    }
+
+    // ===== Local storage for defaults =====
+    const STORAGE_KEY = 'manifest_jd_defaults';
+
+    function getDefaults() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch { return {}; }
+    }
+
+    function getDefault(key) {
+        return getDefaults()[key] || '';
+    }
+
+    function saveDefaults() {
+        const defaults = {
+            about: document.getElementById('defaultAbout').value,
+            benefits: document.getElementById('defaultBenefits').value,
+            eeo: document.getElementById('defaultEEO').value,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
+
+        if (document.getElementById('useDefaultAbout').checked)
+            document.getElementById('aboutCompany').value = defaults.about;
+        if (document.getElementById('useDefaultBenefits').checked)
+            document.getElementById('benefits').value = defaults.benefits;
+        if (document.getElementById('useDefaultEEO').checked)
+            document.getElementById('eeo').value = defaults.eeo;
+
+        showToast('Defaults saved');
+        flashSaveStatus();
+    }
+
+    function resetDefaults() {
+        if (!confirm('Clear all saved defaults? This cannot be undone.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('defaultAbout').value = '';
+        document.getElementById('defaultBenefits').value = '';
+        document.getElementById('defaultEEO').value = '';
+        showToast('Defaults cleared');
+    }
+
+    function loadDefaultsIntoAdmin() {
+        const d = getDefaults();
+        document.getElementById('defaultAbout').value = d.about || '';
+        document.getElementById('defaultBenefits').value = d.benefits || '';
+        document.getElementById('defaultEEO').value = d.eeo || '';
+    }
+
+    // ===== Toast =====
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function flashSaveStatus() {
+        const s = document.getElementById('saveStatus');
+        s.classList.add('visible');
+        setTimeout(() => s.classList.remove('visible'), 2500);
+    }
+
+    // ===== Generate preview =====
+    function linesToList(text) {
+        if (!text.trim()) return '';
+        return '<ul>' + text.split('\n')
+            .map(l => l.trim()).filter(l => l)
+            .map(l => `<li>${escapeHTML(l)}</li>`)
+            .join('') + '</ul>';
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function textToParagraphs(text) {
+        if (!text.trim()) return '';
+        return text.split('\n').map(l => l.trim()).filter(l => l)
+            .map(l => `<p>${escapeHTML(l)}</p>`).join('');
+    }
+
+    function generatePreview() {
+        const title = document.getElementById('jobTitle').value || 'Untitled Role';
+        const dept = document.getElementById('department').value;
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+        const about = document.getElementById('aboutCompany').value;
+        const team = document.getElementById('aboutTeam').value;
+        const role = document.getElementById('aboutRole').value;
+        const resp = document.getElementById('responsibilities').value;
+        const reqQual = document.getElementById('qualRequired').value;
+        const niceQual = document.getElementById('qualNice').value;
+        const benefits = document.getElementById('benefits').value;
+        const eeo = document.getElementById('eeo').value;
+
+        let meta = [type];
+        if (dept) meta.push(dept);
+        if (loc) meta.push(loc);
+        if (reports) meta.push(`Reports to ${reports}`);
+        if (salary) meta.push(salary);
+
+        let html = `<h1>${escapeHTML(title)}</h1>`;
+        html += `<p class="preview-location">${escapeHTML(meta.join('  \u00b7  '))}</p>`;
+
+        if (about) { html += `<h2>About Manifest</h2>` + textToParagraphs(about); }
+        if (team) { html += `<h2>About the Team</h2>` + textToParagraphs(team); }
+        if (role) { html += `<h2>About the Role</h2>` + textToParagraphs(role); }
+        if (resp) { html += `<h2>Responsibilities</h2>` + linesToList(resp); }
+        if (reqQual) { html += `<h2>Qualifications</h2>` + linesToList(reqQual); }
+        if (niceQual) { html += `<h2>Nice to Have</h2>` + linesToList(niceQual); }
+        if (benefits) { html += `<h2>Benefits & Perks</h2>` + linesToList(benefits); }
+        if (eeo) { html += `<h2>Equal Opportunity Statement</h2>` + textToParagraphs(eeo); }
+
+        document.getElementById('previewOutput').innerHTML = html;
+        switchTab('preview');
+        showToast('Job description generated');
+    }
+
+    // ===== Export =====
+    function copyToClipboard() {
+        const el = document.getElementById('previewOutput');
+        let text = '';
+        el.querySelectorAll('h1, h2, p, li').forEach(node => {
+            if (node.tagName === 'H1') text += node.textContent + '\n\n';
+            else if (node.tagName === 'H2') text += '\n' + node.textContent.toUpperCase() + '\n' + '\u2500'.repeat(node.textContent.length) + '\n\n';
+            else if (node.tagName === 'LI') text += '  \u2022 ' + node.textContent + '\n';
+            else if (node.tagName === 'P') text += node.textContent + '\n\n';
+        });
+        navigator.clipboard.writeText(text.trim()).then(() => showToast('Copied as plain text'));
+    }
+
+    function copyAsHTML() {
+        const el = document.getElementById('previewOutput');
+        const blob = new Blob([el.innerHTML], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        navigator.clipboard.write([item]).then(() => showToast('Copied as rich text'));
+    }
+
+    function downloadAsHTML() {
+        const el = document.getElementById('previewOutput');
+        const title = document.getElementById('jobTitle').value || 'job-description';
+        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const fullHTML = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${escapeHTML(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Instrument Sans', sans-serif; max-width: 680px; margin: 48px auto; padding: 0 24px; line-height: 1.75; color: #2A2826; }
+h1 { margin-bottom: 4px; font-size: 26px; }
+h2 { margin-top: 32px; margin-bottom: 10px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #DCD6CD; padding-bottom: 6px; }
+p { color: #7A746C; margin-bottom: 8px; }
+ul { padding-left: 20px; }
+li { margin-bottom: 6px; color: #7A746C; }
+li::marker { color: #B47844; }
+.preview-location { color: #7A746C; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #DCD6CD; }
+</style></head><body>${el.innerHTML}</body></html>`;
+        const blob = new Blob([fullHTML], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${slug}.html`;
+        a.click();
+        showToast('Downloaded');
+    }
+
+    // ===== Clear form =====
+    function clearForm() {
+        if (!confirm('Clear all fields? Default sections will be restored.')) return;
+        ['jobTitle','department','location','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice']
+            .forEach(id => document.getElementById(id).value = '');
+        document.getElementById('employmentType').selectedIndex = 0;
+        document.getElementById('useDefaultAbout').checked = true;
+        document.getElementById('useDefaultBenefits').checked = true;
+        document.getElementById('useDefaultEEO').checked = true;
+        document.getElementById('aboutCompany').value = getDefault('about');
+        document.getElementById('aboutCompany').disabled = true;
+        document.getElementById('benefits').value = getDefault('benefits');
+        document.getElementById('benefits').disabled = true;
+        document.getElementById('eeo').value = getDefault('eeo');
+        document.getElementById('eeo').disabled = true;
+        showToast('Form cleared');
+    }
+
+    // ===== Smart Format (AI) — calls server proxy =====
+    async function smartFormat(textareaId, mode) {
+        const ta = document.getElementById(textareaId);
+        const raw = ta.value.trim();
+        if (!raw) { showToast('Type something first, then hit Smart Format'); return; }
+
+        const jobTitle = document.getElementById('jobTitle').value || 'the role';
+
+        let systemPrompt, userPrompt;
+        if (mode === 'bullets') {
+            systemPrompt = `You are a professional HR copywriter. Convert the user's rough input into clean, concise bullet points for a job description. Rules:
+- Return ONLY the bullet points, one per line, no bullet characters or dashes — just the text of each point
+- Each point should be a clear, professional, action-oriented statement
+- Start each point with a strong verb when possible (for responsibilities) or a noun/qualifier (for qualifications)
+- Remove filler words and redundancy
+- If the input is already clean bullet points, just polish them slightly
+- Typically 4-8 bullet points
+- Do not add points that weren't implied by the input
+- No preamble, no explanations — just the lines`;
+            userPrompt = `Job title: ${jobTitle}\n\nRaw input to convert into bullet points:\n${raw}`;
+        } else {
+            systemPrompt = `You are a professional HR copywriter. Convert the user's rough input into polished, professional prose for a job description section. Rules:
+- Return ONLY the polished paragraph(s) — no headings, no preamble
+- Keep it concise: 2-4 sentences is ideal
+- Professional but warm tone — not corporate-speak
+- Preserve all factual details from the input
+- Do not invent details that weren't in the input
+- No bullet points — flowing prose only`;
+            userPrompt = `Job title: ${jobTitle}\n\nRaw input to polish:\n${raw}`;
+        }
+
+        const btn = ta.closest('.field-with-ai').querySelector('.btn-ai');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="ai-spinner"></span> Formatting...';
+        btn.classList.add('loading');
+        ta.style.opacity = '0.5';
+
+        try {
+            const response = await fetch('/api/format', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ system: systemPrompt, userMessage: userPrompt })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || `Server error (${response.status})`);
+            }
+
+            if (data.text) {
+                ta.value = data.text;
+                showToast('Formatted!');
+            } else {
+                throw new Error('No response from AI');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message);
+            console.error('Smart Format error:', err);
+        } finally {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('loading');
+            ta.style.opacity = '1';
+        }
+    }
+
+    // ===== Save to Notion =====
+    async function saveToNotion() {
+        const title = document.getElementById('jobTitle').value || 'Untitled Role';
+        const dept = document.getElementById('department').value;
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+
+        let metaParts = [type];
+        if (dept) metaParts.push(dept);
+        if (loc) metaParts.push(loc);
+        if (reports) metaParts.push('Reports to ' + reports);
+        if (salary) metaParts.push(salary);
+        const meta = metaParts.join('  \u00b7  ');
+
+        const sections = [];
+        const about = document.getElementById('aboutCompany').value;
+        const team = document.getElementById('aboutTeam').value;
+        const role = document.getElementById('aboutRole').value;
+        const resp = document.getElementById('responsibilities').value;
+        const reqQual = document.getElementById('qualRequired').value;
+        const niceQual = document.getElementById('qualNice').value;
+        const benefits = document.getElementById('benefits').value;
+        const eeo = document.getElementById('eeo').value;
+
+        if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
+        if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
+        if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
+        if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'bullets' });
+        if (reqQual) sections.push({ heading: 'Qualifications', content: reqQual, type: 'bullets' });
+        if (niceQual) sections.push({ heading: 'Nice to Have', content: niceQual, type: 'bullets' });
+        if (benefits) sections.push({ heading: 'Benefits & Perks', content: benefits, type: 'bullets' });
+        if (eeo) sections.push({ heading: 'Equal Opportunity Statement', content: eeo, type: 'prose' });
+
+        if (sections.length === 0) {
+            showToast('Fill out the form first');
+            return;
+        }
+
+        const btn = document.getElementById('notionBtn');
+        const original = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/notion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, meta, sections })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to save');
+            }
+
+            showToast('Saved to Notion!');
+            if (data.url) {
+                setTimeout(() => window.open(data.url, '_blank'), 500);
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message);
+            console.error('Notion save error:', err);
+        } finally {
+            btn.textContent = original;
+            btn.disabled = false;
+        }
+    }
+
+    // ===== Init =====
+    loadDefaultsIntoAdmin();
+    setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
+    setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
+    setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
+</script>
+
+</body>
+</html>

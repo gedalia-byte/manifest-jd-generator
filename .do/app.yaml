@@ -1,0 +1,21 @@
+name: manifest-jd-generator
+services:
+  - name: web
+    source_dir: /
+    github:
+      deploy_on_push: true
+    run_command: node server.js
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    http_port: 8080
+    envs:
+      - key: ANTHROPIC_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: NOTION_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: NOTION_PARENT_PAGE_ID
+        scope: RUN_TIME
+        value: "1ca9717da31f806d9fb4d69aa6d03a4a"

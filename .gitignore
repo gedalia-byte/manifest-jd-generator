@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.pyc
+create-visual.py
+warm-precision-concept.png
+design-philosophy.md
