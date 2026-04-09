@@ -648,25 +648,6 @@
         <p class="subtitle">Set API keys and default boilerplate text. Keys are stored locally in this browser only.</p>
     </div>
 
-    <div class="card">
-        <h2>API Keys</h2>
-        <p class="subtitle">Required for Smart Format and Save to Notion. Stored in your browser only.</p>
-        <div class="field">
-            <label>Gemini API Key <span class="optional">(for Smart Format)</span></label>
-            <input type="password" id="geminiKey" placeholder="AIza..." style="font-family: 'Geist Mono', monospace; font-size: 13px;">
-        </div>
-        <div class="field">
-            <label>Notion API Key <span class="optional">(for Save to Notion)</span></label>
-            <input type="password" id="notionKey" placeholder="ntn_..." style="font-family: 'Geist Mono', monospace; font-size: 13px;">
-        </div>
-        <div class="field">
-            <label>Notion Parent Page ID <span class="optional">(where JDs are saved)</span></label>
-            <input type="text" id="notionPageId" placeholder="e.g. 1ca9717da31f806d9fb4d69aa6d03a4a" style="font-family: 'Geist Mono', monospace; font-size: 13px;">
-        </div>
-        <div class="btn-row">
-            <button class="btn btn-accent" onclick="saveKeys()">Save Keys</button>
-        </div>
-    </div>
 
     <div class="card">
         <h2>About Manifest</h2>
@@ -950,30 +931,13 @@ li::marker { color: #B47844; }
         showToast('Form cleared');
     }
 
-    // ===== API Keys (local storage) =====
-    const KEYS_STORAGE = 'manifest_jd_keys';
-
+    // ===== API Keys (hardcoded for internal use) =====
     function getKeys() {
-        try { return JSON.parse(localStorage.getItem(KEYS_STORAGE)) || {}; }
-        catch { return {}; }
-    }
-
-    function saveKeys() {
-        const keys = {
-            gemini: document.getElementById('geminiKey').value.trim(),
-            notion: document.getElementById('notionKey').value.trim(),
-            notionPage: document.getElementById('notionPageId').value.trim(),
+        return {
+            gemini: 'AIzaSyCwOKDbyWSbBrxhlBeafsK_had8cJM_IrM',
+            notion: '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',
+            notionPage: '1ca9717da31f806d9fb4d69aa6d03a4a'
         };
-        localStorage.setItem(KEYS_STORAGE, JSON.stringify(keys));
-        showToast('Keys saved');
-        flashSaveStatus();
-    }
-
-    function loadKeys() {
-        const k = getKeys();
-        document.getElementById('geminiKey').value = k.gemini || '';
-        document.getElementById('notionKey').value = k.notion || '';
-        document.getElementById('notionPageId').value = k.notionPage || '1ca9717da31f806d9fb4d69aa6d03a4a';
     }
 
     // ===== Smart Format (Gemini — direct browser call) =====
@@ -1180,7 +1144,6 @@ li::marker { color: #B47844; }
 
     // ===== Init =====
     loadDefaultsIntoAdmin();
-    loadKeys();
     setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
     setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
     setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
