@@ -479,6 +479,31 @@
 <div class="container">
 <div class="panel active" id="panel-builder">
 
+    <!-- AI Assistant -->
+    <div class="card" style="border-left: 3px solid var(--amber);">
+        <h2 style="display: flex; align-items: center; gap: 8px;">&#9889; AI Assistant</h2>
+        <p class="subtitle">Ask anything — "what qualifications does a top ops lead need?", "write responsibilities for a senior engineer", "what benefits do startups typically offer?"</p>
+        <div class="field">
+            <textarea id="aiPrompt" rows="2" placeholder="e.g. What are the top qualifications for a senior operations lead at a legal tech company?"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start; margin-top: 8px;">
+            <button class="btn btn-accent" onclick="askAI()" id="aiAskBtn">Ask AI</button>
+            <select id="aiInsertTarget" style="max-width: 220px; font-size: 13px;">
+                <option value="">Copy result manually</option>
+                <option value="aboutTeam">Insert into → About the Team</option>
+                <option value="aboutRole">Insert into → About the Role</option>
+                <option value="responsibilities">Insert into → Responsibilities</option>
+                <option value="qualRequired">Insert into → Qualifications (Required)</option>
+                <option value="qualNice">Insert into → Qualifications (Nice to Have)</option>
+            </select>
+        </div>
+        <div id="aiResult" style="display: none; margin-top: 16px; padding: 16px; background: var(--cream); border: 1px solid var(--stone); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: var(--text-secondary);"></div>
+        <div id="aiResultActions" style="display: none; margin-top: 8px;" class="btn-row">
+            <button class="btn btn-secondary" onclick="copyAIResult()" style="font-size: 12px;">Copy</button>
+            <button class="btn btn-accent" onclick="insertAIResult()" style="font-size: 12px;">Insert into Field</button>
+        </div>
+    </div>
+
     <div class="card">
         <h2>Role Details</h2>
         <p class="subtitle">Basic information about the position</p>
@@ -930,6 +955,83 @@ li::marker { color: #B47844; }
         document.getElementById('eeo').disabled = true;
         showToast('Form cleared');
     }
+
+    // ===== AI Assistant =====
+    async function askAI() {
+        const prompt = document.getElementById('aiPrompt').value.trim();
+        if (!prompt) { showToast('Type a question first'); return; }
+
+        const jobTitle = document.getElementById('jobTitle').value || '';
+        const dept = document.getElementById('department').value || '';
+
+        const context = [jobTitle, dept].filter(Boolean).join(', ');
+
+        const systemPrompt = `You are an expert HR consultant and recruiter. The user is building a job description${context ? ' for a ' + context + ' role' : ''}. Answer their question with practical, specific, professional content they can use directly in a job description.
+
+Rules:
+- If they ask about qualifications, responsibilities, or similar list-type content: return clean bullet points, one per line, no bullet characters or dashes — just the text
+- If they ask about descriptions or summaries: return polished prose, 2-4 sentences
+- Be specific and practical, not generic
+- Draw on real industry knowledge about what top candidates look like
+- No preamble like "Here are..." — just the content itself`;
+
+        const btn = document.getElementById('aiAskBtn');
+        btn.textContent = 'Thinking...';
+        btn.disabled = true;
+
+        const resultDiv = document.getElementById('aiResult');
+        const actionsDiv = document.getElementById('aiResultActions');
+        resultDiv.style.display = 'none';
+        actionsDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/format', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ system: systemPrompt, userMessage: prompt })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Server error');
+
+            if (data.text) {
+                resultDiv.textContent = data.text;
+                resultDiv.style.display = 'block';
+                actionsDiv.style.display = 'flex';
+                showToast('Done!');
+            } else {
+                throw new Error('No response');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message);
+        } finally {
+            btn.textContent = 'Ask AI';
+            btn.disabled = false;
+        }
+    }
+
+    function copyAIResult() {
+        const text = document.getElementById('aiResult').textContent;
+        navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+    }
+
+    function insertAIResult() {
+        const target = document.getElementById('aiInsertTarget').value;
+        if (!target) { showToast('Select a field from the dropdown first'); return; }
+        const ta = document.getElementById(target);
+        const text = document.getElementById('aiResult').textContent;
+        ta.value = ta.value ? ta.value + '\n' + text : text;
+        showToast('Inserted!');
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Allow Enter key to submit AI prompt
+    document.getElementById('aiPrompt').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            askAI();
+        }
+    });
 
     // ===== Smart Format (calls server proxy) =====
     async function smartFormat(textareaId, mode) {
