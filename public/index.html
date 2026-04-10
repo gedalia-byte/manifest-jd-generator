@@ -709,6 +709,17 @@
         }
 
         /* ===== Home page ===== */
+        .home-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 180px);
+            padding: 40px 0;
+        }
+        .home-centered > .card {
+            width: 100%;
+        }
         .home-hero {
             text-align: center;
             padding: 56px 0 44px;
@@ -892,52 +903,10 @@
         <button class="btn btn-accent" onclick="switchTab('builder')" style="padding: 13px 36px; font-size: 14px;">Get Started &rarr;</button>
     </div>
 
-    <!-- Feature Cards -->
-    <div class="home-features">
-        <div class="card" onclick="switchTab('builder')">
-            <div class="home-feature-label">01</div>
-            <h2>Create</h2>
-            <p class="subtitle" style="margin-bottom: 0;">Build a JD from scratch or start from a saved template</p>
-            <ul class="home-feature-list">
-                <li>Pick from saved templates to pre-fill fields</li>
-                <li>AI assistant for qualifications &amp; responsibilities</li>
-                <li>Smart Format polishes any rough text</li>
-                <li>Press Tab to fill example content</li>
-            </ul>
-            <span class="home-feature-link">Go to Create &rarr;</span>
-        </div>
-
-        <div class="card" onclick="switchTab('defaults')">
-            <div class="home-feature-label">02</div>
-            <h2>Admin</h2>
-            <p class="subtitle" style="margin-bottom: 0;">Manage defaults, templates, and imports</p>
-            <ul class="home-feature-list">
-                <li>Save company description, benefits &amp; EEO defaults</li>
-                <li>Build a reusable template library</li>
-                <li>Upload existing JDs (PDF or Word) for AI parsing</li>
-                <li>Review and remove saved templates</li>
-            </ul>
-            <span class="home-feature-link">Go to Admin &rarr;</span>
-        </div>
-
-        <div class="card" onclick="switchTab('preview')">
-            <div class="home-feature-label">03</div>
-            <h2>Preview &amp; Export</h2>
-            <p class="subtitle" style="margin-bottom: 0;">Review your JD and send it anywhere</p>
-            <ul class="home-feature-list">
-                <li>Copy as plain text or rich text</li>
-                <li>Download as .docx</li>
-                <li>Open directly in Google Docs</li>
-                <li>Save to Notion with one click</li>
-            </ul>
-            <span class="home-feature-link">Go to Preview &rarr;</span>
-        </div>
-    </div>
-
     <!-- Template Workflow -->
-    <div class="card" style="border-top: 3px solid var(--amber);">
+    <div class="card" style="border-top: 3px solid var(--amber); text-align: center;">
         <h2>How Templates Work</h2>
-        <p class="subtitle">Templates let anyone on the team create consistent JDs without starting from scratch</p>
+        <p class="subtitle" style="max-width: 480px; margin-left: auto; margin-right: auto;">Templates let anyone on the team create consistent JDs without starting from scratch</p>
         <div class="home-workflow">
             <div class="home-step">
                 <div class="home-step-number">1</div>
