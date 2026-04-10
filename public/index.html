@@ -2402,6 +2402,9 @@ Rules:
             }
             el.value = text;
             el.style.color = '';
+            // Place cursor at end so user can keep editing
+            el.focus();
+            el.setSelectionRange(text.length, text.length);
             // Trigger autosave
             el.dispatchEvent(new Event('input', { bubbles: true }));
         }
