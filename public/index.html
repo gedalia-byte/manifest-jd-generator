@@ -1395,6 +1395,7 @@
             <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
             <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
             <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .docx</button>
+            <button class="btn btn-secondary" onclick="downloadAsPDF()">Download PDF</button>
             <button class="btn btn-secondary" onclick="openInGoogleDocs()">Open in Google Docs</button>
             <button class="btn btn-accent" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
             <button class="btn btn-primary" onclick="switchTab('builder')">Edit</button>
@@ -1673,6 +1674,48 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
         a.download = `${slug}.doc`;
         a.click();
         showToast('Downloaded .doc');
+    }
+
+    function downloadAsPDF() {
+        const payload = getExportPayload();
+        if (payload.sections.length === 0) {
+            showToast('Nothing to export — fill in the form first');
+            return;
+        }
+
+        // Build a clean print-ready HTML page
+        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHTML(payload.title)}</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&display=swap');
+@page { margin: 0.75in 1in; size: letter; }
+body { font-family: 'Inter', Calibri, sans-serif; max-width: 100%; margin: 0; padding: 0; line-height: 1.7; color: #2A2826; -webkit-print-color-adjust: exact; }
+h1 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 22pt; font-weight: 400; margin: 0 0 4px; color: #1A0F0A; }
+.meta { color: #7A746C; font-size: 10pt; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid #D4C6B8; }
+h2 { font-size: 9pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #8D614E; margin-top: 22px; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #E8E0D8; }
+p { color: #4A4540; font-size: 10.5pt; margin: 0 0 6px; }
+ul { padding-left: 18px; margin: 4px 0 0; }
+li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
+</style></head><body>`;
+        html += `<h1>${escapeHTML(payload.title)}</h1>`;
+        html += `<p class="meta">${escapeHTML(payload.meta)}</p>`;
+        for (const s of payload.sections) {
+            html += `<h2>${escapeHTML(s.heading)}</h2>`;
+            if (s.type === 'bullets') {
+                html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
+            } else {
+                html += s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<p>${escapeHTML(l)}</p>`).join('');
+            }
+        }
+        html += '</body></html>';
+
+        // Open in a new window and trigger print (Save as PDF)
+        const printWin = window.open('', '_blank');
+        printWin.document.write(html);
+        printWin.document.close();
+        // Wait for fonts to load then trigger print dialog
+        printWin.onload = () => { printWin.print(); };
+        // Fallback if onload doesn't fire
+        setTimeout(() => { printWin.print(); }, 800);
+        showToast('Use "Save as PDF" in the print dialog');
     }
 
     async function openInGoogleDocs() {
