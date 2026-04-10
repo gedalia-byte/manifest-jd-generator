@@ -16,7 +16,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     system_instruction: { parts: [{ text: system }] },
                     contents: [{ parts: [{ text: userMessage }] }],
-                    generationConfig: { maxOutputTokens: 1024 }
+                    generationConfig: { maxOutputTokens: 4096 }
                 })
             }
         );

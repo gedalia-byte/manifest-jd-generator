@@ -2036,8 +2036,8 @@ Rules:
         if (!response.ok) throw new Error(data.error || 'AI parsing failed');
 
         let text = data.text || '';
-        // Strip markdown code fences if present
-        text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+        // Strip markdown code fences if present (handles ```json\n...\n```)
+        text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
 
         try {
             return JSON.parse(text);
