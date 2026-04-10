@@ -1681,9 +1681,12 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
             showToast('Nothing to export — fill in the form first');
             return;
         }
-        const html = buildStyledHTML(payload);
 
-        // Copy rich HTML to clipboard so user can paste into the new doc
+        // Open Google Doc FIRST (must be synchronous to avoid popup blocker)
+        const newTab = window.open('https://docs.google.com/document/create', '_blank');
+
+        // Then copy rich HTML to clipboard
+        const html = buildStyledHTML(payload);
         try {
             const htmlBlob = new Blob([html], { type: 'text/html' });
             const textContent = buildPlainText(payload);
@@ -1700,8 +1703,21 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
             await navigator.clipboard.writeText(textContent);
         }
 
-        window.open('https://docs.google.com/document/create', '_blank');
-        showToast('Google Doc opened — paste with \u2318V (Cmd+V)');
+        // Show a persistent banner so user knows to paste
+        showPasteBanner();
+    }
+
+    function showPasteBanner() {
+        let banner = document.getElementById('pasteBanner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'pasteBanner';
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--charcoal);color:var(--sand);padding:16px 24px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:14px;font-weight:500;letter-spacing:0.2px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+            banner.innerHTML = '<span style="font-size:18px;">&#9889;</span> JD copied to clipboard — switch to the Google Doc and press <kbd style="background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:4px;font-family:\'Geist Mono\',monospace;font-size:13px;margin:0 2px;">\u2318V</kbd> to paste <button onclick="this.parentElement.remove()" style="margin-left:16px;background:none;border:1px solid rgba(255,255,255,0.3);color:var(--sand);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;">Dismiss</button>';
+            document.body.prepend(banner);
+            // Auto-dismiss after 15 seconds
+            setTimeout(() => { if (banner.parentElement) banner.remove(); }, 15000);
+        }
     }
 
     function buildPlainText(payload) {
