@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -557,6 +559,95 @@
             opacity: 0.4;
         }
 
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--stone);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--cream);
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--amber);
+            background: var(--amber-glow);
+        }
+        .upload-zone-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+        .upload-zone-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .upload-zone-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-progress {
+            margin-top: 16px;
+            display: none;
+        }
+        .upload-progress.active { display: block; }
+        .upload-progress-bar {
+            height: 4px;
+            background: var(--stone);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .upload-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--amber), var(--amber-light));
+            border-radius: 2px;
+            animation: progress-indeterminate 1.5s ease-in-out infinite;
+            width: 40%;
+        }
+        @keyframes progress-indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(350%); }
+        }
+        .upload-status {
+            font-size: 12px;
+            color: var(--amber);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        .upload-preview {
+            margin-top: 16px;
+            display: none;
+            text-align: left;
+        }
+        .upload-preview.active { display: block; }
+        .upload-preview-field {
+            margin-bottom: 12px;
+        }
+        .upload-preview-field label {
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .upload-preview-field .value {
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--cream);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--stone);
+            max-height: 100px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
         /* Admin template management */
         .template-admin-list {
             display: flex;
@@ -897,6 +988,55 @@
             <div class="field" style="flex-shrink: 0;">
                 <button class="btn btn-accent" onclick="saveAsTemplate()" style="width: 100%; margin-top: 2px;">Save Current Form as Template</button>
             </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Upload Existing JD</h2>
+        <p class="subtitle">Upload a PDF or Word doc (.docx) — AI will parse it into a reusable template automatically</p>
+
+        <div class="upload-zone" id="uploadZone">
+            <input type="file" id="jdFileInput" accept=".pdf,.docx,.doc" onchange="handleFileUpload(this.files[0])">
+            <div class="upload-zone-icon">&#128196;</div>
+            <div class="upload-zone-text">Drop a file here or click to browse</div>
+            <div class="upload-zone-hint">PDF or .docx &middot; Max 10 MB</div>
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+            <div class="upload-progress-bar"><div class="upload-progress-fill"></div></div>
+            <div class="upload-status" id="uploadStatus">Extracting text...</div>
+        </div>
+
+        <div class="upload-preview" id="uploadPreview">
+            <div style="margin-bottom: 12px;">
+                <label style="color: var(--amber); font-size: 11px; letter-spacing: 0.5px;">AI PARSED RESULT</label>
+            </div>
+            <div class="upload-preview-field">
+                <label>Job Title</label>
+                <div class="value" id="parsedTitle">—</div>
+            </div>
+            <div class="upload-preview-field">
+                <label>Department</label>
+                <div class="value" id="parsedDepartment">—</div>
+            </div>
+            <div class="upload-preview-field">
+                <label>Responsibilities</label>
+                <div class="value" id="parsedResponsibilities">—</div>
+            </div>
+            <div class="upload-preview-field">
+                <label>Qualifications</label>
+                <div class="value" id="parsedQualifications">—</div>
+            </div>
+            <div class="field-row" style="align-items: flex-end; margin-top: 16px;">
+                <div class="field">
+                    <label>Template Name</label>
+                    <input type="text" id="uploadTemplateName" placeholder="e.g. Senior Product Designer — Design Team">
+                </div>
+                <div class="field" style="flex-shrink: 0;">
+                    <button class="btn btn-accent" onclick="saveUploadedTemplate()" style="width: 100%; margin-top: 2px;">Save as Template</button>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="resetUpload()" style="margin-top: 8px; font-size: 12px;">Upload Another</button>
         </div>
     </div>
 
@@ -1434,6 +1574,191 @@ Rules:
             btn.textContent = original;
             btn.disabled = false;
         }
+    }
+
+    // ===== Upload & Parse JD =====
+    let parsedUploadData = null;
+
+    // Drag and drop
+    const uploadZone = document.getElementById('uploadZone');
+    ['dragenter', 'dragover'].forEach(evt => {
+        uploadZone.addEventListener(evt, e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        uploadZone.addEventListener(evt, e => { e.preventDefault(); uploadZone.classList.remove('dragover'); });
+    });
+    uploadZone.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        if (file) handleFileUpload(file);
+    });
+
+    async function handleFileUpload(file) {
+        if (!file) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'docx', 'doc'].includes(ext)) {
+            showToast('Please upload a PDF or .docx file');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('File too large — max 10 MB');
+            return;
+        }
+
+        // Show progress
+        document.getElementById('uploadProgress').classList.add('active');
+        document.getElementById('uploadPreview').classList.remove('active');
+        document.getElementById('uploadZone').style.display = 'none';
+        document.getElementById('uploadStatus').textContent = 'Extracting text...';
+
+        try {
+            let rawText = '';
+            if (ext === 'pdf') {
+                rawText = await extractTextFromPDF(file);
+            } else {
+                rawText = await extractTextFromDocx(file);
+            }
+
+            if (!rawText || rawText.trim().length < 20) {
+                throw new Error('Could not extract enough text from the file');
+            }
+
+            document.getElementById('uploadStatus').textContent = 'AI is parsing the job description...';
+
+            const parsed = await parseJDWithAI(rawText);
+            parsedUploadData = parsed;
+
+            // Show preview
+            document.getElementById('parsedTitle').textContent = parsed.jobTitle || '—';
+            document.getElementById('parsedDepartment').textContent = parsed.department || '—';
+            document.getElementById('parsedResponsibilities').textContent = parsed.responsibilities || '—';
+            document.getElementById('parsedQualifications').textContent = parsed.qualRequired || '—';
+            document.getElementById('uploadTemplateName').value = parsed.jobTitle || '';
+
+            document.getElementById('uploadProgress').classList.remove('active');
+            document.getElementById('uploadPreview').classList.add('active');
+            showToast('JD parsed successfully!');
+
+        } catch (err) {
+            document.getElementById('uploadProgress').classList.remove('active');
+            document.getElementById('uploadZone').style.display = '';
+            showToast('Error: ' + err.message);
+            console.error('Upload error:', err);
+        }
+    }
+
+    async function extractTextFromPDF(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let text = '';
+        for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        return text;
+    }
+
+    async function extractTextFromDocx(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        return result.value;
+    }
+
+    async function parseJDWithAI(rawText) {
+        const systemPrompt = `You are an expert HR document parser. The user will give you raw text extracted from a job description document. Parse it into structured fields and return ONLY valid JSON (no markdown, no code fences) with these exact keys:
+
+{
+  "jobTitle": "the job title",
+  "department": "department or team name, or empty string if not found",
+  "location": "location, or empty string",
+  "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
+  "reportsTo": "who this role reports to, or empty string",
+  "salaryRange": "salary range, or empty string",
+  "aboutCompany": "company description paragraph if present, or empty string",
+  "aboutTeam": "team description if present, or empty string",
+  "aboutRole": "role summary/overview paragraph, or empty string",
+  "responsibilities": "each responsibility on its own line, no bullets or dashes — just the text",
+  "qualRequired": "each required qualification on its own line, no bullets or dashes",
+  "qualNice": "each nice-to-have on its own line, or empty string",
+  "benefits": "each benefit on its own line, or empty string",
+  "eeo": "equal opportunity statement if present, or empty string"
+}
+
+Rules:
+- Return ONLY the JSON object, nothing else
+- For list fields (responsibilities, qualRequired, qualNice, benefits), put each item on a new line with no bullet characters
+- If a section is not found in the document, use an empty string
+- Be thorough — extract as much as you can find`;
+
+        const response = await fetch('/api/format', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                system: systemPrompt,
+                userMessage: rawText.substring(0, 8000)
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'AI parsing failed');
+
+        let text = data.text || '';
+        // Strip markdown code fences if present
+        text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error('AI returned non-JSON:', text);
+            throw new Error('AI could not parse this document — try a cleaner file');
+        }
+    }
+
+    function saveUploadedTemplate() {
+        if (!parsedUploadData) { showToast('No parsed data'); return; }
+        const name = document.getElementById('uploadTemplateName').value.trim();
+        if (!name) { showToast('Give your template a name'); return; }
+
+        const template = {
+            id: Date.now(),
+            name: name,
+            createdAt: new Date().toISOString(),
+            fields: {
+                jobTitle: parsedUploadData.jobTitle || '',
+                department: parsedUploadData.department || '',
+                location: parsedUploadData.location || '',
+                employmentType: parsedUploadData.employmentType || 'Full-Time',
+                reportsTo: parsedUploadData.reportsTo || '',
+                salaryRange: parsedUploadData.salaryRange || '',
+                aboutCompany: parsedUploadData.aboutCompany || '',
+                aboutTeam: parsedUploadData.aboutTeam || '',
+                aboutRole: parsedUploadData.aboutRole || '',
+                responsibilities: parsedUploadData.responsibilities || '',
+                qualRequired: parsedUploadData.qualRequired || '',
+                qualNice: parsedUploadData.qualNice || '',
+                benefits: parsedUploadData.benefits || '',
+                eeo: parsedUploadData.eeo || '',
+            }
+        };
+
+        const templates = getTemplates();
+        templates.unshift(template);
+        saveTemplates(templates);
+        renderTemplates();
+
+        resetUpload();
+        showToast(`Template "${name}" saved from upload`);
+        flashSaveStatus();
+    }
+
+    function resetUpload() {
+        parsedUploadData = null;
+        document.getElementById('uploadZone').style.display = '';
+        document.getElementById('uploadProgress').classList.remove('active');
+        document.getElementById('uploadPreview').classList.remove('active');
+        document.getElementById('jdFileInput').value = '';
+        document.getElementById('uploadTemplateName').value = '';
     }
 
     // ===== Template Library =====
