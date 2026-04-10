@@ -1408,6 +1408,17 @@
         </p>
     </div>
 
+    <div class="card" id="saveTemplateCard" style="display: none; margin-top: 16px;">
+        <h2 style="font-size: 15px;">Save as Template</h2>
+        <p class="subtitle">Save this JD as a reusable template so anyone on the team can use it.</p>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+            <div class="field" style="flex: 1; margin-bottom: 0;">
+                <input type="text" id="previewTemplateName" placeholder="e.g. Senior Product Designer — Design Team">
+            </div>
+            <button class="btn btn-accent" onclick="saveTemplateFromPreview()" style="white-space: nowrap;">Save to Templates</button>
+        </div>
+    </div>
+
 </div>
 </div>
 
@@ -1574,6 +1585,9 @@
         if (eeo) { html += `<h2>Equal Opportunity Statement</h2>` + textToParagraphs(eeo); }
 
         document.getElementById('previewOutput').innerHTML = html;
+        // Show save-as-template card and pre-fill name
+        document.getElementById('saveTemplateCard').style.display = '';
+        document.getElementById('previewTemplateName').value = title !== 'Untitled Role' ? title : '';
         switchTab('preview');
         showToast('Job description generated');
     }
@@ -2339,6 +2353,49 @@ Rules:
             flashSaveStatus();
         } catch (err) {
             showToast('Failed to save template — check console');
+            console.error(err);
+        }
+    }
+
+    async function saveTemplateFromPreview() {
+        const name = document.getElementById('previewTemplateName').value.trim();
+        if (!name) { showToast('Give your template a name'); return; }
+
+        const template = {
+            id: Date.now(),
+            name: name,
+            createdAt: new Date().toISOString(),
+            fields: {
+                jobTitle: document.getElementById('jobTitle').value,
+                department: document.getElementById('department').value,
+                location: document.getElementById('location').value,
+                employmentType: document.getElementById('employmentType').value,
+                reportsTo: document.getElementById('reportsTo').value,
+                salaryRange: document.getElementById('salaryRange').value,
+                aboutCompany: document.getElementById('aboutCompany').value,
+                aboutTeam: document.getElementById('aboutTeam').value,
+                aboutRole: document.getElementById('aboutRole').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                qualRequired: document.getElementById('qualRequired').value,
+                qualNice: document.getElementById('qualNice').value,
+                benefits: document.getElementById('benefits').value,
+                eeo: document.getElementById('eeo').value,
+            }
+        };
+
+        try {
+            const res = await fetch('/api/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template)
+            });
+            if (!res.ok) throw new Error('Save failed');
+
+            document.getElementById('previewTemplateName').value = '';
+            await renderTemplates();
+            showToast(`Template "${name}" saved — available for the whole team`);
+        } catch (err) {
+            showToast('Failed to save template — check connection');
             console.error(err);
         }
     }
