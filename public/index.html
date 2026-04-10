@@ -1085,11 +1085,11 @@
     <!-- AI Assistant -->
     <div class="card" style="border-left: 3px solid var(--amber);">
         <h2 style="display: flex; align-items: center; gap: 8px;">&#9889; AI Assistant</h2>
-        <p class="subtitle">Ask anything — "what qualifications does a top ops lead need?", "write responsibilities for a senior engineer", "what benefits do startups typically offer?"</p>
+        <p class="subtitle">Ask a question, generate content for a specific field, or tell AI to edit the entire JD at once.</p>
         <div class="field">
-            <textarea id="aiPrompt" rows="2" placeholder="e.g. What are the top qualifications for a senior operations lead at a legal tech company?"></textarea>
+            <textarea id="aiPrompt" rows="2" placeholder='e.g. "Make this role more senior" · "Add remote work benefits" · "What qualifications should a design lead have?"'></textarea>
         </div>
-        <div style="display: flex; gap: 10px; align-items: flex-start; margin-top: 8px;">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px;">
             <button class="btn btn-accent" onclick="askAI()" id="aiAskBtn">Ask AI</button>
             <select id="aiInsertTarget" style="max-width: 220px; font-size: 13px;">
                 <option value="">Copy result manually</option>
@@ -1099,6 +1099,8 @@
                 <option value="qualRequired">Insert into → Qualifications (Required)</option>
                 <option value="qualNice">Insert into → Qualifications (Nice to Have)</option>
             </select>
+            <span style="color: var(--text-muted); font-size: 12px;">or</span>
+            <button class="btn-ai" onclick="aiEditEntireJD()" id="aiEditBtn" style="padding: 8px 16px; font-size: 12px;">&#9889; Apply to Entire JD</button>
         </div>
         <div id="aiResult" style="display: none; margin-top: 16px; padding: 16px; background: var(--cream); border: 1px solid var(--stone); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: var(--text-secondary);"></div>
         <div id="aiResultActions" style="display: none; margin-top: 8px;" class="btn-row">
@@ -1767,6 +1769,96 @@ Rules:
         ta.value = ta.value ? ta.value + '\n' + text : text;
         showToast('Inserted!');
         ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ===== AI Edit Entire JD =====
+    async function aiEditEntireJD() {
+        const instruction = document.getElementById('aiPrompt').value.trim();
+        if (!instruction) { showToast('Type what you want AI to change'); return; }
+
+        // Gather all current form fields
+        const fieldIds = ['jobTitle','department','location','employmentType','reportsTo','salaryRange',
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice','benefits','eeo'];
+        const currentData = {};
+        fieldIds.forEach(id => { currentData[id] = document.getElementById(id).value; });
+
+        // Check if form has content
+        const hasContent = fieldIds.some(id => currentData[id].trim().length > 0);
+        if (!hasContent) {
+            showToast('Fill in some fields first — AI needs content to edit');
+            return;
+        }
+
+        const btn = document.getElementById('aiEditBtn');
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = '&#9889; Applying...';
+        btn.disabled = true;
+
+        const systemPrompt = `You are an expert HR consultant editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change. Apply the instruction across ALL relevant fields and return the complete updated JSON.
+
+Return ONLY valid JSON with these exact keys (no markdown, no code fences):
+{
+  "jobTitle": "...",
+  "department": "...",
+  "location": "...",
+  "employmentType": "Full-Time, Part-Time, Contract, or Internship",
+  "reportsTo": "...",
+  "salaryRange": "...",
+  "aboutCompany": "...",
+  "aboutTeam": "...",
+  "aboutRole": "...",
+  "responsibilities": "each on its own line, no bullets or dashes",
+  "qualRequired": "each on its own line, no bullets or dashes",
+  "qualNice": "each on its own line, no bullets or dashes",
+  "benefits": "each on its own line, no bullets or dashes",
+  "eeo": "..."
+}
+
+Rules:
+- Apply the user's instruction thoughtfully across all affected fields
+- Keep fields that aren't affected by the instruction unchanged
+- If a field was empty and the instruction doesn't relate to it, leave it empty
+- For list fields, put each item on a new line with no bullet characters
+- Be thorough but don't fabricate information the user didn't ask for
+- Return ONLY the JSON — no explanation, no markdown`;
+
+        const userMessage = `CURRENT JD:\n${JSON.stringify(currentData, null, 2)}\n\nINSTRUCTION: ${instruction}`;
+
+        try {
+            const response = await fetch('/api/format', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ system: systemPrompt, userMessage })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Server error');
+
+            let text = data.text || '';
+            text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
+
+            const updated = JSON.parse(text);
+
+            // Apply all fields back to the form
+            fieldIds.forEach(id => {
+                if (updated[id] !== undefined) {
+                    document.getElementById(id).value = updated[id];
+                    // Trigger input event for autosave
+                    document.getElementById(id).dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+
+            showToast('JD updated by AI!');
+            // Scroll to top of form to see changes
+            document.getElementById('panel-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        } catch (err) {
+            console.error('AI Edit error:', err);
+            showToast('Error: ' + (err.message || 'AI could not apply the edit'));
+        } finally {
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+        }
     }
 
     // Allow Enter key to submit AI prompt
