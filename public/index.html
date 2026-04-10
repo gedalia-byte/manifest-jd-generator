@@ -375,49 +375,63 @@
             background: var(--white);
             border: 1px solid var(--stone);
             border-radius: var(--radius);
-            padding: 48px 56px;
+            padding: 56px 64px;
             line-height: 1.75;
             box-shadow: var(--shadow-md);
+            position: relative;
+        }
+        .preview-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--amber), var(--amber-light));
+            border-radius: var(--radius) var(--radius) 0 0;
         }
         .preview-container h1 {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             color: var(--charcoal);
+            letter-spacing: -0.3px;
         }
         .preview-container .preview-location {
             color: var(--text-secondary);
             font-size: 13.5px;
-            margin-bottom: 32px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--stone);
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--stone);
+            letter-spacing: 0.2px;
         }
         .preview-container h2 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-top: 32px;
-            margin-bottom: 10px;
-            color: var(--charcoal);
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 36px;
+            margin-bottom: 12px;
+            color: var(--amber);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding-bottom: 6px;
+            letter-spacing: 1.5px;
+            padding-bottom: 8px;
             border-bottom: 1px solid var(--stone);
         }
         .preview-container p,
         .preview-container li {
-            font-size: 14px;
+            font-size: 14.5px;
             color: var(--text-secondary);
+            line-height: 1.8;
         }
         .preview-container p {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         .preview-container ul {
             padding-left: 20px;
-            margin-top: 6px;
+            margin-top: 8px;
         }
         .preview-container li {
-            margin-bottom: 6px;
-            padding-left: 4px;
+            margin-bottom: 8px;
+            padding-left: 6px;
         }
         .preview-container li::marker {
             color: var(--amber);
@@ -710,9 +724,10 @@
 
     <div class="card" style="padding: 12px 24px;">
         <div class="btn-row" style="margin:0; justify-content: flex-end; flex-wrap: wrap;">
-            <button class="btn btn-secondary" onclick="copyToClipboard()">Copy as Text</button>
+            <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
             <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
-            <button class="btn btn-secondary" onclick="downloadAsHTML()">Download</button>
+            <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .docx</button>
+            <button class="btn btn-secondary" onclick="openInGoogleDocs()">Open in Google Docs</button>
             <button class="btn btn-accent" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
             <button class="btn btn-primary" onclick="switchTab('builder')">Edit</button>
         </div>
@@ -913,29 +928,91 @@
         navigator.clipboard.write([item]).then(() => showToast('Copied as rich text'));
     }
 
-    function downloadAsHTML() {
-        const el = document.getElementById('previewOutput');
-        const title = document.getElementById('jobTitle').value || 'job-description';
-        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const fullHTML = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>${escapeHTML(title)}</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-body { font-family: 'Instrument Sans', sans-serif; max-width: 680px; margin: 48px auto; padding: 0 24px; line-height: 1.75; color: #2A2826; }
-h1 { margin-bottom: 4px; font-size: 26px; }
-h2 { margin-top: 32px; margin-bottom: 10px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #DCD6CD; padding-bottom: 6px; }
-p { color: #7A746C; margin-bottom: 8px; }
-ul { padding-left: 20px; }
-li { margin-bottom: 6px; color: #7A746C; }
-li::marker { color: #B47844; }
-.preview-location { color: #7A746C; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #DCD6CD; }
-</style></head><body>${el.innerHTML}</body></html>`;
-        const blob = new Blob([fullHTML], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${slug}.html`;
-        a.click();
-        showToast('Downloaded');
+    // Build export payload from form fields
+    function getExportPayload() {
+        const title = document.getElementById('jobTitle').value || 'Untitled Role';
+        const dept = document.getElementById('department').value;
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+
+        let metaParts = [type];
+        if (dept) metaParts.push(dept);
+        if (loc) metaParts.push(loc);
+        if (reports) metaParts.push('Reports to ' + reports);
+        if (salary) metaParts.push(salary);
+
+        const sections = [];
+        const about = document.getElementById('aboutCompany').value;
+        const team = document.getElementById('aboutTeam').value;
+        const role = document.getElementById('aboutRole').value;
+        const resp = document.getElementById('responsibilities').value;
+        const reqQual = document.getElementById('qualRequired').value;
+        const niceQual = document.getElementById('qualNice').value;
+        const benefits = document.getElementById('benefits').value;
+        const eeo = document.getElementById('eeo').value;
+
+        if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
+        if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
+        if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
+        if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'bullets' });
+        if (reqQual) sections.push({ heading: 'Qualifications', content: reqQual, type: 'bullets' });
+        if (niceQual) sections.push({ heading: 'Nice to Have', content: niceQual, type: 'bullets' });
+        if (benefits) sections.push({ heading: 'Benefits & Perks', content: benefits, type: 'bullets' });
+        if (eeo) sections.push({ heading: 'Equal Opportunity Statement', content: eeo, type: 'prose' });
+
+        return { title, meta: metaParts.join('  \u00b7  '), sections };
+    }
+
+    async function downloadAsDocx() {
+        const payload = getExportPayload();
+        showToast('Generating document...');
+        try {
+            const response = await fetch('/api/export-docx', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Failed to generate');
+            const blob = await response.blob();
+            const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${slug}.docx`;
+            a.click();
+            showToast('Downloaded .docx');
+        } catch (err) {
+            showToast('Error: ' + err.message);
+        }
+    }
+
+    async function openInGoogleDocs() {
+        const payload = getExportPayload();
+        showToast('Generating document...');
+        try {
+            const response = await fetch('/api/export-docx', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Failed to generate');
+            const blob = await response.blob();
+            const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            // Upload the .docx as a temp file, then open Google Docs import
+            // Google Docs can import .docx files directly via URL
+            // We'll download first, then redirect to Google Docs new doc with import
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${slug}.docx`;
+            a.click();
+            showToast('File downloaded — drag it into Google Drive or go to docs.google.com and open it');
+            // Open Google Docs in new tab for convenience
+            setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 800);
+        } catch (err) {
+            showToast('Error: ' + err.message);
+        }
     }
 
     // ===== Clear form =====
