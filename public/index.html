@@ -1934,6 +1934,26 @@ Rules:
         chevron.classList.toggle('open');
     });
 
+    // ===== Tab-to-fill placeholder =====
+    document.getElementById('panel-builder').addEventListener('keydown', function(e) {
+        if (e.key !== 'Tab' || e.shiftKey) return;
+        const el = e.target;
+        if ((el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.placeholder && el.value.trim() === '' && !el.disabled) {
+            e.preventDefault();
+            // Strip "e.g. " or "e.g. \"...\"" wrapper from placeholder
+            let text = el.placeholder;
+            if (text.startsWith('e.g. "') && text.endsWith('"')) {
+                text = text.slice(6, -1);
+            } else if (text.startsWith('e.g. ')) {
+                text = text.slice(5);
+            }
+            el.value = text;
+            el.style.color = '';
+            // Trigger autosave
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
     // ===== Init =====
     loadDefaultsIntoAdmin();
     setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
