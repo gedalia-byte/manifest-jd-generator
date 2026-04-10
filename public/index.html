@@ -843,6 +843,102 @@
             color: var(--text-secondary);
             line-height: 1.6;
         }
+        /* Path cards */
+        .home-paths {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .home-path {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-left: 3px solid transparent;
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 0 32px;
+            align-items: start;
+        }
+        .home-path:hover {
+            border-left-color: var(--amber);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .home-path-header {
+            grid-column: 1;
+            grid-row: 1 / 3;
+        }
+        .home-path-label {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--amber);
+            margin-bottom: 6px;
+        }
+        .home-path-title {
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--charcoal);
+            letter-spacing: -0.3px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        .home-path-desc {
+            grid-column: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 320px;
+        }
+        .home-path-steps {
+            grid-column: 2;
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-self: center;
+        }
+        .home-path-step {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .home-path-step span {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--amber);
+            background: var(--amber-glow);
+            border: 1px solid var(--stone);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .home-path-time {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            align-self: center;
+            font-family: 'Geist Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
         .home-bottom-cta {
             text-align: center;
             padding: 36px 0 16px;
@@ -868,6 +964,11 @@
             .home-workflow { flex-direction: column; gap: 24px; }
             .home-hero { padding: 36px 0 28px; }
             .home-hero h1 { font-size: 24px; }
+            .home-path { grid-template-columns: 1fr; gap: 16px 0; }
+            .home-path-header { grid-column: 1; grid-row: auto; }
+            .home-path-steps { grid-column: 1; grid-row: auto; }
+            .home-path-time { grid-column: 1; grid-row: auto; align-self: start; }
+            .home-path-desc { max-width: 100%; }
         }
     </style>
 </head>
@@ -898,38 +999,60 @@
 
     <!-- Hero -->
     <div class="home-hero">
-        <h1>Build polished job descriptions<br>in minutes</h1>
-        <p>Create consistent, on-brand JDs for your team using templates, AI assistance, and one-click export to Docs, Notion, and more.</p>
-        <button class="btn btn-accent" onclick="switchTab('builder')" style="padding: 13px 36px; font-size: 14px;">Get Started &rarr;</button>
+        <h1>Job Description Generator</h1>
+        <p>Create polished, on-brand JDs in minutes. Choose how you want to get started.</p>
     </div>
 
-    <!-- Template Workflow -->
-    <div class="card" style="border-top: 3px solid var(--amber); text-align: center;">
-        <h2>How Templates Work</h2>
-        <p class="subtitle" style="max-width: 480px; margin-left: auto; margin-right: auto;">Templates let anyone on the team create consistent JDs without starting from scratch</p>
-        <div class="home-workflow">
-            <div class="home-step">
-                <div class="home-step-number">1</div>
-                <div class="home-step-title">Admin saves a template</div>
-                <div class="home-step-desc">Fill out the Create form for a role, then save it as a named template from the Admin tab.</div>
+    <!-- Three Paths -->
+    <div class="home-paths">
+
+        <div class="home-path" onclick="switchTab('builder')">
+            <div class="home-path-header">
+                <div class="home-path-label">Path A</div>
+                <h2 class="home-path-title">Start from a template</h2>
             </div>
-            <div class="home-step">
-                <div class="home-step-number">2</div>
-                <div class="home-step-title">Anyone picks a template</div>
-                <div class="home-step-desc">On the Create tab, choose a template to instantly pre-fill every field.</div>
+            <p class="home-path-desc">Pick a saved JD template, customize it for your role, and export. Fastest way to get a polished result.</p>
+            <div class="home-path-steps">
+                <div class="home-path-step"><span>1</span> Pick a template from the library</div>
+                <div class="home-path-step"><span>2</span> Edit any fields for your specific role</div>
+                <div class="home-path-step"><span>3</span> Generate &amp; export</div>
             </div>
-            <div class="home-step">
-                <div class="home-step-number">3</div>
-                <div class="home-step-title">Customize and export</div>
-                <div class="home-step-desc">Tweak any section for the specific role, then generate and export your polished JD.</div>
-            </div>
+            <div class="home-path-time">~3 min</div>
         </div>
+
+        <div class="home-path" onclick="switchTab('builder')">
+            <div class="home-path-header">
+                <div class="home-path-label">Path B</div>
+                <h2 class="home-path-title">Describe it, let AI write it</h2>
+            </div>
+            <p class="home-path-desc">Just describe the role casually. The AI assistant and Smart Format will turn your notes into polished prose and bullet points.</p>
+            <div class="home-path-steps">
+                <div class="home-path-step"><span>1</span> Type rough notes into each section</div>
+                <div class="home-path-step"><span>2</span> Hit Smart Format to polish the text</div>
+                <div class="home-path-step"><span>3</span> Generate &amp; export</div>
+            </div>
+            <div class="home-path-time">~5 min</div>
+        </div>
+
+        <div class="home-path" onclick="switchTab('builder')">
+            <div class="home-path-header">
+                <div class="home-path-label">Path C</div>
+                <h2 class="home-path-title">Write it yourself</h2>
+            </div>
+            <p class="home-path-desc">Fill out every field manually with full control. Press Tab on any empty field to start with example text.</p>
+            <div class="home-path-steps">
+                <div class="home-path-step"><span>1</span> Fill in role details, responsibilities, qualifications</div>
+                <div class="home-path-step"><span>2</span> Review in the preview</div>
+                <div class="home-path-step"><span>3</span> Export to Docs, Notion, or .docx</div>
+            </div>
+            <div class="home-path-time">~10 min</div>
+        </div>
+
     </div>
 
     <!-- Bottom CTA -->
     <div class="home-bottom-cta">
-        <p>Ready to create your first job description?</p>
-        <button class="btn btn-accent" onclick="switchTab('builder')">Open the Creator</button>
+        <button class="btn btn-accent" onclick="switchTab('builder')" style="padding: 13px 36px; font-size: 14px;">Get Started &rarr;</button>
     </div>
 
 </div>
