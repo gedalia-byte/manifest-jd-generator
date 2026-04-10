@@ -1,4 +1,6 @@
 {
+  "buildCommand": "",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/format", "destination": "/api/format" },
     { "source": "/api/notion", "destination": "/api/notion" }
