@@ -311,7 +311,7 @@
         }
         .section-header .chevron.open { transform: rotate(90deg); }
         .section-body { margin-top: 18px; }
-        .section-body.collapsed { display: none; }
+        .section-body.collapsed, .collapsed { display: none; }
 
         /* ===== Smart Format button ===== */
         .field-with-ai {
@@ -460,6 +460,150 @@
             opacity: 1;
         }
 
+        /* ===== Template Library ===== */
+        .template-picker {
+            margin-bottom: 16px;
+        }
+        .template-picker .card {
+            border-left: 3px solid var(--stone);
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .template-picker .card:hover {
+            border-left-color: var(--amber-light);
+        }
+        .template-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .template-header-row h2 { margin-bottom: 0; }
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 12px;
+        }
+        .template-card {
+            background: var(--cream);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .template-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--amber);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        .template-card:hover {
+            border-color: var(--amber-light);
+            background: var(--white);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .template-card:hover::before { opacity: 1; }
+        .template-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .template-card-meta {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .template-card-meta .dot {
+            width: 3px;
+            height: 3px;
+            background: var(--warm-gray);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .template-card-dept {
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--amber);
+            background: var(--amber-glow);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .template-empty {
+            text-align: center;
+            padding: 28px 16px;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .template-empty-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+            opacity: 0.4;
+        }
+
+        /* Admin template management */
+        .template-admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .template-admin-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--cream);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+        .template-admin-item:hover {
+            background: var(--white);
+            border-color: var(--warm-gray);
+        }
+        .template-admin-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .template-admin-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+        .btn-delete {
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #C0392B;
+            background: transparent;
+            border: 1px solid #E8D5D2;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: inherit;
+        }
+        .btn-delete:hover {
+            background: #FDF2F0;
+            border-color: #C0392B;
+        }
+
         /* ===== Responsive ===== */
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
@@ -468,6 +612,7 @@
             .topbar { padding: 0 20px; }
             .tabs { padding: 0 20px; }
             .tab { padding: 14px 16px; font-size: 12px; }
+            .template-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -492,6 +637,28 @@
 <!-- ==================== BUILDER PANEL ==================== -->
 <div class="container">
 <div class="panel active" id="panel-builder">
+
+    <!-- Template Picker -->
+    <div class="template-picker">
+        <div class="card">
+            <div class="template-header-row">
+                <div>
+                    <h2>Start from a Template</h2>
+                    <p class="subtitle" style="margin-bottom: 0;">Pick a curated JD to pre-fill the form, then customize it for your role</p>
+                </div>
+                <span class="chevron open" id="templateChevron" style="cursor: pointer; font-size: 11px; color: var(--text-muted); transition: transform 0.2s;">&#9654;</span>
+            </div>
+            <div id="templatePickerBody">
+                <div class="template-grid" id="templateGrid">
+                    <!-- templates populated by JS -->
+                </div>
+                <div class="template-empty" id="templateEmpty">
+                    <div class="template-empty-icon">&#128203;</div>
+                    No templates yet.<br>Admins can save templates from the <strong>Admin</strong> tab.
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- AI Assistant -->
     <div class="card" style="border-left: 3px solid var(--amber);">
@@ -715,6 +882,34 @@
     <div class="btn-row">
         <button class="btn btn-accent" onclick="saveDefaults()">Save Defaults</button>
         <button class="btn btn-secondary" onclick="resetDefaults()">Reset to Empty</button>
+    </div>
+
+    <!-- Template Management -->
+    <div class="card" style="margin-top: 32px; border-top: 3px solid var(--amber);">
+        <h2>Template Library</h2>
+        <p class="subtitle">Save the current Create form as a reusable template. Anyone can then pick it to pre-fill a new JD.</p>
+
+        <div class="field-row" style="align-items: flex-end;">
+            <div class="field">
+                <label>Template Name</label>
+                <input type="text" id="templateName" placeholder="e.g. Senior Product Designer — Design Team">
+            </div>
+            <div class="field" style="flex-shrink: 0;">
+                <button class="btn btn-accent" onclick="saveAsTemplate()" style="width: 100%; margin-top: 2px;">Save Current Form as Template</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Manage Templates</h2>
+        <p class="subtitle">Remove or review saved templates</p>
+        <div class="template-admin-list" id="templateAdminList">
+            <!-- populated by JS -->
+        </div>
+        <div class="template-empty" id="templateAdminEmpty">
+            <div class="template-empty-icon">&#128203;</div>
+            No templates saved yet.
+        </div>
     </div>
 
 </div>
@@ -1241,11 +1436,185 @@ Rules:
         }
     }
 
+    // ===== Template Library =====
+    const TEMPLATES_KEY = 'manifest_jd_templates';
+
+    function getTemplates() {
+        try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY)) || []; }
+        catch { return []; }
+    }
+
+    function saveTemplates(templates) {
+        localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+    }
+
+    function saveAsTemplate() {
+        const name = document.getElementById('templateName').value.trim();
+        if (!name) { showToast('Give your template a name first'); return; }
+
+        const template = {
+            id: Date.now(),
+            name: name,
+            createdAt: new Date().toISOString(),
+            fields: {
+                jobTitle: document.getElementById('jobTitle').value,
+                department: document.getElementById('department').value,
+                location: document.getElementById('location').value,
+                employmentType: document.getElementById('employmentType').value,
+                reportsTo: document.getElementById('reportsTo').value,
+                salaryRange: document.getElementById('salaryRange').value,
+                aboutCompany: document.getElementById('aboutCompany').value,
+                aboutTeam: document.getElementById('aboutTeam').value,
+                aboutRole: document.getElementById('aboutRole').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                qualRequired: document.getElementById('qualRequired').value,
+                qualNice: document.getElementById('qualNice').value,
+                benefits: document.getElementById('benefits').value,
+                eeo: document.getElementById('eeo').value,
+            }
+        };
+
+        const templates = getTemplates();
+        templates.unshift(template);
+        saveTemplates(templates);
+
+        document.getElementById('templateName').value = '';
+        renderTemplates();
+        showToast(`Template "${name}" saved`);
+        flashSaveStatus();
+    }
+
+    function deleteTemplate(id) {
+        const templates = getTemplates();
+        const t = templates.find(t => t.id === id);
+        if (!confirm(`Delete template "${t?.name || 'Untitled'}"?`)) return;
+        saveTemplates(templates.filter(t => t.id !== id));
+        renderTemplates();
+        showToast('Template deleted');
+    }
+
+    function loadTemplate(id) {
+        const templates = getTemplates();
+        const t = templates.find(t => t.id === id);
+        if (!t) return;
+
+        if (!confirm(`Load template "${t.name}"? This will replace your current form.`)) return;
+
+        const f = t.fields;
+
+        // Fill text inputs
+        document.getElementById('jobTitle').value = f.jobTitle || '';
+        document.getElementById('department').value = f.department || '';
+        document.getElementById('location').value = f.location || '';
+        document.getElementById('reportsTo').value = f.reportsTo || '';
+        document.getElementById('salaryRange').value = f.salaryRange || '';
+        document.getElementById('aboutTeam').value = f.aboutTeam || '';
+        document.getElementById('aboutRole').value = f.aboutRole || '';
+        document.getElementById('responsibilities').value = f.responsibilities || '';
+        document.getElementById('qualRequired').value = f.qualRequired || '';
+        document.getElementById('qualNice').value = f.qualNice || '';
+
+        // Employment type
+        const empType = document.getElementById('employmentType');
+        for (let i = 0; i < empType.options.length; i++) {
+            if (empType.options[i].value === f.employmentType) { empType.selectedIndex = i; break; }
+        }
+
+        // Handle boilerplate fields — if template has content, uncheck default and fill
+        if (f.aboutCompany) {
+            document.getElementById('useDefaultAbout').checked = false;
+            document.getElementById('aboutCompany').disabled = false;
+            document.getElementById('aboutCompany').value = f.aboutCompany;
+        }
+        if (f.benefits) {
+            document.getElementById('useDefaultBenefits').checked = false;
+            document.getElementById('benefits').disabled = false;
+            document.getElementById('benefits').value = f.benefits;
+        }
+        if (f.eeo) {
+            document.getElementById('useDefaultEEO').checked = false;
+            document.getElementById('eeo').disabled = false;
+            document.getElementById('eeo').value = f.eeo;
+        }
+
+        showToast(`Loaded "${t.name}" — edit any field to customize`);
+
+        // Scroll to top of form
+        document.getElementById('panel-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderTemplates() {
+        const templates = getTemplates();
+
+        // ---- Picker grid on Create tab ----
+        const grid = document.getElementById('templateGrid');
+        const empty = document.getElementById('templateEmpty');
+
+        if (templates.length === 0) {
+            grid.style.display = 'none';
+            empty.style.display = 'block';
+        } else {
+            grid.style.display = 'grid';
+            empty.style.display = 'none';
+            grid.innerHTML = templates.map(t => {
+                const dept = t.fields.department;
+                const type = t.fields.employmentType || '';
+                const date = new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return `
+                    <div class="template-card" onclick="loadTemplate(${t.id})">
+                        <div class="template-card-title">${escapeHTML(t.name)}</div>
+                        <div class="template-card-meta">
+                            ${dept ? `<span class="template-card-dept">${escapeHTML(dept)}</span>` : ''}
+                            ${type ? `<span>${escapeHTML(type)}</span>` : ''}
+                            <span class="dot"></span>
+                            <span>${date}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ---- Admin list ----
+        const adminList = document.getElementById('templateAdminList');
+        const adminEmpty = document.getElementById('templateAdminEmpty');
+
+        if (templates.length === 0) {
+            adminList.style.display = 'none';
+            adminEmpty.style.display = 'block';
+        } else {
+            adminList.style.display = 'flex';
+            adminEmpty.style.display = 'none';
+            adminList.innerHTML = templates.map(t => {
+                const dept = t.fields.department;
+                const date = new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return `
+                    <div class="template-admin-item">
+                        <div class="template-admin-info">
+                            <span class="template-admin-name">${escapeHTML(t.name)}</span>
+                            ${dept ? `<span class="template-card-dept">${escapeHTML(dept)}</span>` : ''}
+                            <span style="font-size: 12px; color: var(--text-muted);">${date}</span>
+                        </div>
+                        <button class="btn-delete" onclick="deleteTemplate(${t.id})">Remove</button>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Template picker collapse/expand
+    document.getElementById('templateChevron').addEventListener('click', () => {
+        const body = document.getElementById('templatePickerBody');
+        const chevron = document.getElementById('templateChevron');
+        body.classList.toggle('collapsed');
+        chevron.classList.toggle('open');
+    });
+
     // ===== Init =====
     loadDefaultsIntoAdmin();
     setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
     setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
     setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
+    renderTemplates();
 </script>
 
 </body>
