@@ -1661,8 +1661,12 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
 
     function downloadAsDocx() {
         const payload = getExportPayload();
+        if (payload.sections.length === 0) {
+            showToast('Nothing to export — fill in the form first');
+            return;
+        }
         const html = buildStyledHTML(payload);
-        const blob = new Blob([html], { type: 'application/vnd.ms-word;charset=utf-8' });
+        const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
         const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -1671,17 +1675,46 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
         showToast('Downloaded .doc');
     }
 
-    function openInGoogleDocs() {
+    async function openInGoogleDocs() {
         const payload = getExportPayload();
+        if (payload.sections.length === 0) {
+            showToast('Nothing to export — fill in the form first');
+            return;
+        }
         const html = buildStyledHTML(payload);
-        const blob = new Blob([html], { type: 'application/vnd.ms-word;charset=utf-8' });
-        const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${slug}.doc`;
-        a.click();
-        showToast('File downloaded — now opening Google Docs...');
-        setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 600);
+
+        // Copy rich HTML to clipboard so user can paste into the new doc
+        try {
+            const htmlBlob = new Blob([html], { type: 'text/html' });
+            const textContent = buildPlainText(payload);
+            const textBlob = new Blob([textContent], { type: 'text/plain' });
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': htmlBlob,
+                    'text/plain': textBlob
+                })
+            ]);
+        } catch (e) {
+            // Fallback: copy plain text
+            const textContent = buildPlainText(payload);
+            await navigator.clipboard.writeText(textContent);
+        }
+
+        window.open('https://docs.google.com/document/create', '_blank');
+        showToast('Google Doc opened — paste with \u2318V (Cmd+V)');
+    }
+
+    function buildPlainText(payload) {
+        let text = payload.title + '\n' + payload.meta + '\n\n';
+        for (const s of payload.sections) {
+            text += s.heading.toUpperCase() + '\n' + '\u2500'.repeat(s.heading.length) + '\n\n';
+            if (s.type === 'bullets') {
+                text += s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => '  \u2022 ' + l).join('\n') + '\n\n';
+            } else {
+                text += s.content + '\n\n';
+            }
+        }
+        return text.trim();
     }
 
     // ===== Clear form =====
