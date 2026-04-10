@@ -965,54 +965,54 @@
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
 
-    async function downloadAsDocx() {
-        const payload = getExportPayload();
-        showToast('Generating document...');
-        try {
-            const response = await fetch('/api/export-docx', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) throw new Error('Failed to generate');
-            const blob = await response.blob();
-            const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${slug}.docx`;
-            a.click();
-            showToast('Downloaded .docx');
-        } catch (err) {
-            showToast('Error: ' + err.message);
+    function buildStyledHTML(payload) {
+        let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><style>
+body { font-family: Calibri, sans-serif; max-width: 680px; margin: 48px auto; padding: 0 24px; line-height: 1.75; color: #2A2826; }
+h1 { font-size: 24pt; margin-bottom: 2px; color: #2A2826; }
+.meta { color: #7A746C; font-size: 11pt; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #DCD6CD; }
+h2 { font-size: 10pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #B47844; margin-top: 28px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #DCD6CD; }
+p { color: #4A4540; font-size: 11pt; margin-bottom: 6px; }
+ul { padding-left: 18px; margin-top: 6px; }
+li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
+</style></head><body>`;
+        html += `<h1>${escapeHTML(payload.title)}</h1>`;
+        html += `<p class="meta">${escapeHTML(payload.meta)}</p>`;
+        for (const s of payload.sections) {
+            html += `<h2>${escapeHTML(s.heading)}</h2>`;
+            if (s.type === 'bullets') {
+                html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
+            } else {
+                html += s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<p>${escapeHTML(l)}</p>`).join('');
+            }
         }
+        html += '</body></html>';
+        return html;
     }
 
-    async function openInGoogleDocs() {
+    function downloadAsDocx() {
         const payload = getExportPayload();
-        showToast('Generating document...');
-        try {
-            const response = await fetch('/api/export-docx', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) throw new Error('Failed to generate');
-            const blob = await response.blob();
-            const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const html = buildStyledHTML(payload);
+        const blob = new Blob([html], { type: 'application/vnd.ms-word;charset=utf-8' });
+        const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${slug}.doc`;
+        a.click();
+        showToast('Downloaded .doc');
+    }
 
-            // Upload the .docx as a temp file, then open Google Docs import
-            // Google Docs can import .docx files directly via URL
-            // We'll download first, then redirect to Google Docs new doc with import
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${slug}.docx`;
-            a.click();
-            showToast('File downloaded — drag it into Google Drive or go to docs.google.com and open it');
-            // Open Google Docs in new tab for convenience
-            setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 800);
-        } catch (err) {
-            showToast('Error: ' + err.message);
-        }
+    function openInGoogleDocs() {
+        const payload = getExportPayload();
+        const html = buildStyledHTML(payload);
+        const blob = new Blob([html], { type: 'application/vnd.ms-word;charset=utf-8' });
+        const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${slug}.doc`;
+        a.click();
+        showToast('File downloaded — now opening Google Docs...');
+        setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 600);
     }
 
     // ===== Clear form =====
