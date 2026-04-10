@@ -987,8 +987,8 @@
 <div class="tabs">
     <div class="tab active" data-tab="home">Home</div>
     <div class="tab" data-tab="builder">Create</div>
-    <div class="tab" data-tab="defaults">Admin</div>
     <div class="tab" data-tab="preview">Preview & Export</div>
+    <div class="tab" data-tab="defaults">Admin</div>
 </div>
 
 <!-- ==================== BUILDER PANEL ==================== -->
@@ -2047,7 +2047,7 @@ Rules:
         }
     }
 
-    function saveUploadedTemplate() {
+    async function saveUploadedTemplate() {
         if (!parsedUploadData) { showToast('No parsed data'); return; }
         const name = document.getElementById('uploadTemplateName').value.trim();
         if (!name) { showToast('Give your template a name'); return; }
@@ -2074,14 +2074,21 @@ Rules:
             }
         };
 
-        const templates = getTemplates();
-        templates.unshift(template);
-        saveTemplates(templates);
-        renderTemplates();
-
-        resetUpload();
-        showToast(`Template "${name}" saved from upload`);
-        flashSaveStatus();
+        try {
+            const res = await fetch('/api/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template)
+            });
+            if (!res.ok) throw new Error('Save failed');
+            await renderTemplates();
+            resetUpload();
+            showToast(`Template "${name}" saved from upload`);
+            flashSaveStatus();
+        } catch (err) {
+            console.error('Failed to save uploaded template:', err);
+            showToast('Failed to save template — check connection');
+        }
     }
 
     function resetUpload() {
@@ -2093,19 +2100,22 @@ Rules:
         document.getElementById('uploadTemplateName').value = '';
     }
 
-    // ===== Template Library =====
-    const TEMPLATES_KEY = 'manifest_jd_templates';
+    // ===== Template Library (Server-backed) =====
+    let _templatesCache = null;
 
-    function getTemplates() {
-        try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY)) || []; }
-        catch { return []; }
+    async function getTemplates() {
+        try {
+            const res = await fetch('/api/templates');
+            if (!res.ok) throw new Error('Failed to fetch');
+            _templatesCache = await res.json();
+            return _templatesCache;
+        } catch (err) {
+            console.error('Failed to load templates:', err);
+            return _templatesCache || [];
+        }
     }
 
-    function saveTemplates(templates) {
-        localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
-    }
-
-    function saveAsTemplate() {
+    async function saveAsTemplate() {
         const name = document.getElementById('templateName').value.trim();
         if (!name) { showToast('Give your template a name first'); return; }
 
@@ -2131,27 +2141,46 @@ Rules:
             }
         };
 
-        const templates = getTemplates();
-        templates.unshift(template);
-        saveTemplates(templates);
+        try {
+            const res = await fetch('/api/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template)
+            });
+            if (!res.ok) throw new Error('Save failed');
 
-        document.getElementById('templateName').value = '';
-        renderTemplates();
-        showToast(`Template "${name}" saved`);
-        flashSaveStatus();
+            document.getElementById('templateName').value = '';
+            await renderTemplates();
+            showToast(`Template "${name}" saved`);
+            flashSaveStatus();
+        } catch (err) {
+            showToast('Failed to save template — check console');
+            console.error(err);
+        }
     }
 
-    function deleteTemplate(id) {
-        const templates = getTemplates();
+    async function deleteTemplate(id) {
+        const templates = await getTemplates();
         const t = templates.find(t => t.id === id);
         if (!confirm(`Delete template "${t?.name || 'Untitled'}"?`)) return;
-        saveTemplates(templates.filter(t => t.id !== id));
-        renderTemplates();
-        showToast('Template deleted');
+
+        try {
+            const res = await fetch('/api/templates', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (!res.ok) throw new Error('Delete failed');
+            await renderTemplates();
+            showToast('Template deleted');
+        } catch (err) {
+            showToast('Failed to delete template');
+            console.error(err);
+        }
     }
 
-    function loadTemplate(id) {
-        const templates = getTemplates();
+    async function loadTemplate(id) {
+        const templates = await getTemplates();
         const t = templates.find(t => t.id === id);
         if (!t) return;
 
@@ -2200,8 +2229,8 @@ Rules:
         document.getElementById('panel-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function renderTemplates() {
-        const templates = getTemplates();
+    async function renderTemplates() {
+        const templates = await getTemplates();
 
         // ---- Picker grid on Create tab ----
         const grid = document.getElementById('templateGrid');
@@ -2291,7 +2320,7 @@ Rules:
     setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
     setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
     setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
-    renderTemplates();
+    renderTemplates(); // async — fires and renders when API responds
 </script>
 
 </body>
