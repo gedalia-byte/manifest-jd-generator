@@ -335,8 +335,8 @@
         }
         .ai-bottom-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            align-items: flex-start;
+            justify-content: flex-end;
             margin-top: 8px;
         }
         .btn-ai {
@@ -355,6 +355,16 @@
             align-items: center;
             gap: 5px;
             white-space: nowrap;
+        }
+        .btn-ai.btn-ai-primary {
+            background: var(--amber);
+            color: var(--white);
+            border-color: var(--amber);
+        }
+        .btn-ai.btn-ai-primary:hover {
+            background: var(--amber-light);
+            border-color: var(--amber-light);
+            box-shadow: 0 2px 10px rgba(180,120,68,0.25);
         }
         .btn-ai:hover {
             background: var(--amber);
@@ -383,6 +393,10 @@
             font-size: 11px;
             color: var(--text-muted);
             line-height: 1.4;
+        }
+        .ai-btn-wrapper {
+            display: flex;
+            flex-direction: column;
         }
 
         /* AI Chat Popover */
@@ -452,8 +466,9 @@
             color: var(--text-muted);
         }
 
-        /* Smart Format description */
-        .smart-format-desc {
+        /* AI button descriptions */
+        .smart-format-desc,
+        .ai-btn-desc {
             font-size: 10.5px;
             color: var(--text-muted);
             margin-top: 3px;
@@ -1187,8 +1202,8 @@
         /* Per-field AI Suggest */
         .ai-btn-group {
             display: flex;
-            gap: 6px;
-            align-items: center;
+            gap: 10px;
+            align-items: flex-start;
         }
 
         /* ===== Responsive ===== */
@@ -1443,12 +1458,14 @@
         <div class="field field-with-ai">
             <textarea id="aboutTeam" rows="4" placeholder="e.g. &quot;it's the growth team, about 8 people, we focus on acquisition and activation, work closely with product and marketing&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="openAiChat('aboutTeam','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('aboutTeam','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
                         <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="smart-format-desc">Cleans up your writing — keeps your ideas, polishes the language</div>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
                     </div>
                 </div>
             </div>
@@ -1471,12 +1488,14 @@
         <div class="field field-with-ai">
             <textarea id="aboutRole" rows="4" placeholder="e.g. &quot;this person will own our onboarding flow end to end, big impact on retention, reports to the head of growth&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="openAiChat('aboutRole','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('aboutRole','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
                         <button class="btn-ai" onclick="smartFormat('aboutRole','prose')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="smart-format-desc">Cleans up your writing — keeps your ideas, polishes the language</div>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
                     </div>
                 </div>
             </div>
@@ -1499,12 +1518,14 @@
         <div class="field field-with-ai">
             <textarea id="responsibilities" rows="6" placeholder="e.g. &quot;they'll design user flows, work with engineers on implementation, do user research, own the design system, present to stakeholders&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="openAiChat('responsibilities','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('responsibilities','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
                         <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
                     </div>
                 </div>
             </div>
@@ -1528,12 +1549,14 @@
             <label>Required</label>
             <textarea id="qualRequired" rows="5" placeholder="e.g. &quot;need someone senior, at least 5 years in product design, strong portfolio, knows figma well, has shipped real products&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="openAiChat('qualRequired','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('qualRequired','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
                         <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
                     </div>
                 </div>
             </div>
@@ -1552,12 +1575,14 @@
             <label>Nice to Have <span class="optional">(optional)</span></label>
             <textarea id="qualNice" rows="4" placeholder="e.g. &quot;b2b saas experience would be great, if they know design systems that's a plus&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="openAiChat('qualNice','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('qualNice','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
                         <button class="btn-ai" onclick="smartFormat('qualNice','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
                     </div>
                 </div>
             </div>
