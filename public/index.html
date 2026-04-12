@@ -951,6 +951,170 @@
             letter-spacing: -0.3px;
         }
 
+        /* ===== Start Mode Section ===== */
+        .start-section {
+            margin-bottom: 20px;
+        }
+        .start-modes {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .start-mode-card {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius);
+            padding: 20px 18px;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-align: center;
+            position: relative;
+        }
+        .start-mode-card:hover {
+            border-color: var(--amber-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        .start-mode-card.active {
+            border-color: var(--amber);
+            background: var(--amber-glow);
+            box-shadow: var(--shadow-md);
+        }
+        .start-mode-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .start-mode-title {
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-size: 15px;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+        .start-mode-desc {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .start-mode-content {
+            display: none;
+            animation: fadeSlideIn 0.25s ease;
+        }
+        .start-mode-content.active {
+            display: block;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI Generate panel */
+        .ai-generate-panel {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-left: 3px solid var(--amber);
+            border-radius: var(--radius);
+            padding: 24px;
+        }
+        .ai-generate-panel textarea {
+            width: 100%;
+            min-height: 80px;
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            background: var(--cream);
+            color: var(--text);
+            transition: border-color var(--transition);
+        }
+        .ai-generate-panel textarea:focus {
+            outline: none;
+            border-color: var(--amber);
+        }
+        .ai-generate-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* Upload zone for Create tab */
+        .create-upload-zone {
+            border: 2px dashed var(--stone);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            background: var(--cream);
+            position: relative;
+        }
+        .create-upload-zone:hover, .create-upload-zone.dragover {
+            border-color: var(--amber);
+            background: var(--amber-glow);
+        }
+        .create-upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .create-upload-loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .create-upload-loading.active { display: block; }
+
+        /* AI Edit Bar */
+        .ai-edit-bar {
+            background: var(--white);
+            border: 1px solid var(--stone);
+            border-left: 3px solid var(--amber);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .ai-edit-bar input {
+            flex: 1;
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: inherit;
+            font-size: 13px;
+            background: var(--cream);
+            color: var(--text);
+            transition: border-color var(--transition);
+        }
+        .ai-edit-bar input:focus {
+            outline: none;
+            border-color: var(--amber);
+        }
+        .ai-edit-bar .ai-edit-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--amber);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Per-field AI Suggest */
+        .ai-btn-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
         /* ===== Responsive ===== */
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
@@ -969,6 +1133,9 @@
             .home-path-steps { grid-column: 1; grid-row: auto; }
             .home-path-time { grid-column: 1; grid-row: auto; align-self: start; }
             .home-path-desc { max-width: 100%; }
+            .start-modes { grid-template-columns: repeat(2, 1fr); }
+            .ai-edit-bar { flex-direction: column; align-items: stretch; }
+            .ai-btn-group { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -1060,52 +1227,71 @@
 <!-- ==================== BUILDER PANEL ==================== -->
 <div class="panel" id="panel-builder">
 
-    <!-- Template Picker -->
-    <div class="template-picker">
-        <div class="card">
-            <div class="template-header-row">
-                <div>
-                    <h2>Start from a Template</h2>
-                    <p class="subtitle" style="margin-bottom: 0;">Pick a curated JD to pre-fill the form, then customize it for your role</p>
+    <!-- How do you want to start? -->
+    <div class="start-section">
+        <div class="card" style="padding-bottom: 8px;">
+            <h2 style="margin-bottom: 4px;">How do you want to start?</h2>
+            <p class="subtitle">Pick a starting point — you can always edit everything after</p>
+
+            <div class="start-modes">
+                <div class="start-mode-card" onclick="selectStartMode('template')" id="startMode-template">
+                    <div class="start-mode-icon">&#128203;</div>
+                    <div class="start-mode-title">From Template</div>
+                    <div class="start-mode-desc">Pick a saved template to pre-fill the form</div>
                 </div>
-                <span class="chevron open" id="templateChevron" style="cursor: pointer; font-size: 11px; color: var(--text-muted); transition: transform 0.2s;">&#9654;</span>
+                <div class="start-mode-card" onclick="selectStartMode('upload')" id="startMode-upload">
+                    <div class="start-mode-icon">&#128196;</div>
+                    <div class="start-mode-title">Upload a JD</div>
+                    <div class="start-mode-desc">PDF or Word — AI parses it into fields</div>
+                </div>
+                <div class="start-mode-card" onclick="selectStartMode('ai')" id="startMode-ai">
+                    <div class="start-mode-icon">&#9889;</div>
+                    <div class="start-mode-title">Generate with AI</div>
+                    <div class="start-mode-desc">Describe the role, AI writes everything</div>
+                </div>
+                <div class="start-mode-card" onclick="selectStartMode('scratch')" id="startMode-scratch">
+                    <div class="start-mode-icon">&#9998;</div>
+                    <div class="start-mode-title">From Scratch</div>
+                    <div class="start-mode-desc">Start with a blank form — Tab fills examples</div>
+                </div>
             </div>
-            <div id="templatePickerBody">
+
+            <!-- Template content -->
+            <div class="start-mode-content" id="startContent-template">
                 <div class="template-grid" id="templateGrid">
                     <!-- templates populated by JS -->
                 </div>
                 <div class="template-empty" id="templateEmpty">
                     <div class="template-empty-icon">&#128203;</div>
-                    No templates yet.<br>Admins can save templates from the <strong>Admin</strong> tab.
+                    No templates yet.<br>Save templates from the <strong>Admin</strong> tab or <strong>Preview & Export</strong> tab.
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- AI Assistant -->
-    <div class="card" style="border-left: 3px solid var(--amber);">
-        <h2 style="display: flex; align-items: center; gap: 8px;">&#9889; AI Assistant</h2>
-        <p class="subtitle">Ask a question, generate content for a specific field, or tell AI to edit the entire JD at once.</p>
-        <div class="field">
-            <textarea id="aiPrompt" rows="2" placeholder='e.g. "Make this role more senior" · "Add remote work benefits" · "What qualifications should a design lead have?"'></textarea>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px;">
-            <button class="btn btn-accent" onclick="askAI()" id="aiAskBtn">Ask AI</button>
-            <select id="aiInsertTarget" style="max-width: 220px; font-size: 13px;">
-                <option value="">Copy result manually</option>
-                <option value="aboutTeam">Insert into → About the Team</option>
-                <option value="aboutRole">Insert into → About the Role</option>
-                <option value="responsibilities">Insert into → Responsibilities</option>
-                <option value="qualRequired">Insert into → Qualifications (Required)</option>
-                <option value="qualNice">Insert into → Qualifications (Nice to Have)</option>
-            </select>
-            <span style="color: var(--text-muted); font-size: 12px;">or</span>
-            <button class="btn-ai" onclick="aiEditEntireJD()" id="aiEditBtn" style="padding: 8px 16px; font-size: 12px;">&#9889; Apply to Entire JD</button>
-        </div>
-        <div id="aiResult" style="display: none; margin-top: 16px; padding: 16px; background: var(--cream); border: 1px solid var(--stone); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: var(--text-secondary);"></div>
-        <div id="aiResultActions" style="display: none; margin-top: 8px;" class="btn-row">
-            <button class="btn btn-secondary" onclick="copyAIResult()" style="font-size: 12px;">Copy</button>
-            <button class="btn btn-accent" onclick="insertAIResult()" style="font-size: 12px;">Insert into Field</button>
+            <!-- Upload content -->
+            <div class="start-mode-content" id="startContent-upload">
+                <div class="create-upload-zone" id="createUploadZone">
+                    <input type="file" id="createFileInput" accept=".pdf,.docx,.doc" onchange="handleCreateUpload(this.files[0])">
+                    <div class="upload-zone-icon">&#128196;</div>
+                    <div class="upload-zone-text">Drop a file here or click to browse</div>
+                    <div class="upload-zone-hint">PDF or .docx &middot; Max 10 MB &middot; AI will parse and fill the form</div>
+                </div>
+                <div class="create-upload-loading" id="createUploadLoading">
+                    <div class="ai-spinner" style="width: 20px; height: 20px; margin: 0 auto 12px;"></div>
+                    <div id="createUploadStatus">Extracting text...</div>
+                </div>
+            </div>
+
+            <!-- AI Generate content -->
+            <div class="start-mode-content" id="startContent-ai">
+                <div class="ai-generate-panel">
+                    <label style="font-size: 13px; font-weight: 600; color: var(--charcoal); margin-bottom: 8px; display: block;">Describe the role you're hiring for</label>
+                    <textarea id="aiGeneratePrompt" placeholder="e.g. &quot;We need a Senior Product Designer for our growth team in NYC. They'll own the onboarding flow, work closely with engineering and marketing. Need 5+ years experience, strong Figma skills, and B2B SaaS background. Hybrid role, reports to VP of Design.&quot;"></textarea>
+                    <div class="ai-generate-hint">Be as detailed or brief as you want — AI will expand it into a full job description</div>
+                    <div style="margin-top: 12px;">
+                        <button class="btn btn-accent" onclick="aiGenerate()" id="aiGenerateBtn">&#9889; Generate Full JD</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1170,36 +1356,45 @@
 
     <div class="card">
         <h2>About the Team</h2>
-        <p class="subtitle">Describe the team — or just chat naturally and hit Smart Format</p>
+        <p class="subtitle">Describe the team — type rough notes and AI will polish, or let AI suggest from scratch</p>
         <div class="field field-with-ai">
             <textarea id="aboutTeam" rows="4" placeholder="e.g. &quot;it's the growth team, about 8 people, we focus on acquisition and activation, work closely with product and marketing&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Type rough notes or full sentences — Smart Format will polish it</div>
-                <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')"><span class="spark">&#9889;</span> Smart Format</button>
+                <div class="ai-hint">Type rough notes — or leave empty and click AI Suggest</div>
+                <div class="ai-btn-group">
+                    <button class="btn-ai" onclick="aiSuggest('aboutTeam','prose')" title="Generate content based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="card">
         <h2>About the Role</h2>
-        <p class="subtitle">High-level summary — casual input is fine</p>
+        <p class="subtitle">High-level summary — casual input is fine, AI can help</p>
         <div class="field field-with-ai">
             <textarea id="aboutRole" rows="4" placeholder="e.g. &quot;this person will own our onboarding flow end to end, big impact on retention, reports to the head of growth&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Type rough notes or full sentences — Smart Format will polish it</div>
-                <button class="btn-ai" onclick="smartFormat('aboutRole','prose')"><span class="spark">&#9889;</span> Smart Format</button>
+                <div class="ai-hint">Type rough notes — or leave empty and click AI Suggest</div>
+                <div class="ai-btn-group">
+                    <button class="btn-ai" onclick="aiSuggest('aboutRole','prose')" title="Generate content based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <button class="btn-ai" onclick="smartFormat('aboutRole','prose')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="card">
         <h2>Responsibilities</h2>
-        <p class="subtitle">List them out or describe them casually</p>
+        <p class="subtitle">List them or describe casually — AI can generate or polish</p>
         <div class="field field-with-ai">
             <textarea id="responsibilities" rows="6" placeholder="e.g. &quot;they'll design user flows, work with engineers on implementation, do user research, own the design system, present to stakeholders&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">One per line or free-form — Smart Format will create clean bullet points</div>
-                <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+                <div class="ai-hint">One per line or free-form — Smart Format creates clean bullets</div>
+                <div class="ai-btn-group">
+                    <button class="btn-ai" onclick="aiSuggest('responsibilities','bullets')" title="Generate responsibilities based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')" title="Polish your existing text into bullets"><span class="spark">&#10024;</span> Smart Format</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1211,8 +1406,11 @@
             <label>Required</label>
             <textarea id="qualRequired" rows="5" placeholder="e.g. &quot;need someone senior, at least 5 years in product design, strong portfolio, knows figma well, has shipped real products&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Describe what you need — Smart Format will structure it</div>
-                <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+                <div class="ai-hint">Describe what you need — or let AI suggest based on the role</div>
+                <div class="ai-btn-group">
+                    <button class="btn-ai" onclick="aiSuggest('qualRequired','bullets')" title="Generate qualifications based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                </div>
             </div>
         </div>
         <div class="field field-with-ai">
@@ -1220,7 +1418,10 @@
             <textarea id="qualNice" rows="4" placeholder="e.g. &quot;b2b saas experience would be great, if they know design systems that's a plus&quot;"></textarea>
             <div class="ai-bottom-row">
                 <div class="ai-hint"></div>
-                <button class="btn-ai" onclick="smartFormat('qualNice','bullets')"><span class="spark">&#9889;</span> Smart Format</button>
+                <div class="ai-btn-group">
+                    <button class="btn-ai" onclick="aiSuggest('qualNice','bullets')" title="Generate nice-to-haves based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <button class="btn-ai" onclick="smartFormat('qualNice','bullets')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1261,6 +1462,13 @@
                 <textarea id="eeo" rows="3" disabled></textarea>
             </div>
         </div>
+    </div>
+
+    <!-- AI Edit Bar -->
+    <div class="ai-edit-bar">
+        <div class="ai-edit-label">&#9889; AI Edit</div>
+        <input type="text" id="aiEditInput" placeholder='e.g. "Make this more senior" · "Add remote work perks" · "Rewrite for a startup tone"' onkeydown="if(event.key==='Enter'){aiEditEntireJD(); event.preventDefault();}">
+        <button class="btn btn-accent" onclick="aiEditEntireJD()" id="aiEditBtn" style="white-space: nowrap;">Apply to All</button>
     </div>
 
     <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
@@ -1808,33 +2016,82 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
         showToast('Form cleared');
     }
 
-    // ===== AI Assistant =====
-    async function askAI() {
-        const prompt = document.getElementById('aiPrompt').value.trim();
-        if (!prompt) { showToast('Type a question first'); return; }
+    // ===== Start Mode Selection =====
+    let activeStartMode = null;
 
-        const jobTitle = document.getElementById('jobTitle').value || '';
-        const dept = document.getElementById('department').value || '';
+    function selectStartMode(mode) {
+        // Toggle off if clicking the same mode
+        if (activeStartMode === mode) {
+            document.getElementById('startMode-' + mode).classList.remove('active');
+            document.getElementById('startContent-' + mode).classList.remove('active');
+            activeStartMode = null;
+            return;
+        }
 
-        const context = [jobTitle, dept].filter(Boolean).join(', ');
+        // Deactivate previous
+        if (activeStartMode) {
+            document.getElementById('startMode-' + activeStartMode).classList.remove('active');
+            document.getElementById('startContent-' + activeStartMode).classList.remove('active');
+        }
 
-        const systemPrompt = `You are an expert HR consultant and recruiter. The user is building a job description${context ? ' for a ' + context + ' role' : ''}. Answer their question with practical, specific, professional content they can use directly in a job description.
+        // For "scratch" — just scroll to form, no expanded content
+        if (mode === 'scratch') {
+            document.getElementById('startMode-scratch').classList.add('active');
+            activeStartMode = mode;
+            setTimeout(() => {
+                document.querySelector('#panel-builder .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            // Auto-deactivate after scroll
+            setTimeout(() => {
+                document.getElementById('startMode-scratch').classList.remove('active');
+                activeStartMode = null;
+            }, 1500);
+            return;
+        }
 
-Rules:
-- If they ask about qualifications, responsibilities, or similar list-type content: return clean bullet points, one per line, no bullet characters or dashes — just the text
-- If they ask about descriptions or summaries: return polished prose, 2-4 sentences
-- Be specific and practical, not generic
-- Draw on real industry knowledge about what top candidates look like
-- No preamble like "Here are..." — just the content itself`;
+        // Activate new mode
+        document.getElementById('startMode-' + mode).classList.add('active');
+        document.getElementById('startContent-' + mode).classList.add('active');
+        activeStartMode = mode;
+    }
 
-        const btn = document.getElementById('aiAskBtn');
-        btn.textContent = 'Thinking...';
+    // ===== AI Generate (full JD from description) =====
+    async function aiGenerate() {
+        const prompt = document.getElementById('aiGeneratePrompt').value.trim();
+        if (!prompt) { showToast('Describe the role you want to create'); return; }
+
+        const btn = document.getElementById('aiGenerateBtn');
+        const origText = btn.innerHTML;
+        btn.innerHTML = '&#9889; Generating...';
         btn.disabled = true;
 
-        const resultDiv = document.getElementById('aiResult');
-        const actionsDiv = document.getElementById('aiResultActions');
-        resultDiv.style.display = 'none';
-        actionsDiv.style.display = 'none';
+        const systemPrompt = `You are an expert HR consultant creating a complete job description from a user's description. Generate a full, professional JD and return ONLY valid JSON (no markdown, no code fences) with these exact keys:
+
+{
+  "jobTitle": "the job title",
+  "department": "department or team",
+  "location": "location",
+  "employmentType": "Full-Time, Part-Time, Contract, or Internship",
+  "reportsTo": "who this role reports to, or empty string",
+  "salaryRange": "suggested range based on role/market, or empty string",
+  "aboutCompany": "",
+  "aboutTeam": "2-3 sentences about the team based on what the user described",
+  "aboutRole": "2-4 sentence compelling summary of the role",
+  "responsibilities": "each on its own line, no bullets or dashes, 6-10 items",
+  "qualRequired": "each on its own line, no bullets or dashes, 5-8 items",
+  "qualNice": "each on its own line, no bullets or dashes, 3-5 items",
+  "benefits": "",
+  "eeo": ""
+}
+
+Rules:
+- Extract as much detail as possible from the user's description
+- Fill in reasonable professional content for any sections the user didn't explicitly mention
+- For responsibilities and qualifications, be specific to the role — not generic
+- aboutCompany, benefits, and eeo should be empty strings (the tool has saved defaults for those)
+- For list fields, put each item on a new line with no bullet characters
+- Be thorough and professional but not overly corporate
+- Return ONLY the JSON — no explanation`;
 
         try {
             const response = await fetch('/api/format', {
@@ -1846,40 +2103,222 @@ Rules:
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Server error');
 
-            if (data.text) {
-                resultDiv.textContent = data.text;
-                resultDiv.style.display = 'block';
-                actionsDiv.style.display = 'flex';
-                showToast('Done!');
-            } else {
-                throw new Error('No response');
-            }
+            let text = data.text || '';
+            text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
+
+            const generated = JSON.parse(text);
+            applyFieldsToForm(generated);
+
+            showToast('JD generated! Review and customize below.');
+            // Scroll to the form
+            setTimeout(() => {
+                document.querySelector('#panel-builder .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+
         } catch (err) {
-            showToast('Error: ' + err.message);
+            console.error('AI Generate error:', err);
+            showToast('Error: ' + (err.message || 'AI could not generate the JD'));
         } finally {
-            btn.textContent = 'Ask AI';
+            btn.innerHTML = origText;
             btn.disabled = false;
         }
     }
 
-    function copyAIResult() {
-        const text = document.getElementById('aiResult').textContent;
-        navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+    // ===== Upload in Create tab (fills form directly) =====
+    const createUploadZone = document.getElementById('createUploadZone');
+    ['dragenter', 'dragover'].forEach(evt => {
+        createUploadZone.addEventListener(evt, e => { e.preventDefault(); createUploadZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        createUploadZone.addEventListener(evt, e => { e.preventDefault(); createUploadZone.classList.remove('dragover'); });
+    });
+    createUploadZone.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        if (file) handleCreateUpload(file);
+    });
+
+    async function handleCreateUpload(file) {
+        if (!file) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'docx', 'doc'].includes(ext)) {
+            showToast('Please upload a PDF or .docx file');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('File too large — max 10 MB');
+            return;
+        }
+
+        // Show loading
+        createUploadZone.style.display = 'none';
+        document.getElementById('createUploadLoading').classList.add('active');
+        document.getElementById('createUploadStatus').textContent = 'Extracting text...';
+
+        try {
+            let rawText = '';
+            if (ext === 'pdf') {
+                rawText = await extractTextFromPDF(file);
+            } else {
+                rawText = await extractTextFromDocx(file);
+            }
+
+            if (!rawText || rawText.trim().length < 20) {
+                throw new Error('Could not extract enough text from the file');
+            }
+
+            document.getElementById('createUploadStatus').textContent = 'AI is parsing the job description...';
+            const parsed = await parseJDWithAI(rawText);
+
+            // Fill form directly
+            applyFieldsToForm(parsed);
+
+            showToast('JD loaded from file! Review and customize below.');
+            // Reset upload UI
+            createUploadZone.style.display = '';
+            document.getElementById('createUploadLoading').classList.remove('active');
+            document.getElementById('createFileInput').value = '';
+
+            // Scroll to form
+            setTimeout(() => {
+                document.querySelector('#panel-builder .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+
+        } catch (err) {
+            createUploadZone.style.display = '';
+            document.getElementById('createUploadLoading').classList.remove('active');
+            showToast('Error: ' + err.message);
+            console.error('Create upload error:', err);
+        }
     }
 
-    function insertAIResult() {
-        const target = document.getElementById('aiInsertTarget').value;
-        if (!target) { showToast('Select a field from the dropdown first'); return; }
-        const ta = document.getElementById(target);
-        const text = document.getElementById('aiResult').textContent;
-        ta.value = ta.value ? ta.value + '\n' + text : text;
-        showToast('Inserted!');
-        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // ===== Shared: Apply fields to form =====
+    function applyFieldsToForm(data) {
+        const fieldIds = ['jobTitle','department','location','employmentType','reportsTo','salaryRange',
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice','benefits','eeo'];
+        fieldIds.forEach(id => {
+            if (data[id] !== undefined && data[id] !== '') {
+                const el = document.getElementById(id);
+                if (id === 'employmentType') {
+                    for (let i = 0; i < el.options.length; i++) {
+                        if (el.options[i].value === data[id]) { el.selectedIndex = i; break; }
+                    }
+                } else {
+                    // Uncheck default toggle if it's a boilerplate field
+                    if (id === 'aboutCompany' && data[id]) {
+                        document.getElementById('useDefaultAbout').checked = false;
+                        el.disabled = false;
+                    }
+                    if (id === 'benefits' && data[id]) {
+                        document.getElementById('useDefaultBenefits').checked = false;
+                        el.disabled = false;
+                    }
+                    if (id === 'eeo' && data[id]) {
+                        document.getElementById('useDefaultEEO').checked = false;
+                        el.disabled = false;
+                    }
+                    el.value = data[id];
+                }
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    }
+
+    // ===== AI Suggest (generate content for a single field) =====
+    async function aiSuggest(fieldId, mode) {
+        const ta = document.getElementById(fieldId);
+
+        // Gather context from other filled fields
+        const jobTitle = document.getElementById('jobTitle').value || '';
+        const dept = document.getElementById('department').value || '';
+        const location = document.getElementById('location').value || '';
+        const empType = document.getElementById('employmentType').value || '';
+        const aboutRole = document.getElementById('aboutRole').value || '';
+        const responsibilities = document.getElementById('responsibilities').value || '';
+
+        const context = [
+            jobTitle && `Job Title: ${jobTitle}`,
+            dept && `Department: ${dept}`,
+            location && `Location: ${location}`,
+            empType && `Type: ${empType}`,
+            aboutRole && fieldId !== 'aboutRole' && `Role Summary: ${aboutRole}`,
+            responsibilities && fieldId !== 'responsibilities' && `Responsibilities: ${responsibilities}`
+        ].filter(Boolean).join('\n');
+
+        if (!jobTitle && !dept) {
+            showToast('Fill in at least the Job Title or Department first — AI needs context');
+            return;
+        }
+
+        const fieldLabels = {
+            aboutTeam: 'About the Team',
+            aboutRole: 'About the Role',
+            responsibilities: 'Responsibilities',
+            qualRequired: 'Required Qualifications',
+            qualNice: 'Nice-to-Have Qualifications'
+        };
+
+        const existingContent = ta.value.trim();
+
+        let systemPrompt;
+        if (mode === 'bullets') {
+            systemPrompt = `You are an expert HR consultant. Generate the "${fieldLabels[fieldId]}" section for a job description based on the role context provided.${existingContent ? ' The user has some existing content — enhance and expand on it, keeping their input.' : ''}
+
+Rules:
+- Return ONLY the content, one item per line, no bullet characters or dashes — just the text
+- Each point should be clear, professional, and specific to this role
+- Start with strong verbs (for responsibilities) or clear qualifiers (for qualifications)
+- Typically 5-8 items
+- Be specific to the role, not generic
+- No preamble like "Here are..." — just the lines`;
+        } else {
+            systemPrompt = `You are an expert HR consultant. Generate the "${fieldLabels[fieldId]}" section for a job description based on the role context provided.${existingContent ? ' The user has some existing content — enhance and polish it, keeping their core ideas.' : ''}
+
+Rules:
+- Return ONLY polished prose — 2-4 sentences
+- Professional but warm tone
+- Specific to the role described
+- No headings, no preamble — just the content`;
+        }
+
+        const userMessage = `ROLE CONTEXT:\n${context}${existingContent ? '\n\nEXISTING CONTENT:\n' + existingContent : ''}`;
+
+        // Find the AI Suggest button in this field
+        const btn = ta.closest('.field-with-ai').querySelectorAll('.btn-ai')[0];
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="ai-spinner"></span> Suggesting...';
+        btn.classList.add('loading');
+        ta.style.opacity = '0.5';
+
+        try {
+            const response = await fetch('/api/format', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ system: systemPrompt, userMessage })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Server error');
+
+            if (data.text) {
+                ta.value = data.text;
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
+                showToast('Suggested!');
+            } else {
+                throw new Error('No response from AI');
+            }
+        } catch (err) {
+            showToast('Error: ' + err.message);
+            console.error('AI Suggest error:', err);
+        } finally {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('loading');
+            ta.style.opacity = '1';
+        }
     }
 
     // ===== AI Edit Entire JD =====
     async function aiEditEntireJD() {
-        const instruction = document.getElementById('aiPrompt').value.trim();
+        const instruction = document.getElementById('aiEditInput').value.trim();
         if (!instruction) { showToast('Type what you want AI to change'); return; }
 
         // Gather all current form fields
@@ -1896,8 +2335,8 @@ Rules:
         }
 
         const btn = document.getElementById('aiEditBtn');
-        const origHTML = btn.innerHTML;
-        btn.innerHTML = '&#9889; Applying...';
+        const origText = btn.textContent;
+        btn.textContent = 'Applying...';
         btn.disabled = true;
 
         const systemPrompt = `You are an expert HR consultant editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change. Apply the instruction across ALL relevant fields and return the complete updated JSON.
@@ -1944,36 +2383,21 @@ Rules:
             text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
 
             const updated = JSON.parse(text);
+            applyFieldsToForm(updated);
 
-            // Apply all fields back to the form
-            fieldIds.forEach(id => {
-                if (updated[id] !== undefined) {
-                    document.getElementById(id).value = updated[id];
-                    // Trigger input event for autosave
-                    document.getElementById(id).dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            });
-
+            document.getElementById('aiEditInput').value = '';
             showToast('JD updated by AI!');
             // Scroll to top of form to see changes
-            document.getElementById('panel-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelector('#panel-builder .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         } catch (err) {
             console.error('AI Edit error:', err);
             showToast('Error: ' + (err.message || 'AI could not apply the edit'));
         } finally {
-            btn.innerHTML = origHTML;
+            btn.textContent = origText;
             btn.disabled = false;
         }
     }
-
-    // Allow Enter key to submit AI prompt
-    document.getElementById('aiPrompt').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            askAI();
-        }
-    });
 
     // ===== Smart Format (calls server proxy) =====
     async function smartFormat(textareaId, mode) {
@@ -2466,8 +2890,15 @@ Rules:
 
         showToast(`Loaded "${t.name}" — edit any field to customize`);
 
-        // Scroll to top of form
-        document.getElementById('panel-builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Close start section and scroll to form
+        if (activeStartMode) {
+            document.getElementById('startMode-' + activeStartMode).classList.remove('active');
+            document.getElementById('startContent-' + activeStartMode).classList.remove('active');
+            activeStartMode = null;
+        }
+        setTimeout(() => {
+            document.querySelector('#panel-builder .card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
     }
 
     async function renderTemplates() {
@@ -2528,13 +2959,7 @@ Rules:
         }
     }
 
-    // Template picker collapse/expand
-    document.getElementById('templateChevron').addEventListener('click', () => {
-        const body = document.getElementById('templatePickerBody');
-        const chevron = document.getElementById('templateChevron');
-        body.classList.toggle('collapsed');
-        chevron.classList.toggle('open');
-    });
+    // Create upload zone drag-and-drop setup is in the start mode section above
 
     // ===== Tab-to-fill placeholder =====
     document.getElementById('panel-builder').addEventListener('keydown', function(e) {
