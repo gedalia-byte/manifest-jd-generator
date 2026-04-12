@@ -2065,18 +2065,20 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
         btn.innerHTML = '&#9889; Generating...';
         btn.disabled = true;
 
-        const systemPrompt = `You are an expert HR consultant creating a complete job description from a user's description. Generate a full, professional JD and return ONLY valid JSON (no markdown, no code fences) with these exact keys:
+        const systemPrompt = `You are a world-class talent acquisition strategist who writes job descriptions that attract top candidates. You understand what A-players look for in a JD and how to position a role to stand out in a competitive market.
+
+Generate a complete, professional job description from the user's input. Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
-  "jobTitle": "the job title",
+  "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
   "department": "department or team",
-  "location": "location",
+  "location": "location including work arrangement if mentioned (Remote, Hybrid, On-site)",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
-  "reportsTo": "who this role reports to, or empty string",
-  "salaryRange": "suggested range based on role/market, or empty string",
+  "reportsTo": "who this role reports to, or empty string if not mentioned",
+  "salaryRange": "empty string (leave for the user to fill)",
   "aboutCompany": "",
-  "aboutTeam": "2-3 sentences about the team based on what the user described",
-  "aboutRole": "2-4 sentence compelling summary of the role",
+  "aboutTeam": "2-3 sentences: what the team does, how big it is, what they care about, who they collaborate with. Make it feel real, not templated.",
+  "aboutRole": "2-4 sentences: why this role exists, what impact it has, what makes it exciting. Lead with the mission, not the tasks.",
   "responsibilities": "each on its own line, no bullets or dashes, 6-10 items",
   "qualRequired": "each on its own line, no bullets or dashes, 5-8 items",
   "qualNice": "each on its own line, no bullets or dashes, 3-5 items",
@@ -2084,13 +2086,14 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
   "eeo": ""
 }
 
-Rules:
-- Extract as much detail as possible from the user's description
-- Fill in reasonable professional content for any sections the user didn't explicitly mention
-- For responsibilities and qualifications, be specific to the role — not generic
-- aboutCompany, benefits, and eeo should be empty strings (the tool has saved defaults for those)
+Writing principles:
+- Responsibilities should start with strong action verbs and describe outcomes, not just tasks ("Own the end-to-end onboarding experience" not "Work on onboarding")
+- Required qualifications should be genuinely required — don't inflate. Separate true must-haves from nice-to-haves
+- Nice-to-haves should signal growth areas and bonus skills that would accelerate impact
+- Use natural, confident language — not corporate jargon or buzzword soup
+- Be specific to this role and industry — generic bullets like "strong communication skills" should be contextualized ("Communicate design decisions clearly to engineering and product stakeholders")
+- aboutCompany, benefits, and eeo should be empty strings (the tool has saved company defaults for those)
 - For list fields, put each item on a new line with no bullet characters
-- Be thorough and professional but not overly corporate
 - Return ONLY the JSON — no explanation`;
 
         try {
@@ -2227,21 +2230,29 @@ Rules:
     async function aiSuggest(fieldId, mode) {
         const ta = document.getElementById(fieldId);
 
-        // Gather context from other filled fields
+        // Gather rich context from all filled fields
         const jobTitle = document.getElementById('jobTitle').value || '';
         const dept = document.getElementById('department').value || '';
         const location = document.getElementById('location').value || '';
         const empType = document.getElementById('employmentType').value || '';
+        const reportsTo = document.getElementById('reportsTo').value || '';
+        const salary = document.getElementById('salaryRange').value || '';
+        const aboutTeam = document.getElementById('aboutTeam').value || '';
         const aboutRole = document.getElementById('aboutRole').value || '';
         const responsibilities = document.getElementById('responsibilities').value || '';
+        const qualRequired = document.getElementById('qualRequired').value || '';
 
         const context = [
             jobTitle && `Job Title: ${jobTitle}`,
             dept && `Department: ${dept}`,
             location && `Location: ${location}`,
             empType && `Type: ${empType}`,
-            aboutRole && fieldId !== 'aboutRole' && `Role Summary: ${aboutRole}`,
-            responsibilities && fieldId !== 'responsibilities' && `Responsibilities: ${responsibilities}`
+            reportsTo && `Reports To: ${reportsTo}`,
+            salary && `Salary Range: ${salary}`,
+            aboutTeam && fieldId !== 'aboutTeam' && `About the Team: ${aboutTeam}`,
+            aboutRole && fieldId !== 'aboutRole' && `About the Role: ${aboutRole}`,
+            responsibilities && fieldId !== 'responsibilities' && `Current Responsibilities: ${responsibilities}`,
+            qualRequired && fieldId !== 'qualRequired' && fieldId !== 'qualNice' && `Required Qualifications: ${qualRequired}`
         ].filter(Boolean).join('\n');
 
         if (!jobTitle && !dept) {
@@ -2259,28 +2270,38 @@ Rules:
 
         const existingContent = ta.value.trim();
 
+        // Field-specific guidance for smarter suggestions
+        const fieldGuidance = {
+            aboutTeam: 'Describe the team in a way that makes a candidate excited to join. Mention team size if you can infer it, what they own, how they collaborate, and what the team culture is like. Make it feel real and specific — not a generic "fast-paced team" blurb.',
+            aboutRole: 'Explain why this role exists, what impact it will have, and what makes it a compelling opportunity. Lead with the mission and opportunity, not a list of tasks. A great candidate should read this and think "I want that job."',
+            responsibilities: 'Write outcome-oriented responsibilities, not task lists. Start each with a strong action verb. Focus on what this person will OWN, DRIVE, and DELIVER — not just "participate in" or "assist with." Each responsibility should make the scope and impact clear. Think about what would show up in a performance review.',
+            qualRequired: 'List only genuinely required qualifications — the non-negotiables. Be specific about years of experience, tools, and domain knowledge. Avoid inflating requirements (don\'t ask for 10 years for a mid-level role). Frame experience in terms of what the person has DONE, not just what they know. Each qualification should map to a real responsibility above.',
+            qualNice: 'These should signal what would make someone exceptionally successful, not just "more of the required quals." Think: adjacent skills, industry experience, leadership qualities, or technical depth that would accelerate their impact. These help top candidates self-select in.'
+        };
+
         let systemPrompt;
         if (mode === 'bullets') {
-            systemPrompt = `You are an expert HR consultant. Generate the "${fieldLabels[fieldId]}" section for a job description based on the role context provided.${existingContent ? ' The user has some existing content — enhance and expand on it, keeping their input.' : ''}
+            systemPrompt = `You are a world-class talent acquisition strategist who writes job descriptions that attract top candidates. Generate the "${fieldLabels[fieldId]}" section based on the role context.${existingContent ? ' The user has drafted some content — enhance, expand, and professionalize it while keeping their core ideas and any specific details they mentioned.' : ''}
 
-Rules:
+Section guidance: ${fieldGuidance[fieldId]}
+
+Format rules:
 - Return ONLY the content, one item per line, no bullet characters or dashes — just the text
-- Each point should be clear, professional, and specific to this role
-- Start with strong verbs (for responsibilities) or clear qualifiers (for qualifications)
 - Typically 5-8 items
-- Be specific to the role, not generic
-- No preamble like "Here are..." — just the lines`;
+- No preamble like "Here are..." — just the lines
+- Every item must be specific to THIS role — nothing generic`;
         } else {
-            systemPrompt = `You are an expert HR consultant. Generate the "${fieldLabels[fieldId]}" section for a job description based on the role context provided.${existingContent ? ' The user has some existing content — enhance and polish it, keeping their core ideas.' : ''}
+            systemPrompt = `You are a world-class talent acquisition strategist who writes job descriptions that attract top candidates. Generate the "${fieldLabels[fieldId]}" section based on the role context.${existingContent ? ' The user has drafted some content — enhance and polish it while keeping their core ideas and specific details.' : ''}
 
-Rules:
+Section guidance: ${fieldGuidance[fieldId]}
+
+Format rules:
 - Return ONLY polished prose — 2-4 sentences
-- Professional but warm tone
-- Specific to the role described
+- Professional but warm and authentic tone — not corporate-speak
 - No headings, no preamble — just the content`;
         }
 
-        const userMessage = `ROLE CONTEXT:\n${context}${existingContent ? '\n\nEXISTING CONTENT:\n' + existingContent : ''}`;
+        const userMessage = `ROLE CONTEXT:\n${context}${existingContent ? '\n\nEXISTING CONTENT (keep their details, enhance the writing):\n' + existingContent : ''}`;
 
         // Find the AI Suggest button in this field
         const btn = ta.closest('.field-with-ai').querySelectorAll('.btn-ai')[0];
@@ -2339,7 +2360,15 @@ Rules:
         btn.textContent = 'Applying...';
         btn.disabled = true;
 
-        const systemPrompt = `You are an expert HR consultant editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change. Apply the instruction across ALL relevant fields and return the complete updated JSON.
+        const systemPrompt = `You are a world-class talent acquisition strategist editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change. Think carefully about what the instruction means in context and apply it intelligently.
+
+Common instructions and what they actually mean:
+- "Make it more senior" → increase scope of responsibilities (own → lead → define strategy), raise qualification bar, adjust title if needed
+- "Make it more junior" → reduce scope, lower experience requirements, add mentorship/growth language
+- "Add remote work" → update location, add remote-specific responsibilities and qualifications
+- "Make it shorter" → tighten language, consolidate similar bullets, reduce to essential items
+- "Make it warmer/more casual" → adjust tone throughout while keeping it professional
+- "More technical" → add specific tools, frameworks, technical depth to responsibilities and qualifications
 
 Return ONLY valid JSON with these exact keys (no markdown, no code fences):
 {
@@ -2360,11 +2389,11 @@ Return ONLY valid JSON with these exact keys (no markdown, no code fences):
 }
 
 Rules:
-- Apply the user's instruction thoughtfully across all affected fields
-- Keep fields that aren't affected by the instruction unchanged
+- Apply the instruction thoughtfully across ALL relevant fields — most edits should touch multiple sections
+- Keep fields that genuinely aren't affected unchanged
 - If a field was empty and the instruction doesn't relate to it, leave it empty
 - For list fields, put each item on a new line with no bullet characters
-- Be thorough but don't fabricate information the user didn't ask for
+- Maintain the same quality bar: specific, outcome-oriented, no generic filler
 - Return ONLY the JSON — no explanation, no markdown`;
 
         const userMessage = `CURRENT JD:\n${JSON.stringify(currentData, null, 2)}\n\nINSTRUCTION: ${instruction}`;
@@ -2406,31 +2435,56 @@ Rules:
         if (!raw) { showToast('Type something first, then hit Smart Format'); return; }
 
         const jobTitle = document.getElementById('jobTitle').value || 'the role';
+        const dept = document.getElementById('department').value || '';
+
+        // Determine which section this is for smarter formatting
+        const sectionContext = {
+            aboutTeam: 'This is the "About the Team" section — it should read as an inviting description of who the team is, what they do, and why someone would want to join.',
+            aboutRole: 'This is the "About the Role" section — it should read as a compelling pitch for the role, focusing on impact and opportunity.',
+            responsibilities: 'These are job responsibilities — each should start with a strong action verb and describe an outcome or ownership area, not just a task.',
+            qualRequired: 'These are required qualifications — each should be specific, measurable where possible, and genuinely required for success in the role.',
+            qualNice: 'These are nice-to-have qualifications — each should signal what would make someone exceptionally successful beyond the base requirements.'
+        };
+
+        const sectionHint = sectionContext[textareaId] || '';
+        const roleContext = [jobTitle, dept].filter(Boolean).join(', ');
 
         let systemPrompt, userPrompt;
         if (mode === 'bullets') {
-            systemPrompt = `You are a professional HR copywriter. Convert the user's rough input into clean, concise bullet points for a job description. Rules:
-- Return ONLY the bullet points, one per line, no bullet characters or dashes — just the text of each point
-- Each point should be a clear, professional, action-oriented statement
-- Start each point with a strong verb when possible (for responsibilities) or a noun/qualifier (for qualifications)
-- Remove filler words and redundancy
-- If the input is already clean bullet points, just polish them slightly
-- Typically 4-8 bullet points
-- Do not add points that weren't implied by the input
+            systemPrompt = `You are a world-class HR copywriter who transforms rough notes into polished job description content. Your job is to take whatever the user typed — whether it's casual shorthand, a brain dump, partial sentences, or already-decent bullets — and make it crisp, professional, and compelling.
+
+${sectionHint}
+
+Rules:
+- Return ONLY the polished bullet points, one per line, no bullet characters or dashes — just the text
+- PRESERVE every factual detail and specific requirement the user mentioned — do not drop anything
+- DO NOT add new points the user didn't mention or imply — only polish what's there
+- Each point should be a clear, confident, professional statement
+- Start with strong action verbs (for responsibilities: "Own", "Drive", "Lead", "Design", "Build") or specific qualifiers (for qualifications: "5+ years of...", "Demonstrated ability to...")
+- Remove filler words, redundancy, and vague language — make every word earn its place
+- If the input is already clean, just polish lightly — don't over-rewrite good content
+- Typically 4-8 bullet points depending on what the user provided
 - No preamble, no explanations — just the lines`;
-            userPrompt = `Job title: ${jobTitle}\n\nRaw input to convert into bullet points:\n${raw}`;
+            userPrompt = `Role: ${roleContext}\n\nUser's raw input to polish into clean bullet points:\n${raw}`;
         } else {
-            systemPrompt = `You are a professional HR copywriter. Convert the user's rough input into polished, professional prose for a job description section. Rules:
-- Return ONLY the polished paragraph(s) — no headings, no preamble
+            systemPrompt = `You are a world-class HR copywriter who transforms rough notes into polished job description content. Your job is to take whatever the user typed — whether it's casual notes, stream-of-consciousness, or already-decent prose — and make it read beautifully.
+
+${sectionHint}
+
+Rules:
+- Return ONLY the polished paragraph(s) — no headings, no preamble, no "Here's the polished version"
+- PRESERVE all factual details from the input — team size, tools, processes, anything specific
+- DO NOT invent details that weren't in the input
 - Keep it concise: 2-4 sentences is ideal
-- Professional but warm tone — not corporate-speak
-- Preserve all factual details from the input
-- Do not invent details that weren't in the input
+- Tone: professional but warm, confident but not arrogant — like a great company that knows its worth
+- Avoid corporate clichés ("fast-paced environment", "passionate team player", "synergy")
 - No bullet points — flowing prose only`;
-            userPrompt = `Job title: ${jobTitle}\n\nRaw input to polish:\n${raw}`;
+            userPrompt = `Role: ${roleContext}\n\nUser's raw input to polish:\n${raw}`;
         }
 
-        const btn = ta.closest('.field-with-ai').querySelector('.btn-ai');
+        // Find the Smart Format button (second .btn-ai in the group)
+        const btns = ta.closest('.field-with-ai').querySelectorAll('.btn-ai');
+        const btn = btns.length > 1 ? btns[1] : btns[0];
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<span class="ai-spinner"></span> Formatting...';
         btn.classList.add('loading');
@@ -2620,12 +2674,14 @@ Rules:
     }
 
     async function parseJDWithAI(rawText) {
-        const systemPrompt = `You are an expert HR document parser. The user will give you raw text extracted from a job description document. Parse it into structured fields and return ONLY valid JSON (no markdown, no code fences) with these exact keys:
+        const systemPrompt = `You are an expert at parsing job description documents into structured data. The user will give you raw text extracted from a PDF or Word document. Your job is to identify and extract each section intelligently, even if the document uses non-standard headings or formatting.
+
+Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
   "jobTitle": "the job title",
   "department": "department or team name, or empty string if not found",
-  "location": "location, or empty string",
+  "location": "location including work arrangement if mentioned, or empty string",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "reportsTo": "who this role reports to, or empty string",
   "salaryRange": "salary range, or empty string",
@@ -2639,11 +2695,15 @@ Rules:
   "eeo": "equal opportunity statement if present, or empty string"
 }
 
-Rules:
-- Return ONLY the JSON object, nothing else
-- For list fields (responsibilities, qualRequired, qualNice, benefits), put each item on a new line with no bullet characters
-- If a section is not found in the document, use an empty string
-- Be thorough — extract as much as you can find`;
+Parsing guidance:
+- Documents may use varied section headings: "What You'll Do" = responsibilities, "Who You Are" = qualRequired, "What We Offer" = benefits, "The Role" = aboutRole, etc.
+- Some documents combine required and nice-to-have qualifications — use your judgment to separate them based on language ("must have" vs "ideally" / "bonus" / "preferred")
+- If the document has a general intro paragraph before specific sections, that's likely aboutRole or aboutCompany
+- Clean up any formatting artifacts from PDF extraction (random line breaks, header/footer text, page numbers)
+- For list fields, put each item on a new line with no bullet characters — strip bullets, dashes, numbers
+- If a section is not found, use an empty string
+- Be thorough — extract everything you can find
+- Return ONLY the JSON object, nothing else`;
 
         const response = await fetch('/api/format', {
             method: 'POST',
