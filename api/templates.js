@@ -60,7 +60,7 @@ export default async function handler(req, res) {
             if (!id) return res.status(400).json({ error: 'Missing template id' });
 
             let templates = await getTemplatesBlob();
-            templates = templates.filter(t => t.id !== id);
+            templates = templates.filter(t => String(t.id) !== String(id));
             await saveTemplatesBlob(templates);
             return res.json({ ok: true });
         }
