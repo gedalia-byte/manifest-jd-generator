@@ -385,6 +385,82 @@
             line-height: 1.4;
         }
 
+        /* AI Chat Popover */
+        .ai-chat-popover {
+            display: none;
+            margin-top: 10px;
+            background: var(--white);
+            border: 1px solid var(--amber);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: 0 8px 24px rgba(42,40,38,0.12);
+            animation: fadeSlideIn 0.2s ease;
+        }
+        .ai-chat-popover.active {
+            display: block;
+        }
+        .ai-chat-popover-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .ai-chat-popover-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--amber);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ai-chat-popover-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all var(--transition);
+            font-family: inherit;
+            line-height: 1;
+        }
+        .ai-chat-popover-close:hover {
+            background: var(--sand);
+            color: var(--text);
+        }
+        .ai-chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .ai-chat-input-row input {
+            flex: 1;
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            background: var(--cream);
+            color: var(--text);
+            transition: border-color var(--transition);
+        }
+        .ai-chat-input-row input:focus {
+            outline: none;
+            border-color: var(--amber);
+        }
+        .ai-chat-input-row input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Smart Format description */
+        .smart-format-desc {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            margin-top: 3px;
+            font-style: italic;
+            line-height: 1.3;
+        }
+
         /* ===== Preview ===== */
         .preview-container {
             background: var(--white);
@@ -1295,6 +1371,13 @@
         </div>
     </div>
 
+    <!-- AI Edit Bar (edit the whole JD at once) -->
+    <div class="ai-edit-bar">
+        <div class="ai-edit-label">&#9889; AI Edit</div>
+        <input type="text" id="aiEditInput" placeholder='e.g. "Make this more senior" · "Add remote work perks" · "Rewrite for a startup tone"' onkeydown="if(event.key==='Enter'){aiEditEntireJD(); event.preventDefault();}">
+        <button class="btn btn-accent" onclick="aiEditEntireJD()" id="aiEditBtn" style="white-space: nowrap;">Apply to All</button>
+    </div>
+
     <div class="card">
         <h2>Role Details</h2>
         <p class="subtitle">Basic information about the position</p>
@@ -1356,14 +1439,27 @@
 
     <div class="card">
         <h2>About the Team</h2>
-        <p class="subtitle">Describe the team — type rough notes and AI will polish, or let AI suggest from scratch</p>
+        <p class="subtitle">Describe the team — type rough notes and AI will polish</p>
         <div class="field field-with-ai">
             <textarea id="aboutTeam" rows="4" placeholder="e.g. &quot;it's the growth team, about 8 people, we focus on acquisition and activation, work closely with product and marketing&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Type rough notes — or leave empty and click AI Suggest</div>
+                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="aiSuggest('aboutTeam','prose')" title="Generate content based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                    <button class="btn-ai" onclick="openAiChat('aboutTeam','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <div>
+                        <button class="btn-ai" onclick="smartFormat('aboutTeam','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="smart-format-desc">Cleans up your writing — keeps your ideas, polishes the language</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-aboutTeam">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — About the Team</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('aboutTeam')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-aboutTeam" placeholder="e.g. &quot;Write about a small growth team focused on acquisition&quot;" onkeydown="if(event.key==='Enter'){runAiChat('aboutTeam','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('aboutTeam','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
@@ -1375,10 +1471,23 @@
         <div class="field field-with-ai">
             <textarea id="aboutRole" rows="4" placeholder="e.g. &quot;this person will own our onboarding flow end to end, big impact on retention, reports to the head of growth&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Type rough notes — or leave empty and click AI Suggest</div>
+                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="aiSuggest('aboutRole','prose')" title="Generate content based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <button class="btn-ai" onclick="smartFormat('aboutRole','prose')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                    <button class="btn-ai" onclick="openAiChat('aboutRole','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <div>
+                        <button class="btn-ai" onclick="smartFormat('aboutRole','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="smart-format-desc">Cleans up your writing — keeps your ideas, polishes the language</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-aboutRole">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — About the Role</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('aboutRole')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-aboutRole" placeholder="e.g. &quot;This person will own onboarding and have a big impact on retention&quot;" onkeydown="if(event.key==='Enter'){runAiChat('aboutRole','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('aboutRole','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
@@ -1390,10 +1499,23 @@
         <div class="field field-with-ai">
             <textarea id="responsibilities" rows="6" placeholder="e.g. &quot;they'll design user flows, work with engineers on implementation, do user research, own the design system, present to stakeholders&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">One per line or free-form — Smart Format creates clean bullets</div>
+                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="aiSuggest('responsibilities','bullets')" title="Generate responsibilities based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')" title="Polish your existing text into bullets"><span class="spark">&#10024;</span> Smart Format</button>
+                    <button class="btn-ai" onclick="openAiChat('responsibilities','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <div>
+                        <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-responsibilities">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Responsibilities</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('responsibilities')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-responsibilities" placeholder="e.g. &quot;Add something about cross-team collaboration&quot; or &quot;Make these more senior&quot;" onkeydown="if(event.key==='Enter'){runAiChat('responsibilities','bullets'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('responsibilities','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
@@ -1406,10 +1528,23 @@
             <label>Required</label>
             <textarea id="qualRequired" rows="5" placeholder="e.g. &quot;need someone senior, at least 5 years in product design, strong portfolio, knows figma well, has shipped real products&quot;"></textarea>
             <div class="ai-bottom-row">
-                <div class="ai-hint">Describe what you need — or let AI suggest based on the role</div>
+                <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="aiSuggest('qualRequired','bullets')" title="Generate qualifications based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                    <button class="btn-ai" onclick="openAiChat('qualRequired','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <div>
+                        <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-qualRequired">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Required Qualifications</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('qualRequired')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-qualRequired" placeholder="e.g. &quot;5+ years design, strong Figma skills&quot; or &quot;Lower the bar a bit&quot;" onkeydown="if(event.key==='Enter'){runAiChat('qualRequired','bullets'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('qualRequired','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
@@ -1419,8 +1554,21 @@
             <div class="ai-bottom-row">
                 <div class="ai-hint"></div>
                 <div class="ai-btn-group">
-                    <button class="btn-ai" onclick="aiSuggest('qualNice','bullets')" title="Generate nice-to-haves based on role context"><span class="spark">&#9889;</span> AI Suggest</button>
-                    <button class="btn-ai" onclick="smartFormat('qualNice','bullets')" title="Polish your existing text"><span class="spark">&#10024;</span> Smart Format</button>
+                    <button class="btn-ai" onclick="openAiChat('qualNice','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                    <div>
+                        <button class="btn-ai" onclick="smartFormat('qualNice','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="smart-format-desc">Turns rough notes into clean bullet points</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-qualNice">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Nice to Have</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('qualNice')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-qualNice" placeholder="e.g. &quot;Add some design system experience&quot; or &quot;Suggest nice-to-haves for this role&quot;" onkeydown="if(event.key==='Enter'){runAiChat('qualNice','bullets'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('qualNice','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
@@ -1462,13 +1610,6 @@
                 <textarea id="eeo" rows="3" disabled></textarea>
             </div>
         </div>
-    </div>
-
-    <!-- AI Edit Bar -->
-    <div class="ai-edit-bar">
-        <div class="ai-edit-label">&#9889; AI Edit</div>
-        <input type="text" id="aiEditInput" placeholder='e.g. "Make this more senior" · "Add remote work perks" · "Rewrite for a startup tone"' onkeydown="if(event.key==='Enter'){aiEditEntireJD(); event.preventDefault();}">
-        <button class="btn btn-accent" onclick="aiEditEntireJD()" id="aiEditBtn" style="white-space: nowrap;">Apply to All</button>
     </div>
 
     <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
@@ -2226,9 +2367,32 @@ Writing principles:
         });
     }
 
-    // ===== AI Suggest (generate content for a single field) =====
-    async function aiSuggest(fieldId, mode) {
+    // ===== AI Suggest Chat (per-field AI with chat interface) =====
+    function openAiChat(fieldId) {
+        // Close any other open chat
+        document.querySelectorAll('.ai-chat-popover.active').forEach(el => el.classList.remove('active'));
+        const popover = document.getElementById('aiChat-' + fieldId);
+        popover.classList.add('active');
+        const input = document.getElementById('aiChatInput-' + fieldId);
+        input.focus();
+        // If field is empty, pre-fill with a helpful default
+        if (!input.value && !document.getElementById(fieldId).value.trim()) {
+            input.placeholder = 'Describe what you want here — AI will write it for you';
+        }
+    }
+
+    function closeAiChat(fieldId) {
+        document.getElementById('aiChat-' + fieldId).classList.remove('active');
+    }
+
+    async function runAiChat(fieldId, mode) {
         const ta = document.getElementById(fieldId);
+        const chatInput = document.getElementById('aiChatInput-' + fieldId);
+        const userInstruction = chatInput.value.trim();
+
+        if (!userInstruction) { showToast('Type what you want AI to do'); return; }
+
+        const existingContent = ta.value.trim();
 
         // Gather rich context from all filled fields
         const jobTitle = document.getElementById('jobTitle').value || '';
@@ -2255,11 +2419,6 @@ Writing principles:
             qualRequired && fieldId !== 'qualRequired' && fieldId !== 'qualNice' && `Required Qualifications: ${qualRequired}`
         ].filter(Boolean).join('\n');
 
-        if (!jobTitle && !dept) {
-            showToast('Fill in at least the Job Title or Department first — AI needs context');
-            return;
-        }
-
         const fieldLabels = {
             aboutTeam: 'About the Team',
             aboutRole: 'About the Role',
@@ -2268,46 +2427,48 @@ Writing principles:
             qualNice: 'Nice-to-Have Qualifications'
         };
 
-        const existingContent = ta.value.trim();
-
-        // Field-specific guidance for smarter suggestions
         const fieldGuidance = {
-            aboutTeam: 'Describe the team in a way that makes a candidate excited to join. Mention team size if you can infer it, what they own, how they collaborate, and what the team culture is like. Make it feel real and specific — not a generic "fast-paced team" blurb.',
-            aboutRole: 'Explain why this role exists, what impact it will have, and what makes it a compelling opportunity. Lead with the mission and opportunity, not a list of tasks. A great candidate should read this and think "I want that job."',
-            responsibilities: 'Write outcome-oriented responsibilities, not task lists. Start each with a strong action verb. Focus on what this person will OWN, DRIVE, and DELIVER — not just "participate in" or "assist with." Each responsibility should make the scope and impact clear. Think about what would show up in a performance review.',
-            qualRequired: 'List only genuinely required qualifications — the non-negotiables. Be specific about years of experience, tools, and domain knowledge. Avoid inflating requirements (don\'t ask for 10 years for a mid-level role). Frame experience in terms of what the person has DONE, not just what they know. Each qualification should map to a real responsibility above.',
-            qualNice: 'These should signal what would make someone exceptionally successful, not just "more of the required quals." Think: adjacent skills, industry experience, leadership qualities, or technical depth that would accelerate their impact. These help top candidates self-select in.'
+            aboutTeam: 'Describe the team in a way that makes a candidate excited to join. Mention team size if inferable, what they own, how they collaborate. Make it feel real — not a generic blurb.',
+            aboutRole: 'Explain why this role exists, what impact it will have, and what makes it compelling. Lead with mission and opportunity, not tasks.',
+            responsibilities: 'Write outcome-oriented responsibilities. Start each with a strong action verb. Focus on what this person will OWN, DRIVE, DELIVER. Each should make scope and impact clear.',
+            qualRequired: 'List genuinely required qualifications — non-negotiables. Be specific about experience, tools, domain knowledge. Frame in terms of what the person has DONE.',
+            qualNice: 'Signal what would make someone exceptionally successful — adjacent skills, industry experience, leadership qualities that accelerate impact.'
         };
 
         let systemPrompt;
-        if (mode === 'bullets') {
-            systemPrompt = `You are a world-class talent acquisition strategist who writes job descriptions that attract top candidates. Generate the "${fieldLabels[fieldId]}" section based on the role context.${existingContent ? ' The user has drafted some content — enhance, expand, and professionalize it while keeping their core ideas and any specific details they mentioned.' : ''}
+        if (existingContent) {
+            // There's existing content — the user wants to EDIT it
+            systemPrompt = `You are a world-class talent acquisition strategist. The user has content in the "${fieldLabels[fieldId]}" section of a job description, and they're telling you what to change. Apply their instruction to the existing content.
 
 Section guidance: ${fieldGuidance[fieldId]}
 
-Format rules:
-- Return ONLY the content, one item per line, no bullet characters or dashes — just the text
-- Typically 5-8 items
-- No preamble like "Here are..." — just the lines
-- Every item must be specific to THIS role — nothing generic`;
+Rules:
+- KEEP everything the user hasn't asked you to change — preserve their existing details and structure
+- Only modify what the instruction asks for
+- If they say "add X" — add it to the existing content, don't rewrite everything
+- If they say "make it more X" — adjust the tone/level while keeping the substance
+- If they say "remove X" — remove just that part
+${mode === 'bullets' ? '- Return one item per line, no bullet characters or dashes — just the text\n- No preamble' : '- Return polished prose, 2-4 sentences\n- No headings, no preamble'}`;
         } else {
-            systemPrompt = `You are a world-class talent acquisition strategist who writes job descriptions that attract top candidates. Generate the "${fieldLabels[fieldId]}" section based on the role context.${existingContent ? ' The user has drafted some content — enhance and polish it while keeping their core ideas and specific details.' : ''}
+            // Field is empty — generate from scratch based on instruction
+            systemPrompt = `You are a world-class talent acquisition strategist. Generate the "${fieldLabels[fieldId]}" section for a job description. The user will tell you what they want.
 
 Section guidance: ${fieldGuidance[fieldId]}
 
-Format rules:
-- Return ONLY polished prose — 2-4 sentences
-- Professional but warm and authentic tone — not corporate-speak
-- No headings, no preamble — just the content`;
+Rules:
+- Use the user's instruction AND the role context to generate specific, compelling content
+- Be specific to THIS role — nothing generic
+${mode === 'bullets' ? '- Return one item per line, no bullet characters or dashes — just the text\n- Typically 5-8 items\n- No preamble' : '- Return polished prose, 2-4 sentences\n- Professional but warm — not corporate-speak\n- No headings, no preamble'}`;
         }
 
-        const userMessage = `ROLE CONTEXT:\n${context}${existingContent ? '\n\nEXISTING CONTENT (keep their details, enhance the writing):\n' + existingContent : ''}`;
+        const userMessage = `ROLE CONTEXT:\n${context || '(no other fields filled yet)'}${existingContent ? '\n\nCURRENT CONTENT IN THIS FIELD:\n' + existingContent : ''}\n\nUSER INSTRUCTION: ${userInstruction}`;
 
-        // Find the AI Suggest button in this field
-        const btn = ta.closest('.field-with-ai').querySelectorAll('.btn-ai')[0];
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<span class="ai-spinner"></span> Suggesting...';
-        btn.classList.add('loading');
+        // Show loading state
+        const goBtn = chatInput.nextElementSibling;
+        const origBtnText = goBtn.textContent;
+        goBtn.textContent = '...';
+        goBtn.disabled = true;
+        chatInput.disabled = true;
         ta.style.opacity = '0.5';
 
         try {
@@ -2323,16 +2484,21 @@ Format rules:
             if (data.text) {
                 ta.value = data.text;
                 ta.dispatchEvent(new Event('input', { bubbles: true }));
-                showToast('Suggested!');
+                showToast('Updated!');
+                // Keep chat open so user can iterate
+                chatInput.value = '';
+                chatInput.placeholder = 'Tell AI what else to change, or close this chat';
             } else {
                 throw new Error('No response from AI');
             }
         } catch (err) {
             showToast('Error: ' + err.message);
-            console.error('AI Suggest error:', err);
+            console.error('AI Chat error:', err);
         } finally {
-            btn.innerHTML = originalHTML;
-            btn.classList.remove('loading');
+            goBtn.textContent = origBtnText;
+            goBtn.disabled = false;
+            chatInput.disabled = false;
+            chatInput.focus();
             ta.style.opacity = '1';
         }
     }
