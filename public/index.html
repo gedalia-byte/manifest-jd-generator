@@ -487,24 +487,42 @@
         }
         .preview-header {
             background: #1e1310;
-            padding: 80px 40px;
+            padding: 100px 40px;
             text-align: center;
             position: relative;
         }
         .preview-header h1 {
             font-family: 'Libre Caslon Display', Georgia, serif;
-            font-size: 48px;
+            font-size: 90px;
             font-weight: 400;
             color: white;
-            letter-spacing: -1px;
-            line-height: 1.1;
+            letter-spacing: -1.8px;
+            line-height: 1;
             margin: 0;
+        }
+        .preview-back-btn {
+            position: absolute;
+            top: 26px;
+            left: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 17px;
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            color: white;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            cursor: default;
+            letter-spacing: -0.2px;
         }
         .preview-body {
             display: flex;
             flex-direction: column;
             gap: 60px;
-            padding: 48px 80px 80px;
+            padding: 80px 150px 150px;
+            background: white;
         }
         .preview-meta {
             width: 100%;
@@ -513,7 +531,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 6px;
+            padding: 10px 6px;
             border-top: 1px solid rgba(30, 19, 16, 0.15);
         }
         .preview-meta-row:last-child {
@@ -521,12 +539,12 @@
         }
         .preview-meta-label {
             font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-size: 17px;
             color: var(--charcoal);
         }
         .preview-meta-value {
             font-family: 'Libre Caslon Display', Georgia, serif;
-            font-size: 17px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--charcoal);
             text-align: right;
@@ -537,7 +555,7 @@
             justify-content: center;
             padding: 12px 18px;
             font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-size: 18px;
             color: var(--charcoal);
             background: transparent;
             border: 1px solid rgba(30, 19, 16, 0.2);
@@ -548,28 +566,28 @@
         .preview-content {
             display: flex;
             flex-direction: column;
-            gap: 64px;
-            padding-top: 16px;
+            gap: 100px;
+            padding-top: 30px;
         }
         .preview-section {
             margin-bottom: 0;
         }
         .preview-section h2 {
             font-family: 'Libre Caslon Display', Georgia, serif;
-            font-size: 36px;
+            font-size: 55px;
             font-weight: 400;
             font-style: italic;
             color: var(--charcoal);
-            letter-spacing: -0.7px;
-            line-height: 1.1;
-            margin-bottom: 28px;
+            letter-spacing: -1.1px;
+            line-height: 1;
+            margin-bottom: 40px;
             margin-top: 0;
         }
         .preview-section p {
             font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-size: 18px;
             color: var(--charcoal);
-            line-height: 1.5;
+            line-height: 1.4;
             margin-bottom: 12px;
         }
         .preview-section ul {
@@ -578,9 +596,9 @@
         }
         .preview-section li {
             font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            font-size: 18px;
             color: var(--charcoal);
-            line-height: 1.5;
+            line-height: 1.4;
             margin-bottom: 8px;
         }
         .preview-bottom-cta {
@@ -1183,9 +1201,13 @@
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
             .container { padding: 0 16px; }
-            .preview-body { gap: 32px; padding: 28px 24px 48px; }
+            .preview-body { gap: 32px; padding: 40px 24px 48px; }
             .preview-header { padding: 48px 24px; }
-            .preview-header h1 { font-size: 32px; }
+            .preview-header h1 { font-size: 36px; letter-spacing: -0.7px; }
+            .preview-back-btn { top: 12px; left: 12px; font-size: 14px; padding: 8px 12px; }
+            .preview-section h2 { font-size: 28px; margin-bottom: 20px; }
+            .preview-section p, .preview-section li { font-size: 15px; }
+            .preview-content { gap: 48px; }
             .preview-section h2 { font-size: 28px; }
             .topbar { padding: 0 20px; }
             .tabs { padding: 0 20px; }
@@ -1347,11 +1369,11 @@
         <div class="field-row">
             <div class="field">
                 <label>Reports To <span class="optional">(optional)</span></label>
-                <input type="text" id="reportsTo" placeholder="e.g. VP of Design">
+                <input type="text" id="reportsTo" placeholder="e.g. VP of Design (defaults to Leadership)">
             </div>
             <div class="field">
                 <label>Salary Range <span class="optional">(optional)</span></label>
-                <input type="text" id="salaryRange" placeholder="e.g. Commensurate with Experience">
+                <input type="text" id="salaryRange" placeholder="e.g. $120k–$150k (defaults to Commensurate with experience)">
             </div>
         </div>
     </div>
@@ -1496,7 +1518,7 @@
     </div>
 
     <div class="card">
-        <h2>This Is For You If You...</h2>
+        <h2>This For You If</h2>
         <p class="subtitle">Describe what makes someone a great fit for this role</p>
         <div class="field field-with-ai">
             <textarea id="goodFit" rows="4" placeholder="e.g. &quot;love building 0-to-1 products, thrive in ambiguity, want to own a major product area, enjoy collaborating closely with engineers&quot;"></textarea>
@@ -1525,6 +1547,36 @@
         </div>
     </div>
 
+    <div class="card">
+        <h2>Not For You If</h2>
+        <p class="subtitle">Describe what might make this role not the right fit</p>
+        <div class="field field-with-ai">
+            <textarea id="notAFit" rows="4" placeholder="e.g. &quot;prefer highly structured environments, want to manage a large team right away, need detailed specs before starting work&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-btn-group">
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('notAFit','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai" onclick="smartFormat('notAFit','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-chat-popover" id="aiChat-notAFit">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Not For You</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('notAFit')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-notAFit" placeholder="e.g. &quot;Someone who needs a lot of structure and doesn't like ambiguity&quot;" onkeydown="if(event.key==='Enter'){runAiChat('notAFit','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('notAFit','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
         <button class="btn btn-accent" onclick="generatePreview()">Generate Job Description</button>
@@ -1538,7 +1590,7 @@
 
     <div class="card">
         <h2>Admin Settings</h2>
-        <p class="subtitle">Set API keys and default boilerplate text. Keys are stored locally in this browser only.</p>
+        <p class="subtitle">Set default boilerplate text. Defaults are saved to the server and shared across all team members.</p>
     </div>
 
 
@@ -1568,7 +1620,6 @@
 
     <div class="btn-row">
         <button class="btn btn-accent" onclick="saveDefaults()">Save Defaults</button>
-        <button class="btn btn-secondary" onclick="resetDefaults()">Reset to Empty</button>
     </div>
 
     <!-- Template Management -->
@@ -1576,26 +1627,26 @@
         <h2>Template Library</h2>
         <p class="subtitle">Save the current Create form as a reusable template. Anyone can then pick it to pre-fill a new JD.</p>
 
-        <div class="field-row" style="align-items: flex-end;">
-            <div class="field">
+        <div style="display: flex; gap: 12px; align-items: flex-end;">
+            <div class="field" style="flex: 1;">
                 <label>Template Name</label>
                 <input type="text" id="templateName" placeholder="e.g. Senior Product Designer — Design Team">
             </div>
-            <div class="field" style="flex-shrink: 0;">
-                <button class="btn btn-accent" onclick="saveAsTemplate()" style="width: 100%; margin-top: 2px;">Save Current Form as Template</button>
-            </div>
+            <button class="btn btn-accent" onclick="saveAsTemplate()" style="white-space: nowrap; height: 42px;">Save as Template</button>
         </div>
     </div>
 
     <div class="card">
         <h2>Upload Existing JD</h2>
-        <p class="subtitle">Upload a PDF or Word doc (.docx) — AI will parse it into a reusable template automatically</p>
+        <p class="subtitle">Upload a PDF or Word doc — AI parses it into fields you can save as a template</p>
 
-        <div class="upload-zone" id="uploadZone">
+        <div class="upload-zone" id="uploadZone" style="padding: 32px 24px;">
             <input type="file" id="jdFileInput" accept=".pdf,.docx,.doc" onchange="handleFileUpload(this.files[0])">
-            <div class="upload-zone-icon">&#128196;</div>
-            <div class="upload-zone-text">Drop a file here or click to browse</div>
-            <div class="upload-zone-hint">PDF or .docx &middot; Max 10 MB</div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div style="font-size: 28px; opacity: 0.4;">&#8593;</div>
+                <div style="font-size: 14px; font-weight: 500; color: var(--text);">Drop a file here or click to browse</div>
+                <div style="font-size: 12px; color: var(--text-muted);">PDF or .docx &middot; Max 10 MB</div>
+            </div>
         </div>
 
         <div class="upload-progress" id="uploadProgress">
@@ -1604,8 +1655,8 @@
         </div>
 
         <div class="upload-preview" id="uploadPreview">
-            <div style="margin-bottom: 12px;">
-                <label style="color: var(--amber); font-size: 11px; letter-spacing: 0.5px;">AI PARSED RESULT</label>
+            <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--stone);">
+                <label style="color: var(--amber); font-size: 11px; font-weight: 600; letter-spacing: 0.5px;">AI PARSED RESULT</label>
             </div>
             <div class="upload-preview-field">
                 <label>Job Title</label>
@@ -1623,16 +1674,16 @@
                 <label>Qualifications</label>
                 <div class="value" id="parsedQualifications">—</div>
             </div>
-            <div class="field-row" style="align-items: flex-end; margin-top: 16px;">
-                <div class="field">
-                    <label>Template Name</label>
-                    <input type="text" id="uploadTemplateName" placeholder="e.g. Senior Product Designer — Design Team">
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--stone);">
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                    <div class="field" style="flex: 1;">
+                        <label>Template Name</label>
+                        <input type="text" id="uploadTemplateName" placeholder="e.g. Senior Product Designer — Design Team">
+                    </div>
+                    <button class="btn btn-accent" onclick="saveUploadedTemplate()" style="white-space: nowrap; height: 42px;">Save as Template</button>
                 </div>
-                <div class="field" style="flex-shrink: 0;">
-                    <button class="btn btn-accent" onclick="saveUploadedTemplate()" style="width: 100%; margin-top: 2px;">Save as Template</button>
-                </div>
+                <button class="btn btn-secondary" onclick="resetUpload()" style="margin-top: 10px; font-size: 12px;">Upload Another File</button>
             </div>
-            <button class="btn btn-secondary" onclick="resetUpload()" style="margin-top: 8px; font-size: 12px;">Upload Another</button>
         </div>
     </div>
 
@@ -1653,16 +1704,18 @@
 <!-- ==================== PREVIEW PANEL ==================== -->
 <div class="panel" id="panel-preview">
 
-    <div class="card" style="padding: 12px 24px;">
-        <div class="btn-row" style="margin:0; justify-content: flex-end; flex-wrap: wrap;">
+    <div class="card" style="padding: 16px 24px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn" style="font-size: 14px; padding: 10px 24px;">Push to CMS</button>
+            <div style="width: 1px; height: 28px; background: var(--stone); flex-shrink: 0;"></div>
+            <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
             <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
             <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
             <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .doc</button>
             <button class="btn btn-secondary" onclick="downloadAsPDF()">Download PDF</button>
-            <button class="btn btn-secondary" onclick="openInGoogleDocs()">Open in Google Docs</button>
-            <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn">Push to CMS</button>
-            <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
-            <button class="btn btn-primary" onclick="switchTab('builder')">Edit</button>
+            <button class="btn btn-secondary" onclick="openInGoogleDocs()">Google Docs</button>
+            <div style="flex: 1;"></div>
+            <button class="btn btn-primary" onclick="switchTab('builder')" style="font-size: 13px;">Edit</button>
         </div>
     </div>
 
@@ -1732,51 +1785,139 @@
         }
     }
 
-    // ===== Local storage for defaults =====
-    const STORAGE_KEY = 'manifest_jd_defaults';
+    // ===== Server-backed defaults =====
+    let _defaultsCache = {};
+
+    async function fetchDefaults() {
+        try {
+            const res = await fetch('/api/defaults?type=defaults');
+            if (!res.ok) throw new Error('Failed to fetch defaults');
+            _defaultsCache = await res.json();
+        } catch (err) {
+            console.warn('Could not load defaults from server:', err.message);
+            // Fallback: try localStorage migration
+            try {
+                const local = JSON.parse(localStorage.getItem('manifest_jd_defaults'));
+                if (local) _defaultsCache = local;
+            } catch {}
+        }
+        return _defaultsCache;
+    }
 
     function getDefaults() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-        catch { return {}; }
+        return _defaultsCache;
     }
 
     function getDefault(key) {
-        return getDefaults()[key] || '';
+        return _defaultsCache[key] || '';
     }
 
-    function saveDefaults() {
+    async function saveDefaults() {
         const defaults = {
             about: document.getElementById('defaultAbout').value,
             benefits: document.getElementById('defaultBenefits').value,
             eeo: document.getElementById('defaultEEO').value,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
 
-        if (document.getElementById('useDefaultAbout').checked)
-            document.getElementById('aboutCompany').value = defaults.about;
-        if (document.getElementById('useDefaultBenefits').checked)
-            document.getElementById('benefits').value = defaults.benefits;
-        if (document.getElementById('useDefaultEEO').checked)
-            document.getElementById('eeo').value = defaults.eeo;
+        const btn = document.querySelector('#panel-defaults .btn-accent');
+        const origText = btn.textContent;
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
 
-        showToast('Defaults saved');
-        flashSaveStatus();
+        try {
+            const res = await fetch('/api/defaults?type=defaults', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(defaults)
+            });
+            if (!res.ok) throw new Error('Save failed');
+
+            _defaultsCache = defaults;
+            // Also keep localStorage as fast cache
+            localStorage.setItem('manifest_jd_defaults', JSON.stringify(defaults));
+
+            if (document.getElementById('useDefaultAbout').checked)
+                document.getElementById('aboutCompany').value = defaults.about;
+
+            showToast('Defaults saved to server');
+            flashSaveStatus();
+        } catch (err) {
+            showToast('Error saving defaults: ' + err.message);
+            console.error('Defaults save error:', err);
+        } finally {
+            btn.textContent = origText;
+            btn.disabled = false;
+        }
     }
 
-    function resetDefaults() {
-        if (!confirm('Clear all saved defaults? This cannot be undone.')) return;
-        localStorage.removeItem(STORAGE_KEY);
-        document.getElementById('defaultAbout').value = '';
-        document.getElementById('defaultBenefits').value = '';
-        document.getElementById('defaultEEO').value = '';
-        showToast('Defaults cleared');
-    }
-
-    function loadDefaultsIntoAdmin() {
-        const d = getDefaults();
+    async function loadDefaultsIntoAdmin() {
+        await fetchDefaults();
+        const d = _defaultsCache;
         document.getElementById('defaultAbout').value = d.about || '';
         document.getElementById('defaultBenefits').value = d.benefits || '';
         document.getElementById('defaultEEO').value = d.eeo || '';
+    }
+
+    // ===== Auto-save Create form to server =====
+    let _autosaveTimer = null;
+    const AUTOSAVE_FIELDS = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
+                              'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+
+    function getFormData() {
+        const data = {};
+        AUTOSAVE_FIELDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) data[id] = el.value;
+        });
+        return data;
+    }
+
+    function scheduleAutosave() {
+        clearTimeout(_autosaveTimer);
+        _autosaveTimer = setTimeout(async () => {
+            const data = getFormData();
+            // Only save if there's actual content
+            const hasContent = AUTOSAVE_FIELDS.some(id => (data[id] || '').trim().length > 0);
+            if (!hasContent) return;
+            try {
+                await fetch('/api/defaults?type=autosave', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } catch (err) {
+                console.warn('Autosave failed:', err.message);
+            }
+        }, 2000); // 2 second debounce
+    }
+
+    async function restoreAutosave() {
+        try {
+            const res = await fetch('/api/defaults?type=autosave');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || typeof data !== 'object') return;
+            const hasContent = AUTOSAVE_FIELDS.some(id => (data[id] || '').trim().length > 0);
+            if (!hasContent) return;
+            // Only restore if current form is empty
+            const currentData = getFormData();
+            const formIsEmpty = AUTOSAVE_FIELDS.every(id => !(currentData[id] || '').trim());
+            if (!formIsEmpty) return;
+            applyFieldsToForm(data);
+        } catch (err) {
+            console.warn('Could not restore autosave:', err.message);
+        }
+    }
+
+    // Attach autosave listeners to all Create form fields
+    function setupAutosave() {
+        AUTOSAVE_FIELDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', scheduleAutosave);
+                el.addEventListener('change', scheduleAutosave);
+            }
+        });
     }
 
     // ===== Toast =====
@@ -1821,17 +1962,18 @@
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
         const lvl = document.getElementById('level').value;
-        const reports = document.getElementById('reportsTo').value;
-        const salary = document.getElementById('salaryRange').value;
+        const reports = document.getElementById('reportsTo').value || 'Leadership';
+        const salary = document.getElementById('salaryRange').value || 'Commensurate with experience';
         const about = document.getElementById('aboutCompany').value;
         const team = document.getElementById('aboutTeam').value;
         const role = document.getElementById('aboutRole').value;
         const resp = document.getElementById('responsibilities').value;
         const idealExp = document.getElementById('idealExperience').value;
         const goodFit = document.getElementById('goodFit').value;
+        const notFit = document.getElementById('notAFit').value;
 
         // Header
-        let html = `<div class="preview-header"><h1>${escapeHTML(title)}.</h1></div>`;
+        let html = `<div class="preview-header"><div class="preview-back-btn">\u2190 Back</div><h1>${escapeHTML(title)}.</h1></div>`;
 
         // Body — single column
         html += `<div class="preview-body">`;
@@ -1861,7 +2003,8 @@
         if (team) { html += `<div class="preview-section"><h2>About the Team.</h2>${textToParagraphs(team)}</div>`; }
         if (idealExp) { html += `<div class="preview-section"><h2>Ideal Experience.</h2>${textToParagraphs(idealExp)}</div>`; }
         if (resp) { html += `<div class="preview-section"><h2>Responsibilities.</h2>${textToParagraphs(resp)}</div>`; }
-        if (goodFit) { html += `<div class="preview-section"><h2>This for you if you...</h2>${textToParagraphs(goodFit)}</div>`; }
+        if (goodFit) { html += `<div class="preview-section"><h2>This for you if</h2>${textToParagraphs(goodFit)}</div>`; }
+        if (notFit) { html += `<div class="preview-section"><h2>Not for you if</h2>${textToParagraphs(notFit)}</div>`; }
         html += `</div>`; // .preview-content
 
         // Apply Now button
@@ -1873,10 +2016,7 @@
         document.getElementById('saveTemplateCard').style.display = '';
         document.getElementById('previewTemplateName').value = title !== 'Untitled Role' ? title : '';
         switchTab('preview');
-        showToast('Job description generated');
-
-        // Sync to Framer CMS
-        syncToFramer('create');
+        showToast('Job description generated — use "Push to CMS" to publish');
     }
 
     // ===== Export =====
@@ -1905,8 +2045,8 @@
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
         const lvl = document.getElementById('level').value;
-        const reports = document.getElementById('reportsTo').value;
-        const salary = document.getElementById('salaryRange').value;
+        const reports = document.getElementById('reportsTo').value || 'Leadership';
+        const salary = document.getElementById('salaryRange').value || 'Commensurate with experience';
 
         let metaParts = [type];
         if (loc) metaParts.push(loc);
@@ -1925,7 +2065,9 @@
         if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
         if (idealExp) sections.push({ heading: 'Ideal Experience', content: idealExp, type: 'prose' });
         if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'prose' });
-        if (goodFit) sections.push({ heading: 'This for you if you...', content: goodFit, type: 'prose' });
+        if (goodFit) sections.push({ heading: 'This for you if', content: goodFit, type: 'prose' });
+        const notFit = document.getElementById('notAFit').value;
+        if (notFit) sections.push({ heading: 'Not for you if', content: notFit, type: 'prose' });
 
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
@@ -2079,13 +2221,19 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
     // ===== Clear form =====
     function clearForm() {
         if (!confirm('Clear all fields? Default sections will be restored.')) return;
-        ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit']
+        ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit']
             .forEach(id => document.getElementById(id).value = '');
         document.getElementById('employmentType').selectedIndex = 0;
         document.getElementById('useDefaultAbout').checked = true;
         document.getElementById('aboutCompany').value = getDefault('about');
         document.getElementById('aboutCompany').disabled = true;
         currentFramerJobId = null;
+        // Clear server autosave
+        fetch('/api/defaults?type=autosave', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(() => {});
         showToast('Form cleared');
     }
 
@@ -2154,7 +2302,8 @@ Generate a complete, professional job description from the user's input. Return 
   "aboutRole": "",
   "idealExperience": "2-3 paragraphs describing the ideal candidate's background, skills, and experience. Write in flowing prose, not bullet points.",
   "responsibilities": "2-3 paragraphs describing key responsibilities and what this person will own. Write in flowing prose, not bullet points.",
-  "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit."
+  "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit.",
+  "notAFit": "1 paragraph: describe what kind of person would NOT be a good fit. Be honest and direct — help people self-select out."
 }
 
 Writing principles:
@@ -2162,7 +2311,7 @@ Writing principles:
 - Be specific to this role and industry
 - aboutCompany should be empty string (the tool has saved company defaults)
 - aboutRole can be empty — about the team covers context
-- goodFit should feel honest and conversational, helping candidates self-select
+- goodFit and notAFit should feel honest and conversational, helping candidates self-select
 - Return ONLY the JSON — no explanation`;
 
         try {
@@ -2280,7 +2429,7 @@ Writing principles:
     // ===== Shared: Apply fields to form =====
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit'];
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         // Backwards compat: map old field names to new ones
         if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
         if (data.department && !data.level) data.level = data.department;
@@ -2361,7 +2510,8 @@ Writing principles:
             aboutRole: 'About the Role',
             responsibilities: 'Responsibilities',
             idealExperience: 'Ideal Experience',
-            goodFit: 'This Is For You If You...'
+            goodFit: 'This For You If',
+            notAFit: 'Not For You If'
         };
 
         const fieldGuidance = {
@@ -2369,7 +2519,8 @@ Writing principles:
             aboutRole: 'Explain why this role exists, what impact it will have, and what makes it compelling.',
             responsibilities: 'Describe key responsibilities in flowing prose. Focus on what this person will own and deliver.',
             idealExperience: 'Describe the ideal candidate\'s background, skills, and experience in flowing prose. Be specific about what they\'ve done.',
-            goodFit: 'Describe traits, working styles, and motivations that make someone a great fit for this role. Be honest and conversational.'
+            goodFit: 'Describe traits, working styles, and motivations that make someone a great fit for this role. Be honest and conversational.',
+            notAFit: 'Describe what kind of person would NOT be a good fit. Be honest and direct — help people self-select out.'
         };
 
         let systemPrompt;
@@ -2447,7 +2598,7 @@ ${mode === 'bullets' ? '- Return one item per line, no bullet characters or dash
 
         // Gather all current form fields
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit'];
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         const currentData = {};
         fieldIds.forEach(id => { currentData[id] = document.getElementById(id).value; });
 
@@ -2478,7 +2629,8 @@ Return ONLY valid JSON with these exact keys (no markdown, no code fences):
   "aboutRole": "...",
   "idealExperience": "flowing prose describing ideal background and skills",
   "responsibilities": "flowing prose describing key responsibilities",
-  "goodFit": "prose: what kind of person thrives in this role"
+  "goodFit": "prose: what kind of person thrives in this role",
+  "notAFit": "prose: what kind of person would NOT be a good fit"
 }
 
 Rules:
@@ -2653,7 +2805,7 @@ Rules:
 
     async function syncToFramer(action) {
         const title = document.getElementById('jobTitle').value;
-        if (!title || title === 'Untitled Role') return;
+        if (!title || title === 'Untitled Role') throw new Error('Add a job title first');
 
         if (!currentFramerJobId) {
             currentFramerJobId = 'jd-' + Date.now().toString(36);
@@ -2664,29 +2816,25 @@ Rules:
             slug: generateJobSlug(title),
             location: document.getElementById('location').value || '',
             level: document.getElementById('level').value || '',
-            reportsTo: document.getElementById('reportsTo').value || '',
+            reportsTo: document.getElementById('reportsTo').value || 'Leadership',
             idealExperience: document.getElementById('idealExperience').value || '',
             responsibilities: document.getElementById('responsibilities').value || '',
             goodFit: document.getElementById('goodFit').value || '',
-            notAFit: '',
-            compBand: document.getElementById('salaryRange').value || '',
+            notAFit: document.getElementById('notAFit').value || '',
+            compBand: document.getElementById('salaryRange').value || 'Commensurate with experience',
         };
 
-        try {
-            const response = await fetch('/api/sync-to-framer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, job, jobId: currentFramerJobId })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                console.log('Framer sync:', action, data);
-            } else {
-                console.warn('Framer sync failed:', data.error);
-            }
-        } catch (err) {
-            console.warn('Framer sync error:', err.message);
+        const response = await fetch('/api/sync-to-framer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, job, jobId: currentFramerJobId })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            const hint = data.hint ? ` (${data.hint})` : '';
+            throw new Error((data.error || 'CMS sync failed') + hint);
         }
+        console.log('Framer sync:', action, data);
     }
 
     async function pushToCMS() {
@@ -2702,9 +2850,10 @@ Rules:
         btn.disabled = true;
 
         try {
+            // First push = create, subsequent = update
             const action = currentFramerJobId ? 'update' : 'create';
             await syncToFramer(action);
-            showToast('Pushed to CMS!');
+            showToast('Pushed to CMS! \u2705');
         } catch (err) {
             showToast('Error pushing to CMS: ' + err.message);
         } finally {
@@ -2833,7 +2982,8 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "aboutRole": "",
   "idealExperience": "candidate background, skills, qualifications — as flowing prose",
   "responsibilities": "key responsibilities — as flowing prose",
-  "goodFit": "traits/motivations of someone who'd thrive here, or empty string"
+  "goodFit": "traits/motivations of someone who'd thrive here, or empty string",
+  "notAFit": "traits/motivations of someone who would NOT be a good fit, or empty string"
 }
 
 Parsing guidance:
@@ -2890,6 +3040,7 @@ Parsing guidance:
                 responsibilities: parsedUploadData.responsibilities || '',
                 idealExperience: parsedUploadData.idealExperience || '',
                 goodFit: parsedUploadData.goodFit || '',
+                notAFit: parsedUploadData.notAFit || '',
             }
         };
 
@@ -2955,6 +3106,7 @@ Parsing guidance:
                 responsibilities: document.getElementById('responsibilities').value,
                 idealExperience: document.getElementById('idealExperience').value,
                 goodFit: document.getElementById('goodFit').value,
+                notAFit: document.getElementById('notAFit').value,
             }
         };
 
@@ -2997,6 +3149,7 @@ Parsing guidance:
                 responsibilities: document.getElementById('responsibilities').value,
                 idealExperience: document.getElementById('idealExperience').value,
                 goodFit: document.getElementById('goodFit').value,
+                notAFit: document.getElementById('notAFit').value,
             }
         };
 
@@ -3045,41 +3198,11 @@ Parsing guidance:
         if (!confirm(`Load template "${t.name}"? This will replace your current form.`)) return;
 
         const f = t.fields;
+        // Backwards compat for old templates
+        if (f.qualRequired && !f.idealExperience) f.idealExperience = f.qualRequired;
+        if (f.department && !f.level) f.level = f.department;
 
-        // Fill text inputs
-        document.getElementById('jobTitle').value = f.jobTitle || '';
-        document.getElementById('department').value = f.department || '';
-        document.getElementById('location').value = f.location || '';
-        document.getElementById('reportsTo').value = f.reportsTo || '';
-        document.getElementById('salaryRange').value = f.salaryRange || '';
-        document.getElementById('aboutTeam').value = f.aboutTeam || '';
-        document.getElementById('aboutRole').value = f.aboutRole || '';
-        document.getElementById('responsibilities').value = f.responsibilities || '';
-        document.getElementById('qualRequired').value = f.qualRequired || '';
-        document.getElementById('qualNice').value = f.qualNice || '';
-
-        // Employment type
-        const empType = document.getElementById('employmentType');
-        for (let i = 0; i < empType.options.length; i++) {
-            if (empType.options[i].value === f.employmentType) { empType.selectedIndex = i; break; }
-        }
-
-        // Handle boilerplate fields — if template has content, uncheck default and fill
-        if (f.aboutCompany) {
-            document.getElementById('useDefaultAbout').checked = false;
-            document.getElementById('aboutCompany').disabled = false;
-            document.getElementById('aboutCompany').value = f.aboutCompany;
-        }
-        if (f.benefits) {
-            document.getElementById('useDefaultBenefits').checked = false;
-            document.getElementById('benefits').disabled = false;
-            document.getElementById('benefits').value = f.benefits;
-        }
-        if (f.eeo) {
-            document.getElementById('useDefaultEEO').checked = false;
-            document.getElementById('eeo').disabled = false;
-            document.getElementById('eeo').value = f.eeo;
-        }
+        applyFieldsToForm(f);
 
         showToast(`Loaded "${t.name}" — edit any field to customize`);
 
@@ -3178,11 +3301,15 @@ Parsing guidance:
     });
 
     // ===== Init =====
-    loadDefaultsIntoAdmin();
-    setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
-    setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
-    setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
-    renderTemplates(); // async — fires and renders when API responds
+    (async function init() {
+        await loadDefaultsIntoAdmin();
+        setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
+        setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
+        setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
+        await restoreAutosave();
+        setupAutosave();
+        renderTemplates(); // async — fires and renders when API responds
+    })();
 </script>
 
 </body>
