@@ -1920,8 +1920,10 @@
 
     function textToParagraphs(text) {
         if (!text.trim()) return '';
-        return text.split('\n').map(l => l.trim()).filter(l => l)
-            .map(l => `<p>${escapeHTML(l)}</p>`).join('');
+        // Split on double newlines (real paragraph breaks) — join single newlines into flowing text
+        return text.split(/\n\s*\n/).map(para =>
+            para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
+        ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
     }
 
     function generatePreview() {
@@ -2041,7 +2043,10 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
             if (s.type === 'bullets') {
                 html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
             } else {
-                html += s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<p>${escapeHTML(l)}</p>`).join('');
+                // Join single newlines into flowing text; only double newlines = new paragraph
+                html += s.content.split(/\n\s*\n/).map(para =>
+                    para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
+                ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
             }
         }
         html += '</body></html>';
@@ -2090,7 +2095,9 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
             if (s.type === 'bullets') {
                 html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
             } else {
-                html += s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<p>${escapeHTML(l)}</p>`).join('');
+                html += s.content.split(/\n\s*\n/).map(para =>
+                    para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
+                ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
             }
         }
         html += '</body></html>';
