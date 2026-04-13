@@ -476,71 +476,127 @@
             line-height: 1.3;
         }
 
-        /* ===== Preview ===== */
+        /* ===== Preview (Figma layout) ===== */
         .preview-container {
             background: var(--white);
             border: 1px solid var(--stone);
             border-radius: var(--radius);
-            padding: 56px 64px;
+            overflow: hidden;
             line-height: 1.75;
             box-shadow: var(--shadow-md);
+        }
+        .preview-header {
+            background: #1e1310;
+            padding: 80px 40px;
+            text-align: center;
             position: relative;
         }
-        .preview-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--amber), var(--amber-light));
-            border-radius: var(--radius) var(--radius) 0 0;
+        .preview-header h1 {
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-size: 48px;
+            font-weight: 400;
+            color: white;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            margin: 0;
         }
-        .preview-container h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 6px;
+        .preview-body {
+            display: flex;
+            gap: 80px;
+            padding: 48px 48px 64px;
+        }
+        .preview-sidebar {
+            flex-shrink: 0;
+            width: 280px;
+            padding-top: 16px;
+        }
+        .preview-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 6px;
+            border-top: 1px solid rgba(30, 19, 16, 0.15);
+        }
+        .preview-meta-row:last-child {
+            border-bottom: 1px solid rgba(30, 19, 16, 0.15);
+        }
+        .preview-meta-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
             color: var(--charcoal);
-            letter-spacing: -0.3px;
         }
-        .preview-container .preview-location {
-            color: var(--text-secondary);
-            font-size: 13.5px;
-            margin-bottom: 36px;
-            padding-bottom: 24px;
-            border-bottom: 2px solid var(--stone);
-            letter-spacing: 0.2px;
-        }
-        .preview-container h2 {
-            font-size: 12px;
+        .preview-meta-value {
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-size: 16px;
             font-weight: 700;
+            color: var(--charcoal);
+            text-align: right;
+        }
+        .preview-apply-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin-top: 36px;
+            padding: 12px 18px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: white;
+            background: #1a100a;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 3px;
+            cursor: default;
+            letter-spacing: -0.2px;
+        }
+        .preview-content {
+            flex: 1;
+            min-width: 0;
+            padding-top: 16px;
+        }
+        .preview-section {
+            margin-bottom: 64px;
+        }
+        .preview-section:last-child {
+            margin-bottom: 0;
+        }
+        .preview-section h2 {
+            font-family: 'Libre Caslon Display', Georgia, serif;
+            font-size: 32px;
+            font-weight: 400;
+            font-style: italic;
+            color: var(--charcoal);
+            letter-spacing: -0.6px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            margin-top: 0;
+        }
+        .preview-section p {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--charcoal);
+            line-height: 1.5;
             margin-bottom: 12px;
-            color: var(--amber);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--stone);
         }
-        .preview-container p,
-        .preview-container li {
-            font-size: 14.5px;
-            color: var(--text-secondary);
-            line-height: 1.8;
-        }
-        .preview-container p {
-            margin-bottom: 10px;
-        }
-        .preview-container ul {
+        .preview-section ul {
             padding-left: 20px;
             margin-top: 8px;
         }
-        .preview-container li {
+        .preview-section li {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            color: var(--charcoal);
+            line-height: 1.5;
             margin-bottom: 8px;
-            padding-left: 6px;
         }
-        .preview-container li::marker {
-            color: var(--amber);
+        .preview-callout {
+            border-left: 6px solid var(--charcoal);
+            padding-left: 40px;
+            margin-bottom: 64px;
+        }
+        .preview-callout:last-child {
+            margin-bottom: 0;
+        }
+        .preview-callout h2 {
+            font-size: 26px;
         }
 
         /* ===== Toast ===== */
@@ -1138,7 +1194,12 @@
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
             .container { padding: 0 16px; }
-            .preview-container { padding: 28px 24px; }
+            .preview-body { flex-direction: column; gap: 32px; padding: 28px 24px; }
+            .preview-sidebar { width: 100%; }
+            .preview-header { padding: 48px 24px; }
+            .preview-header h1 { font-size: 32px; }
+            .preview-section h2 { font-size: 24px; }
+            .preview-callout { padding-left: 24px; }
             .topbar { padding: 0 20px; }
             .tabs { padding: 0 20px; }
             .tab { padding: 14px 16px; font-size: 12px; }
@@ -1277,15 +1338,11 @@
                 <input type="text" id="jobTitle" placeholder="e.g. Senior Product Designer">
             </div>
             <div class="field">
-                <label>Department / Team</label>
-                <input type="text" id="department" placeholder="e.g. Design">
-            </div>
-        </div>
-        <div class="field-row">
-            <div class="field">
                 <label>Location</label>
                 <input type="text" id="location" placeholder="e.g. New York, NY (Hybrid)">
             </div>
+        </div>
+        <div class="field-row">
             <div class="field">
                 <label>Employment Type</label>
                 <select id="employmentType">
@@ -1295,6 +1352,10 @@
                     <option value="Internship">Internship</option>
                 </select>
             </div>
+            <div class="field">
+                <label>Level</label>
+                <input type="text" id="level" placeholder="e.g. Senior, Mid-Level, Associate">
+            </div>
         </div>
         <div class="field-row">
             <div class="field">
@@ -1303,7 +1364,7 @@
             </div>
             <div class="field">
                 <label>Salary Range <span class="optional">(optional)</span></label>
-                <input type="text" id="salaryRange" placeholder="e.g. $120,000 - $150,000">
+                <input type="text" id="salaryRange" placeholder="e.g. Commensurate with Experience">
             </div>
         </div>
     </div>
@@ -1418,96 +1479,91 @@
     </div>
 
     <div class="card">
-        <h2>Qualifications</h2>
-        <p class="subtitle">List them or describe the ideal candidate</p>
+        <h2>Ideal Experience</h2>
+        <p class="subtitle">Describe the ideal candidate's background and qualifications</p>
         <div class="field field-with-ai">
-            <label>Required</label>
-            <textarea id="qualRequired" rows="5" placeholder="e.g. &quot;need someone senior, at least 5 years in product design, strong portfolio, knows figma well, has shipped real products&quot;"></textarea>
+            <textarea id="idealExperience" rows="5" placeholder="e.g. &quot;5+ years in product design, strong portfolio, shipped real products, knows Figma well, B2B SaaS experience a plus&quot;"></textarea>
             <div class="ai-bottom-row">
                 <div class="ai-btn-group">
                     <div class="ai-btn-wrapper">
-                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('qualRequired','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('idealExperience','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
                         <div class="ai-btn-desc">Click to tell AI what you want</div>
                     </div>
                     <div class="ai-btn-wrapper">
-                        <button class="btn-ai" onclick="smartFormat('qualRequired','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
+                        <button class="btn-ai" onclick="smartFormat('idealExperience','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
                     </div>
                 </div>
             </div>
-            <div class="ai-chat-popover" id="aiChat-qualRequired">
+            <div class="ai-chat-popover" id="aiChat-idealExperience">
                 <div class="ai-chat-popover-header">
-                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Required Qualifications</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('qualRequired')">&times;</button>
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Ideal Experience</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('idealExperience')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
-                    <input type="text" id="aiChatInput-qualRequired" placeholder="e.g. &quot;5+ years design, strong Figma skills&quot; or &quot;Lower the bar a bit&quot;" onkeydown="if(event.key==='Enter'){runAiChat('qualRequired','bullets'); event.preventDefault();}">
-                    <button class="btn btn-accent" onclick="runAiChat('qualRequired','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
-                </div>
-            </div>
-        </div>
-        <div class="field field-with-ai">
-            <label>Nice to Have <span class="optional">(optional)</span></label>
-            <textarea id="qualNice" rows="4" placeholder="e.g. &quot;b2b saas experience would be great, if they know design systems that's a plus&quot;"></textarea>
-            <div class="ai-bottom-row">
-                <div class="ai-btn-group">
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('qualNice','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
-                        <div class="ai-btn-desc">Click to tell AI what you want</div>
-                    </div>
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai" onclick="smartFormat('qualNice','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
-                    </div>
-                </div>
-            </div>
-            <div class="ai-chat-popover" id="aiChat-qualNice">
-                <div class="ai-chat-popover-header">
-                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Nice to Have</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('qualNice')">&times;</button>
-                </div>
-                <div class="ai-chat-input-row">
-                    <input type="text" id="aiChatInput-qualNice" placeholder="e.g. &quot;Add some design system experience&quot; or &quot;Suggest nice-to-haves for this role&quot;" onkeydown="if(event.key==='Enter'){runAiChat('qualNice','bullets'); event.preventDefault();}">
-                    <button class="btn btn-accent" onclick="runAiChat('qualNice','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
+                    <input type="text" id="aiChatInput-idealExperience" placeholder="e.g. &quot;5+ years design, strong Figma skills&quot; or &quot;Lower the bar a bit&quot;" onkeydown="if(event.key==='Enter'){runAiChat('idealExperience','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('idealExperience','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="section-header" data-section="benefits">
-            <div>
-                <h2>Benefits & Perks <span class="default-badge">Default</span></h2>
-                <p class="subtitle">Uses your saved default unless you edit it here</p>
+        <h2>This Is For You If You...</h2>
+        <p class="subtitle">Describe what makes someone a great fit for this role</p>
+        <div class="field field-with-ai">
+            <textarea id="goodFit" rows="4" placeholder="e.g. &quot;love building 0-to-1 products, thrive in ambiguity, want to own a major product area, enjoy collaborating closely with engineers&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-btn-group">
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('goodFit','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai" onclick="smartFormat('goodFit','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
+                    </div>
+                </div>
             </div>
-            <span class="chevron open">&#9654;</span>
-        </div>
-        <div class="section-body" id="section-benefits">
-            <div class="boilerplate-toggle">
-                <input type="checkbox" id="useDefaultBenefits" checked>
-                <label for="useDefaultBenefits">Use saved default</label>
-            </div>
-            <div class="field">
-                <textarea id="benefits" rows="5" disabled></textarea>
+            <div class="ai-chat-popover" id="aiChat-goodFit">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Good Fit</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('goodFit')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-goodFit" placeholder="e.g. &quot;Someone who loves ambiguity and building from scratch&quot;" onkeydown="if(event.key==='Enter'){runAiChat('goodFit','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('goodFit','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="section-header" data-section="eeo">
-            <div>
-                <h2>Equal Opportunity Statement <span class="default-badge">Default</span></h2>
-                <p class="subtitle">Uses your saved default unless you edit it here</p>
+        <h2>This Is Not For You If You...</h2>
+        <p class="subtitle">Help candidates self-select out if it's not the right fit</p>
+        <div class="field field-with-ai">
+            <textarea id="notAFit" rows="4" placeholder="e.g. &quot;prefer highly structured environments, want a narrowly defined role, don't enjoy cross-functional collaboration&quot;"></textarea>
+            <div class="ai-bottom-row">
+                <div class="ai-btn-group">
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('notAFit','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
+                        <div class="ai-btn-desc">Click to tell AI what you want</div>
+                    </div>
+                    <div class="ai-btn-wrapper">
+                        <button class="btn-ai" onclick="smartFormat('notAFit','prose')"><span class="spark">&#10024;</span> Smart Format</button>
+                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
+                    </div>
+                </div>
             </div>
-            <span class="chevron open">&#9654;</span>
-        </div>
-        <div class="section-body" id="section-eeo">
-            <div class="boilerplate-toggle">
-                <input type="checkbox" id="useDefaultEEO" checked>
-                <label for="useDefaultEEO">Use saved default</label>
-            </div>
-            <div class="field">
-                <textarea id="eeo" rows="3" disabled></textarea>
+            <div class="ai-chat-popover" id="aiChat-notAFit">
+                <div class="ai-chat-popover-header">
+                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Not A Fit</div>
+                    <button class="ai-chat-popover-close" onclick="closeAiChat('notAFit')">&times;</button>
+                </div>
+                <div class="ai-chat-input-row">
+                    <input type="text" id="aiChatInput-notAFit" placeholder="e.g. &quot;Not ideal for someone who prefers rigid structure&quot;" onkeydown="if(event.key==='Enter'){runAiChat('notAFit','prose'); event.preventDefault();}">
+                    <button class="btn btn-accent" onclick="runAiChat('notAFit','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1803,37 +1859,55 @@
 
     function generatePreview() {
         const title = document.getElementById('jobTitle').value || 'Untitled Role';
-        const dept = document.getElementById('department').value;
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value;
         const salary = document.getElementById('salaryRange').value;
         const about = document.getElementById('aboutCompany').value;
         const team = document.getElementById('aboutTeam').value;
         const role = document.getElementById('aboutRole').value;
         const resp = document.getElementById('responsibilities').value;
-        const reqQual = document.getElementById('qualRequired').value;
-        const niceQual = document.getElementById('qualNice').value;
-        const benefits = document.getElementById('benefits').value;
-        const eeo = document.getElementById('eeo').value;
+        const idealExp = document.getElementById('idealExperience').value;
+        const goodFit = document.getElementById('goodFit').value;
+        const notAFit = document.getElementById('notAFit').value;
 
-        let meta = [type];
-        if (dept) meta.push(dept);
-        if (loc) meta.push(loc);
-        if (reports) meta.push(`Reports to ${reports}`);
-        if (salary) meta.push(salary);
+        // Header
+        let html = `<div class="preview-header"><h1>${escapeHTML(title)}.</h1></div>`;
 
-        let html = `<h1>${escapeHTML(title)}</h1>`;
-        html += `<p class="preview-location">${escapeHTML(meta.join('  \u00b7  '))}</p>`;
+        // Body — two columns
+        html += `<div class="preview-body">`;
 
-        if (about) { html += `<h2>About Manifest</h2>` + textToParagraphs(about); }
-        if (team) { html += `<h2>About the Team</h2>` + textToParagraphs(team); }
-        if (role) { html += `<h2>About the Role</h2>` + textToParagraphs(role); }
-        if (resp) { html += `<h2>Responsibilities</h2>` + linesToList(resp); }
-        if (reqQual) { html += `<h2>Qualifications</h2>` + linesToList(reqQual); }
-        if (niceQual) { html += `<h2>Nice to Have</h2>` + linesToList(niceQual); }
-        if (benefits) { html += `<h2>Benefits & Perks</h2>` + linesToList(benefits); }
-        if (eeo) { html += `<h2>Equal Opportunity Statement</h2>` + textToParagraphs(eeo); }
+        // Left sidebar — metadata
+        html += `<div class="preview-sidebar">`;
+        const metaRows = [
+            ['Location', loc],
+            ['Employment Type', type],
+            ['Level', lvl],
+            ['Reports To', reports],
+            ['Salary Range', salary],
+        ];
+        for (const [label, value] of metaRows) {
+            if (value) {
+                html += `<div class="preview-meta-row">
+                    <span class="preview-meta-label">${escapeHTML(label)}</span>
+                    <span class="preview-meta-value">${escapeHTML(value)}</span>
+                </div>`;
+            }
+        }
+        html += `<div class="preview-apply-btn">Apply Now</div>`;
+        html += `</div>`;
+
+        // Right content — sections
+        html += `<div class="preview-content">`;
+        if (about) { html += `<div class="preview-section"><h2>About Manifest.</h2>${textToParagraphs(about)}</div>`; }
+        if (team) { html += `<div class="preview-section"><h2>About the Team.</h2>${textToParagraphs(team)}</div>`; }
+        if (idealExp) { html += `<div class="preview-section"><h2>Ideal Experience.</h2>${textToParagraphs(idealExp)}</div>`; }
+        if (resp) { html += `<div class="preview-section"><h2>Responsibilities.</h2>${textToParagraphs(resp)}</div>`; }
+        if (goodFit) { html += `<div class="preview-callout"><h2>This for you if you...</h2>${textToParagraphs(goodFit)}</div>`; }
+        if (notAFit) { html += `<div class="preview-callout"><h2>This is not for you if you do not...</h2>${textToParagraphs(notAFit)}</div>`; }
+        html += `</div>`; // .preview-content
+        html += `</div>`; // .preview-body
 
         document.getElementById('previewOutput').innerHTML = html;
         // Show save-as-template card and pre-fill name
@@ -1869,36 +1943,32 @@
     // Build export payload from form fields
     function getExportPayload() {
         const title = document.getElementById('jobTitle').value || 'Untitled Role';
-        const dept = document.getElementById('department').value;
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value;
         const salary = document.getElementById('salaryRange').value;
 
         let metaParts = [type];
-        if (dept) metaParts.push(dept);
         if (loc) metaParts.push(loc);
+        if (lvl) metaParts.push(lvl);
         if (reports) metaParts.push('Reports to ' + reports);
         if (salary) metaParts.push(salary);
 
         const sections = [];
         const about = document.getElementById('aboutCompany').value;
         const team = document.getElementById('aboutTeam').value;
-        const role = document.getElementById('aboutRole').value;
+        const idealExp = document.getElementById('idealExperience').value;
         const resp = document.getElementById('responsibilities').value;
-        const reqQual = document.getElementById('qualRequired').value;
-        const niceQual = document.getElementById('qualNice').value;
-        const benefits = document.getElementById('benefits').value;
-        const eeo = document.getElementById('eeo').value;
+        const goodFit = document.getElementById('goodFit').value;
+        const notAFit = document.getElementById('notAFit').value;
 
         if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
         if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
-        if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
-        if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'bullets' });
-        if (reqQual) sections.push({ heading: 'Qualifications', content: reqQual, type: 'bullets' });
-        if (niceQual) sections.push({ heading: 'Nice to Have', content: niceQual, type: 'bullets' });
-        if (benefits) sections.push({ heading: 'Benefits & Perks', content: benefits, type: 'bullets' });
-        if (eeo) sections.push({ heading: 'Equal Opportunity Statement', content: eeo, type: 'prose' });
+        if (idealExp) sections.push({ heading: 'Ideal Experience', content: idealExp, type: 'prose' });
+        if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'prose' });
+        if (goodFit) sections.push({ heading: 'This for you if you...', content: goodFit, type: 'prose' });
+        if (notAFit) sections.push({ heading: 'This is not for you if you do not...', content: notAFit, type: 'prose' });
 
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
@@ -2052,18 +2122,13 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
     // ===== Clear form =====
     function clearForm() {
         if (!confirm('Clear all fields? Default sections will be restored.')) return;
-        ['jobTitle','department','location','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice']
+        ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit']
             .forEach(id => document.getElementById(id).value = '');
         document.getElementById('employmentType').selectedIndex = 0;
         document.getElementById('useDefaultAbout').checked = true;
-        document.getElementById('useDefaultBenefits').checked = true;
-        document.getElementById('useDefaultEEO').checked = true;
         document.getElementById('aboutCompany').value = getDefault('about');
         document.getElementById('aboutCompany').disabled = true;
-        document.getElementById('benefits').value = getDefault('benefits');
-        document.getElementById('benefits').disabled = true;
-        document.getElementById('eeo').value = getDefault('eeo');
-        document.getElementById('eeo').disabled = true;
+        currentFramerJobId = null;
         showToast('Form cleared');
     }
 
@@ -2122,29 +2187,26 @@ Generate a complete, professional job description from the user's input. Return 
 
 {
   "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
-  "department": "department or team",
   "location": "location including work arrangement if mentioned (Remote, Hybrid, On-site)",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
+  "level": "seniority level (e.g. Senior, Mid-Level, Associate, Lead, Director)",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
   "salaryRange": "empty string (leave for the user to fill)",
   "aboutCompany": "",
   "aboutTeam": "2-3 sentences: what the team does, how big it is, what they care about, who they collaborate with. Make it feel real, not templated.",
-  "aboutRole": "2-4 sentences: why this role exists, what impact it has, what makes it exciting. Lead with the mission, not the tasks.",
-  "responsibilities": "each on its own line, no bullets or dashes, 6-10 items",
-  "qualRequired": "each on its own line, no bullets or dashes, 5-8 items",
-  "qualNice": "each on its own line, no bullets or dashes, 3-5 items",
-  "benefits": "",
-  "eeo": ""
+  "aboutRole": "",
+  "idealExperience": "2-3 paragraphs describing the ideal candidate's background, skills, and experience. Write in flowing prose, not bullet points.",
+  "responsibilities": "2-3 paragraphs describing key responsibilities and what this person will own. Write in flowing prose, not bullet points.",
+  "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit.",
+  "notAFit": "1-2 paragraphs: honestly describe what would make this role NOT right for someone. Help candidates self-select out."
 }
 
 Writing principles:
-- Responsibilities should start with strong action verbs and describe outcomes, not just tasks ("Own the end-to-end onboarding experience" not "Work on onboarding")
-- Required qualifications should be genuinely required — don't inflate. Separate true must-haves from nice-to-haves
-- Nice-to-haves should signal growth areas and bonus skills that would accelerate impact
-- Use natural, confident language — not corporate jargon or buzzword soup
-- Be specific to this role and industry — generic bullets like "strong communication skills" should be contextualized ("Communicate design decisions clearly to engineering and product stakeholders")
-- aboutCompany, benefits, and eeo should be empty strings (the tool has saved company defaults for those)
-- For list fields, put each item on a new line with no bullet characters
+- Write in natural, confident prose — not bullet points or corporate jargon
+- Be specific to this role and industry
+- aboutCompany should be empty string (the tool has saved company defaults)
+- aboutRole can be empty — about the team covers context
+- goodFit and notAFit should feel honest and conversational, helping candidates self-select
 - Return ONLY the JSON — no explanation`;
 
         try {
@@ -2261,27 +2323,22 @@ Writing principles:
 
     // ===== Shared: Apply fields to form =====
     function applyFieldsToForm(data) {
-        const fieldIds = ['jobTitle','department','location','employmentType','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice','benefits','eeo'];
+        const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+        // Backwards compat: map old field names to new ones
+        if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
+        if (data.department && !data.level) data.level = data.department;
         fieldIds.forEach(id => {
             if (data[id] !== undefined && data[id] !== '') {
                 const el = document.getElementById(id);
+                if (!el) return;
                 if (id === 'employmentType') {
                     for (let i = 0; i < el.options.length; i++) {
                         if (el.options[i].value === data[id]) { el.selectedIndex = i; break; }
                     }
                 } else {
-                    // Uncheck default toggle if it's a boilerplate field
                     if (id === 'aboutCompany' && data[id]) {
                         document.getElementById('useDefaultAbout').checked = false;
-                        el.disabled = false;
-                    }
-                    if (id === 'benefits' && data[id]) {
-                        document.getElementById('useDefaultBenefits').checked = false;
-                        el.disabled = false;
-                    }
-                    if (id === 'eeo' && data[id]) {
-                        document.getElementById('useDefaultEEO').checked = false;
                         el.disabled = false;
                     }
                     el.value = data[id];
@@ -2320,43 +2377,45 @@ Writing principles:
 
         // Gather rich context from all filled fields
         const jobTitle = document.getElementById('jobTitle').value || '';
-        const dept = document.getElementById('department').value || '';
         const location = document.getElementById('location').value || '';
         const empType = document.getElementById('employmentType').value || '';
+        const lvl = document.getElementById('level').value || '';
         const reportsTo = document.getElementById('reportsTo').value || '';
         const salary = document.getElementById('salaryRange').value || '';
         const aboutTeam = document.getElementById('aboutTeam').value || '';
         const aboutRole = document.getElementById('aboutRole').value || '';
         const responsibilities = document.getElementById('responsibilities').value || '';
-        const qualRequired = document.getElementById('qualRequired').value || '';
+        const idealExp = document.getElementById('idealExperience').value || '';
 
         const context = [
             jobTitle && `Job Title: ${jobTitle}`,
-            dept && `Department: ${dept}`,
             location && `Location: ${location}`,
             empType && `Type: ${empType}`,
+            lvl && `Level: ${lvl}`,
             reportsTo && `Reports To: ${reportsTo}`,
             salary && `Salary Range: ${salary}`,
             aboutTeam && fieldId !== 'aboutTeam' && `About the Team: ${aboutTeam}`,
             aboutRole && fieldId !== 'aboutRole' && `About the Role: ${aboutRole}`,
-            responsibilities && fieldId !== 'responsibilities' && `Current Responsibilities: ${responsibilities}`,
-            qualRequired && fieldId !== 'qualRequired' && fieldId !== 'qualNice' && `Required Qualifications: ${qualRequired}`
+            responsibilities && fieldId !== 'responsibilities' && `Responsibilities: ${responsibilities}`,
+            idealExp && fieldId !== 'idealExperience' && `Ideal Experience: ${idealExp}`
         ].filter(Boolean).join('\n');
 
         const fieldLabels = {
             aboutTeam: 'About the Team',
             aboutRole: 'About the Role',
             responsibilities: 'Responsibilities',
-            qualRequired: 'Required Qualifications',
-            qualNice: 'Nice-to-Have Qualifications'
+            idealExperience: 'Ideal Experience',
+            goodFit: 'This Is For You If You...',
+            notAFit: 'This Is Not For You If You...'
         };
 
         const fieldGuidance = {
-            aboutTeam: 'Describe the team in a way that makes a candidate excited to join. Mention team size if inferable, what they own, how they collaborate. Make it feel real — not a generic blurb.',
-            aboutRole: 'Explain why this role exists, what impact it will have, and what makes it compelling. Lead with mission and opportunity, not tasks.',
-            responsibilities: 'Write outcome-oriented responsibilities. Start each with a strong action verb. Focus on what this person will OWN, DRIVE, DELIVER. Each should make scope and impact clear.',
-            qualRequired: 'List genuinely required qualifications — non-negotiables. Be specific about experience, tools, domain knowledge. Frame in terms of what the person has DONE.',
-            qualNice: 'Signal what would make someone exceptionally successful — adjacent skills, industry experience, leadership qualities that accelerate impact.'
+            aboutTeam: 'Describe the team in a way that makes a candidate excited to join. Mention team size if inferable, what they own, how they collaborate.',
+            aboutRole: 'Explain why this role exists, what impact it will have, and what makes it compelling.',
+            responsibilities: 'Describe key responsibilities in flowing prose. Focus on what this person will own and deliver.',
+            idealExperience: 'Describe the ideal candidate\'s background, skills, and experience in flowing prose. Be specific about what they\'ve done.',
+            goodFit: 'Describe traits, working styles, and motivations that make someone a great fit for this role. Be honest and conversational.',
+            notAFit: 'Help candidates self-select out by honestly describing what would make this role NOT right for them.'
         };
 
         let systemPrompt;
@@ -2433,8 +2492,8 @@ ${mode === 'bullets' ? '- Return one item per line, no bullet characters or dash
         if (!instruction) { showToast('Type what you want AI to change'); return; }
 
         // Gather all current form fields
-        const fieldIds = ['jobTitle','department','location','employmentType','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','qualRequired','qualNice','benefits','eeo'];
+        const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         const currentData = {};
         fieldIds.forEach(id => { currentData[id] = document.getElementById(id).value; });
 
@@ -2450,40 +2509,30 @@ ${mode === 'bullets' ? '- Return one item per line, no bullet characters or dash
         btn.textContent = 'Applying...';
         btn.disabled = true;
 
-        const systemPrompt = `You are a world-class talent acquisition strategist editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change. Think carefully about what the instruction means in context and apply it intelligently.
-
-Common instructions and what they actually mean:
-- "Make it more senior" → increase scope of responsibilities (own → lead → define strategy), raise qualification bar, adjust title if needed
-- "Make it more junior" → reduce scope, lower experience requirements, add mentorship/growth language
-- "Add remote work" → update location, add remote-specific responsibilities and qualifications
-- "Make it shorter" → tighten language, consolidate similar bullets, reduce to essential items
-- "Make it warmer/more casual" → adjust tone throughout while keeping it professional
-- "More technical" → add specific tools, frameworks, technical depth to responsibilities and qualifications
+        const systemPrompt = `You are a world-class talent acquisition strategist editing an existing job description. The user will give you the current JD fields as JSON, plus an instruction for what to change.
 
 Return ONLY valid JSON with these exact keys (no markdown, no code fences):
 {
   "jobTitle": "...",
-  "department": "...",
   "location": "...",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
+  "level": "...",
   "reportsTo": "...",
   "salaryRange": "...",
   "aboutCompany": "...",
   "aboutTeam": "...",
   "aboutRole": "...",
-  "responsibilities": "each on its own line, no bullets or dashes",
-  "qualRequired": "each on its own line, no bullets or dashes",
-  "qualNice": "each on its own line, no bullets or dashes",
-  "benefits": "each on its own line, no bullets or dashes",
-  "eeo": "..."
+  "idealExperience": "flowing prose describing ideal background and skills",
+  "responsibilities": "flowing prose describing key responsibilities",
+  "goodFit": "prose: what kind of person thrives in this role",
+  "notAFit": "prose: who should self-select out"
 }
 
 Rules:
-- Apply the instruction thoughtfully across ALL relevant fields — most edits should touch multiple sections
+- Apply the instruction thoughtfully across ALL relevant fields
 - Keep fields that genuinely aren't affected unchanged
 - If a field was empty and the instruction doesn't relate to it, leave it empty
-- For list fields, put each item on a new line with no bullet characters
-- Maintain the same quality bar: specific, outcome-oriented, no generic filler
+- Write in natural prose, not bullet points
 - Return ONLY the JSON — no explanation, no markdown`;
 
         const userMessage = `CURRENT JD:\n${JSON.stringify(currentData, null, 2)}\n\nINSTRUCTION: ${instruction}`;
@@ -2606,38 +2655,8 @@ Rules:
 
     // ===== Save to Notion (calls server proxy) =====
     async function saveToNotion() {
-        const title = document.getElementById('jobTitle').value || 'Untitled Role';
-        const dept = document.getElementById('department').value;
-        const loc = document.getElementById('location').value;
-        const type = document.getElementById('employmentType').value;
-        const reports = document.getElementById('reportsTo').value;
-        const salary = document.getElementById('salaryRange').value;
-
-        let metaParts = [type];
-        if (dept) metaParts.push(dept);
-        if (loc) metaParts.push(loc);
-        if (reports) metaParts.push('Reports to ' + reports);
-        if (salary) metaParts.push(salary);
-        const meta = metaParts.join('  \u00b7  ');
-
-        const sections = [];
-        const about = document.getElementById('aboutCompany').value;
-        const team = document.getElementById('aboutTeam').value;
-        const role = document.getElementById('aboutRole').value;
-        const resp = document.getElementById('responsibilities').value;
-        const reqQual = document.getElementById('qualRequired').value;
-        const niceQual = document.getElementById('qualNice').value;
-        const benefits = document.getElementById('benefits').value;
-        const eeo = document.getElementById('eeo').value;
-
-        if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
-        if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
-        if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
-        if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'bullets' });
-        if (reqQual) sections.push({ heading: 'Qualifications', content: reqQual, type: 'bullets' });
-        if (niceQual) sections.push({ heading: 'Nice to Have', content: niceQual, type: 'bullets' });
-        if (benefits) sections.push({ heading: 'Benefits & Perks', content: benefits, type: 'bullets' });
-        if (eeo) sections.push({ heading: 'Equal Opportunity Statement', content: eeo, type: 'prose' });
+        const payload = getExportPayload();
+        const { title, meta, sections } = payload;
 
         if (sections.length === 0) {
             showToast('Fill out the form first');
@@ -2681,17 +2700,8 @@ Rules:
 
     async function syncToFramer(action) {
         const title = document.getElementById('jobTitle').value;
-        if (!title || title === 'Untitled Role') return; // skip if no real title
+        if (!title || title === 'Untitled Role') return;
 
-        const loc = document.getElementById('location').value;
-        const type = document.getElementById('employmentType').value;
-        const reports = document.getElementById('reportsTo').value;
-        const salary = document.getElementById('salaryRange').value;
-        const resp = document.getElementById('responsibilities').value;
-        const reqQual = document.getElementById('qualRequired').value;
-        const niceQual = document.getElementById('qualNice').value;
-
-        // Generate a stable ID from the title slug, or reuse existing
         if (!currentFramerJobId) {
             currentFramerJobId = 'jd-' + Date.now().toString(36);
         }
@@ -2699,14 +2709,14 @@ Rules:
         const job = {
             title: title,
             slug: generateJobSlug(title),
-            location: loc || '',
-            level: type || '',
-            reportsTo: reports || '',
-            idealExperience: reqQual || '',
-            responsibilities: resp || '',
-            goodFit: niceQual || '',
-            notAFit: '',
-            compBand: salary || '',
+            location: document.getElementById('location').value || '',
+            level: document.getElementById('level').value || '',
+            reportsTo: document.getElementById('reportsTo').value || '',
+            idealExperience: document.getElementById('idealExperience').value || '',
+            responsibilities: document.getElementById('responsibilities').value || '',
+            goodFit: document.getElementById('goodFit').value || '',
+            notAFit: document.getElementById('notAFit').value || '',
+            compBand: document.getElementById('salaryRange').value || '',
         };
 
         try {
@@ -2830,35 +2840,34 @@ Rules:
     }
 
     async function parseJDWithAI(rawText) {
-        const systemPrompt = `You are an expert at parsing job description documents into structured data. The user will give you raw text extracted from a PDF or Word document. Your job is to identify and extract each section intelligently, even if the document uses non-standard headings or formatting.
+        const systemPrompt = `You are an expert at parsing job description documents into structured data. The user will give you raw text extracted from a PDF or Word document. Extract each section intelligently.
 
 Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
   "jobTitle": "the job title",
-  "department": "department or team name, or empty string if not found",
   "location": "location including work arrangement if mentioned, or empty string",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
+  "level": "seniority level if mentioned (Senior, Mid-Level, etc.), or empty string",
   "reportsTo": "who this role reports to, or empty string",
   "salaryRange": "salary range, or empty string",
-  "aboutCompany": "company description paragraph if present, or empty string",
+  "aboutCompany": "company description if present, or empty string",
   "aboutTeam": "team description if present, or empty string",
-  "aboutRole": "role summary/overview paragraph, or empty string",
-  "responsibilities": "each responsibility on its own line, no bullets or dashes — just the text",
-  "qualRequired": "each required qualification on its own line, no bullets or dashes",
-  "qualNice": "each nice-to-have on its own line, or empty string",
-  "benefits": "each benefit on its own line, or empty string",
-  "eeo": "equal opportunity statement if present, or empty string"
+  "aboutRole": "",
+  "idealExperience": "candidate background, skills, qualifications — as flowing prose",
+  "responsibilities": "key responsibilities — as flowing prose",
+  "goodFit": "traits/motivations of someone who'd thrive here, or empty string",
+  "notAFit": "traits of someone who wouldn't enjoy this role, or empty string"
 }
 
 Parsing guidance:
-- Documents may use varied section headings: "What You'll Do" = responsibilities, "Who You Are" = qualRequired, "What We Offer" = benefits, "The Role" = aboutRole, etc.
-- Some documents combine required and nice-to-have qualifications — use your judgment to separate them based on language ("must have" vs "ideally" / "bonus" / "preferred")
-- If the document has a general intro paragraph before specific sections, that's likely aboutRole or aboutCompany
-- Clean up any formatting artifacts from PDF extraction (random line breaks, header/footer text, page numbers)
-- For list fields, put each item on a new line with no bullet characters — strip bullets, dashes, numbers
+- "What You'll Do" / "Responsibilities" → responsibilities
+- "Who You Are" / "Qualifications" / "Requirements" → idealExperience
+- "What We Offer" / "Benefits" → ignore (handled separately)
+- "Equal Opportunity" → ignore (handled separately)
+- Convert bullet lists into flowing prose paragraphs
+- Clean up PDF formatting artifacts
 - If a section is not found, use an empty string
-- Be thorough — extract everything you can find
 - Return ONLY the JSON object, nothing else`;
 
         const response = await fetch('/api/format', {
@@ -2894,19 +2903,18 @@ Parsing guidance:
             createdAt: new Date().toISOString(),
             fields: {
                 jobTitle: parsedUploadData.jobTitle || '',
-                department: parsedUploadData.department || '',
                 location: parsedUploadData.location || '',
                 employmentType: parsedUploadData.employmentType || 'Full-Time',
+                level: parsedUploadData.level || '',
                 reportsTo: parsedUploadData.reportsTo || '',
                 salaryRange: parsedUploadData.salaryRange || '',
                 aboutCompany: parsedUploadData.aboutCompany || '',
                 aboutTeam: parsedUploadData.aboutTeam || '',
                 aboutRole: parsedUploadData.aboutRole || '',
                 responsibilities: parsedUploadData.responsibilities || '',
-                qualRequired: parsedUploadData.qualRequired || '',
-                qualNice: parsedUploadData.qualNice || '',
-                benefits: parsedUploadData.benefits || '',
-                eeo: parsedUploadData.eeo || '',
+                idealExperience: parsedUploadData.idealExperience || '',
+                goodFit: parsedUploadData.goodFit || '',
+                notAFit: parsedUploadData.notAFit || '',
             }
         };
 
@@ -2961,19 +2969,18 @@ Parsing guidance:
             createdAt: new Date().toISOString(),
             fields: {
                 jobTitle: document.getElementById('jobTitle').value,
-                department: document.getElementById('department').value,
                 location: document.getElementById('location').value,
                 employmentType: document.getElementById('employmentType').value,
+                level: document.getElementById('level').value,
                 reportsTo: document.getElementById('reportsTo').value,
                 salaryRange: document.getElementById('salaryRange').value,
                 aboutCompany: document.getElementById('aboutCompany').value,
                 aboutTeam: document.getElementById('aboutTeam').value,
                 aboutRole: document.getElementById('aboutRole').value,
                 responsibilities: document.getElementById('responsibilities').value,
-                qualRequired: document.getElementById('qualRequired').value,
-                qualNice: document.getElementById('qualNice').value,
-                benefits: document.getElementById('benefits').value,
-                eeo: document.getElementById('eeo').value,
+                idealExperience: document.getElementById('idealExperience').value,
+                goodFit: document.getElementById('goodFit').value,
+                notAFit: document.getElementById('notAFit').value,
             }
         };
 
@@ -3005,19 +3012,18 @@ Parsing guidance:
             createdAt: new Date().toISOString(),
             fields: {
                 jobTitle: document.getElementById('jobTitle').value,
-                department: document.getElementById('department').value,
                 location: document.getElementById('location').value,
                 employmentType: document.getElementById('employmentType').value,
+                level: document.getElementById('level').value,
                 reportsTo: document.getElementById('reportsTo').value,
                 salaryRange: document.getElementById('salaryRange').value,
                 aboutCompany: document.getElementById('aboutCompany').value,
                 aboutTeam: document.getElementById('aboutTeam').value,
                 aboutRole: document.getElementById('aboutRole').value,
                 responsibilities: document.getElementById('responsibilities').value,
-                qualRequired: document.getElementById('qualRequired').value,
-                qualNice: document.getElementById('qualNice').value,
-                benefits: document.getElementById('benefits').value,
-                eeo: document.getElementById('eeo').value,
+                idealExperience: document.getElementById('idealExperience').value,
+                goodFit: document.getElementById('goodFit').value,
+                notAFit: document.getElementById('notAFit').value,
             }
         };
 
