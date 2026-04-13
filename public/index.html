@@ -2227,7 +2227,6 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
         document.getElementById('useDefaultAbout').checked = true;
         document.getElementById('aboutCompany').value = getDefault('about');
         document.getElementById('aboutCompany').disabled = true;
-        currentFramerJobId = null;
         // Clear server autosave
         fetch('/api/defaults?type=autosave', {
             method: 'POST',
@@ -2797,19 +2796,13 @@ Rules:
     }
 
     // ===== Sync to Framer CMS =====
-    let currentFramerJobId = null;
-
     function generateJobSlug(title) {
         return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
 
-    async function syncToFramer(action) {
+    async function syncToFramer() {
         const title = document.getElementById('jobTitle').value;
         if (!title || title === 'Untitled Role') throw new Error('Add a job title first');
-
-        if (!currentFramerJobId) {
-            currentFramerJobId = 'jd-' + Date.now().toString(36);
-        }
 
         const job = {
             title: title,
@@ -2829,14 +2822,15 @@ Rules:
         const response = await fetch('/api/sync-to-framer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, job, jobId: currentFramerJobId })
+            body: JSON.stringify({ job })
         });
         const data = await response.json();
         if (!response.ok) {
             const hint = data.hint ? ` (${data.hint})` : '';
             throw new Error((data.error || 'CMS sync failed') + hint);
         }
-        console.log('Framer sync:', action, data);
+        console.log('Framer sync:', data);
+        return data;
     }
 
     async function pushToCMS() {
@@ -2852,10 +2846,8 @@ Rules:
         btn.disabled = true;
 
         try {
-            // First push = create, subsequent = update
-            const action = currentFramerJobId ? 'update' : 'create';
-            await syncToFramer(action);
-            showToast('Pushed to CMS! \u2705');
+            const result = await syncToFramer();
+            showToast(result.action === 'updated' ? 'CMS updated! \u2705' : 'Pushed to CMS! \u2705');
         } catch (err) {
             showToast('Error pushing to CMS: ' + err.message);
         } finally {
@@ -2865,14 +2857,15 @@ Rules:
     }
 
     async function deleteFromFramer() {
-        if (!currentFramerJobId) return;
+        const title = document.getElementById('jobTitle').value;
+        if (!title || title === 'Untitled Role') return;
+        const slug = generateJobSlug(title);
         try {
             await fetch('/api/sync-to-framer', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ jobId: currentFramerJobId })
+                body: JSON.stringify({ slug })
             });
-            currentFramerJobId = null;
         } catch (err) {
             console.warn('Framer delete error:', err.message);
         }

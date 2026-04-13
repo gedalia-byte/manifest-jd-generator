@@ -40,7 +40,6 @@ async function buildFieldData(collection, job) {
     console.log('Fields found:', fields.map(f => f.name));
     const field = Object.fromEntries(fields.map(f => [f.name, f]))
 
-    // Only include fields that exist in the collection
     const data = {};
     const fieldMap = {
         "Title": job.title,
@@ -67,6 +66,19 @@ async function buildFieldData(collection, job) {
     return data;
 }
 
+// Find an existing item by matching the slug
+async function findItemBySlug(collection, slug) {
+    const items = await collection.getItems();
+    console.log(`Looking for slug "${slug}" among ${items.length} items`);
+    for (const item of items) {
+        if (item.slug === slug) {
+            console.log(`Found existing item: id=${item.id}, slug=${item.slug}`);
+            return item;
+        }
+    }
+    return null;
+}
+
 export default async function handler(req, res) {
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -74,7 +86,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Health check — GET returns env var status
+    // Health check
     if (req.method === 'GET') {
         return res.json({
             status: 'ok',
@@ -86,63 +98,50 @@ export default async function handler(req, res) {
 
     try {
         if (req.method === 'POST') {
-            const { action, job, jobId } = req.body
+            const { job } = req.body
 
-            if (!job)   return res.status(400).json({ error: 'Missing job data' })
-            if (!jobId) return res.status(400).json({ error: 'Missing jobId' })
+            if (!job) return res.status(400).json({ error: 'Missing job data' })
+            if (!job.title) return res.status(400).json({ error: 'Missing job title' })
 
-            console.log(`sync-to-framer: ${action} jobId=${jobId} title="${job.title}"`);
+            console.log(`sync-to-framer: push title="${job.title}" slug="${job.slug}"`);
 
             const result = await withFramer(async (framer) => {
                 const collection = await getJobsCollection(framer)
                 const fieldData = await buildFieldData(collection, job)
 
-                if (action === 'create') {
-                    console.log('Creating item with slug:', job.slug);
-                    await collection.addItems([{
-                        id: jobId,
-                        slug: job.slug,
-                        fieldData,
-                    }])
-                    return { success: true, action: 'created' }
+                // Check if an item with this slug already exists
+                const existing = await findItemBySlug(collection, job.slug);
+
+                if (existing) {
+                    // Update existing item
+                    console.log('Updating existing item:', existing.id);
+                    await existing.setAttributes({ fieldData });
+                    return { success: true, action: 'updated', itemId: existing.id, slug: job.slug }
                 }
 
-                if (action === 'update') {
-                    const items = await collection.getItems()
-                    console.log('Existing items:', items.length);
-                    const item = items.find(i => i.id === jobId)
-                    if (!item) {
-                        // Item not found — create instead
-                        console.log('Item not found for update, creating instead');
-                        await collection.addItems([{
-                            id: jobId,
-                            slug: job.slug,
-                            fieldData,
-                        }])
-                        return { success: true, action: 'created (fallback)' }
-                    }
-                    await item.setAttributes({ fieldData })
-                    return { success: true, action: 'updated' }
-                }
-
-                return { error: 'Invalid action — use "create" or "update"' }
+                // Create new item — let Framer assign the ID
+                console.log('Creating new item with slug:', job.slug);
+                await collection.addItems([{
+                    slug: job.slug,
+                    fieldData,
+                }]);
+                return { success: true, action: 'created', slug: job.slug }
             });
 
             return res.json(result);
         }
 
         if (req.method === 'DELETE') {
-            const { jobId } = req.body
-            if (!jobId) return res.status(400).json({ error: 'Missing jobId' })
+            const { slug } = req.body
+            if (!slug) return res.status(400).json({ error: 'Missing slug' })
 
-            console.log(`sync-to-framer: DELETE jobId=${jobId}`);
+            console.log(`sync-to-framer: DELETE slug="${slug}"`);
 
             const result = await withFramer(async (framer) => {
                 const collection = await getJobsCollection(framer)
-                const items = await collection.getItems()
-                const item = items.find(i => i.id === jobId)
-                if (!item) return { success: true, action: 'not found (already deleted)' }
-                await item.delete()
+                const existing = await findItemBySlug(collection, slug);
+                if (!existing) return { success: true, action: 'not found (already deleted)' }
+                await existing.delete()
                 return { success: true, action: 'deleted' }
             });
 
@@ -157,7 +156,6 @@ export default async function handler(req, res) {
             error: err.message,
             hint: err.message.includes('env') ? 'Check FRAMER_API_KEY and FRAMER_PROJECT_URL in Vercel env vars' :
                   err.message.includes('timeout') ? 'Connection timed out — Framer may be slow, try again' :
-                  err.message.includes('Node') ? 'Node.js 22+ required — check Vercel Node version setting' :
                   'Check Vercel function logs for details'
         })
     }
