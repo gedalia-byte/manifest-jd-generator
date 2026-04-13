@@ -502,13 +502,12 @@
         }
         .preview-body {
             display: flex;
-            gap: 80px;
-            padding: 48px 48px 64px;
+            flex-direction: column;
+            gap: 60px;
+            padding: 48px 80px 80px;
         }
-        .preview-sidebar {
-            flex-shrink: 0;
-            width: 280px;
-            padding-top: 16px;
+        .preview-meta {
+            width: 100%;
         }
         .preview-meta-row {
             display: flex;
@@ -522,12 +521,12 @@
         }
         .preview-meta-label {
             font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-size: 15px;
             color: var(--charcoal);
         }
         .preview-meta-value {
             font-family: 'Libre Caslon Display', Georgia, serif;
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
             color: var(--charcoal);
             text-align: right;
@@ -536,37 +535,34 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-top: 36px;
             padding: 12px 18px;
             font-family: 'Inter', sans-serif;
             font-size: 15px;
-            color: white;
-            background: #1a100a;
-            border: 1px solid rgba(255,255,255,0.4);
+            color: var(--charcoal);
+            background: transparent;
+            border: 1px solid rgba(30, 19, 16, 0.2);
             border-radius: 3px;
             cursor: default;
             letter-spacing: -0.2px;
         }
         .preview-content {
-            flex: 1;
-            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 64px;
             padding-top: 16px;
         }
         .preview-section {
-            margin-bottom: 64px;
-        }
-        .preview-section:last-child {
             margin-bottom: 0;
         }
         .preview-section h2 {
             font-family: 'Libre Caslon Display', Georgia, serif;
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 400;
             font-style: italic;
             color: var(--charcoal);
-            letter-spacing: -0.6px;
+            letter-spacing: -0.7px;
             line-height: 1.1;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             margin-top: 0;
         }
         .preview-section p {
@@ -587,16 +583,9 @@
             line-height: 1.5;
             margin-bottom: 8px;
         }
-        .preview-callout {
-            border-left: 6px solid var(--charcoal);
-            padding-left: 40px;
-            margin-bottom: 64px;
-        }
-        .preview-callout:last-child {
-            margin-bottom: 0;
-        }
-        .preview-callout h2 {
-            font-size: 26px;
+        .preview-bottom-cta {
+            text-align: left;
+            padding-top: 16px;
         }
 
         /* ===== Toast ===== */
@@ -1194,12 +1183,10 @@
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
             .container { padding: 0 16px; }
-            .preview-body { flex-direction: column; gap: 32px; padding: 28px 24px; }
-            .preview-sidebar { width: 100%; }
+            .preview-body { gap: 32px; padding: 28px 24px 48px; }
             .preview-header { padding: 48px 24px; }
             .preview-header h1 { font-size: 32px; }
-            .preview-section h2 { font-size: 24px; }
-            .preview-callout { padding-left: 24px; }
+            .preview-section h2 { font-size: 28px; }
             .topbar { padding: 0 20px; }
             .tabs { padding: 0 20px; }
             .tab { padding: 14px 16px; font-size: 12px; }
@@ -1538,35 +1525,6 @@
         </div>
     </div>
 
-    <div class="card">
-        <h2>This Is Not For You If You...</h2>
-        <p class="subtitle">Help candidates self-select out if it's not the right fit</p>
-        <div class="field field-with-ai">
-            <textarea id="notAFit" rows="4" placeholder="e.g. &quot;prefer highly structured environments, want a narrowly defined role, don't enjoy cross-functional collaboration&quot;"></textarea>
-            <div class="ai-bottom-row">
-                <div class="ai-btn-group">
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('notAFit','prose')"><span class="spark">&#9889;</span> AI Suggest</button>
-                        <div class="ai-btn-desc">Click to tell AI what you want</div>
-                    </div>
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai" onclick="smartFormat('notAFit','prose')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="ai-btn-desc">Cleans up your writing, polishes language</div>
-                    </div>
-                </div>
-            </div>
-            <div class="ai-chat-popover" id="aiChat-notAFit">
-                <div class="ai-chat-popover-header">
-                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Not A Fit</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('notAFit')">&times;</button>
-                </div>
-                <div class="ai-chat-input-row">
-                    <input type="text" id="aiChatInput-notAFit" placeholder="e.g. &quot;Not ideal for someone who prefers rigid structure&quot;" onkeydown="if(event.key==='Enter'){runAiChat('notAFit','prose'); event.preventDefault();}">
-                    <button class="btn btn-accent" onclick="runAiChat('notAFit','prose')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
         <button class="btn btn-accent" onclick="generatePreview()">Generate Job Description</button>
@@ -1702,7 +1660,8 @@
             <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .doc</button>
             <button class="btn btn-secondary" onclick="downloadAsPDF()">Download PDF</button>
             <button class="btn btn-secondary" onclick="openInGoogleDocs()">Open in Google Docs</button>
-            <button class="btn btn-accent" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
+            <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn">Push to CMS</button>
+            <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
             <button class="btn btn-primary" onclick="switchTab('builder')">Edit</button>
         </div>
     </div>
@@ -1870,16 +1829,15 @@
         const resp = document.getElementById('responsibilities').value;
         const idealExp = document.getElementById('idealExperience').value;
         const goodFit = document.getElementById('goodFit').value;
-        const notAFit = document.getElementById('notAFit').value;
 
         // Header
         let html = `<div class="preview-header"><h1>${escapeHTML(title)}.</h1></div>`;
 
-        // Body — two columns
+        // Body — single column
         html += `<div class="preview-body">`;
 
-        // Left sidebar — metadata
-        html += `<div class="preview-sidebar">`;
+        // Metadata table
+        html += `<div class="preview-meta">`;
         const metaRows = [
             ['Location', loc],
             ['Employment Type', type],
@@ -1895,18 +1853,19 @@
                 </div>`;
             }
         }
-        html += `<div class="preview-apply-btn">Apply Now</div>`;
         html += `</div>`;
 
-        // Right content — sections
+        // Content sections
         html += `<div class="preview-content">`;
         if (about) { html += `<div class="preview-section"><h2>About Manifest.</h2>${textToParagraphs(about)}</div>`; }
         if (team) { html += `<div class="preview-section"><h2>About the Team.</h2>${textToParagraphs(team)}</div>`; }
         if (idealExp) { html += `<div class="preview-section"><h2>Ideal Experience.</h2>${textToParagraphs(idealExp)}</div>`; }
         if (resp) { html += `<div class="preview-section"><h2>Responsibilities.</h2>${textToParagraphs(resp)}</div>`; }
-        if (goodFit) { html += `<div class="preview-callout"><h2>This for you if you...</h2>${textToParagraphs(goodFit)}</div>`; }
-        if (notAFit) { html += `<div class="preview-callout"><h2>This is not for you if you do not...</h2>${textToParagraphs(notAFit)}</div>`; }
+        if (goodFit) { html += `<div class="preview-section"><h2>This for you if you...</h2>${textToParagraphs(goodFit)}</div>`; }
         html += `</div>`; // .preview-content
+
+        // Apply Now button
+        html += `<div class="preview-bottom-cta"><div class="preview-apply-btn">Apply Now</div></div>`;
         html += `</div>`; // .preview-body
 
         document.getElementById('previewOutput').innerHTML = html;
@@ -1961,14 +1920,12 @@
         const idealExp = document.getElementById('idealExperience').value;
         const resp = document.getElementById('responsibilities').value;
         const goodFit = document.getElementById('goodFit').value;
-        const notAFit = document.getElementById('notAFit').value;
 
         if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
         if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
         if (idealExp) sections.push({ heading: 'Ideal Experience', content: idealExp, type: 'prose' });
         if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'prose' });
         if (goodFit) sections.push({ heading: 'This for you if you...', content: goodFit, type: 'prose' });
-        if (notAFit) sections.push({ heading: 'This is not for you if you do not...', content: notAFit, type: 'prose' });
 
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
@@ -2122,7 +2079,7 @@ li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
     // ===== Clear form =====
     function clearForm() {
         if (!confirm('Clear all fields? Default sections will be restored.')) return;
-        ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit']
+        ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit']
             .forEach(id => document.getElementById(id).value = '');
         document.getElementById('employmentType').selectedIndex = 0;
         document.getElementById('useDefaultAbout').checked = true;
@@ -2197,8 +2154,7 @@ Generate a complete, professional job description from the user's input. Return 
   "aboutRole": "",
   "idealExperience": "2-3 paragraphs describing the ideal candidate's background, skills, and experience. Write in flowing prose, not bullet points.",
   "responsibilities": "2-3 paragraphs describing key responsibilities and what this person will own. Write in flowing prose, not bullet points.",
-  "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit.",
-  "notAFit": "1-2 paragraphs: honestly describe what would make this role NOT right for someone. Help candidates self-select out."
+  "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit."
 }
 
 Writing principles:
@@ -2206,7 +2162,7 @@ Writing principles:
 - Be specific to this role and industry
 - aboutCompany should be empty string (the tool has saved company defaults)
 - aboutRole can be empty — about the team covers context
-- goodFit and notAFit should feel honest and conversational, helping candidates self-select
+- goodFit should feel honest and conversational, helping candidates self-select
 - Return ONLY the JSON — no explanation`;
 
         try {
@@ -2324,7 +2280,7 @@ Writing principles:
     // ===== Shared: Apply fields to form =====
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit'];
         // Backwards compat: map old field names to new ones
         if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
         if (data.department && !data.level) data.level = data.department;
@@ -2405,8 +2361,7 @@ Writing principles:
             aboutRole: 'About the Role',
             responsibilities: 'Responsibilities',
             idealExperience: 'Ideal Experience',
-            goodFit: 'This Is For You If You...',
-            notAFit: 'This Is Not For You If You...'
+            goodFit: 'This Is For You If You...'
         };
 
         const fieldGuidance = {
@@ -2414,8 +2369,7 @@ Writing principles:
             aboutRole: 'Explain why this role exists, what impact it will have, and what makes it compelling.',
             responsibilities: 'Describe key responsibilities in flowing prose. Focus on what this person will own and deliver.',
             idealExperience: 'Describe the ideal candidate\'s background, skills, and experience in flowing prose. Be specific about what they\'ve done.',
-            goodFit: 'Describe traits, working styles, and motivations that make someone a great fit for this role. Be honest and conversational.',
-            notAFit: 'Help candidates self-select out by honestly describing what would make this role NOT right for them.'
+            goodFit: 'Describe traits, working styles, and motivations that make someone a great fit for this role. Be honest and conversational.'
         };
 
         let systemPrompt;
@@ -2493,7 +2447,7 @@ ${mode === 'bullets' ? '- Return one item per line, no bullet characters or dash
 
         // Gather all current form fields
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+                          'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit'];
         const currentData = {};
         fieldIds.forEach(id => { currentData[id] = document.getElementById(id).value; });
 
@@ -2524,8 +2478,7 @@ Return ONLY valid JSON with these exact keys (no markdown, no code fences):
   "aboutRole": "...",
   "idealExperience": "flowing prose describing ideal background and skills",
   "responsibilities": "flowing prose describing key responsibilities",
-  "goodFit": "prose: what kind of person thrives in this role",
-  "notAFit": "prose: who should self-select out"
+  "goodFit": "prose: what kind of person thrives in this role"
 }
 
 Rules:
@@ -2715,7 +2668,7 @@ Rules:
             idealExperience: document.getElementById('idealExperience').value || '',
             responsibilities: document.getElementById('responsibilities').value || '',
             goodFit: document.getElementById('goodFit').value || '',
-            notAFit: document.getElementById('notAFit').value || '',
+            notAFit: '',
             compBand: document.getElementById('salaryRange').value || '',
         };
 
@@ -2733,6 +2686,30 @@ Rules:
             }
         } catch (err) {
             console.warn('Framer sync error:', err.message);
+        }
+    }
+
+    async function pushToCMS() {
+        const title = document.getElementById('jobTitle').value;
+        if (!title || title === 'Untitled Role') {
+            showToast('Add a job title first');
+            return;
+        }
+
+        const btn = document.getElementById('pushCmsBtn');
+        const origText = btn.textContent;
+        btn.textContent = 'Pushing...';
+        btn.disabled = true;
+
+        try {
+            const action = currentFramerJobId ? 'update' : 'create';
+            await syncToFramer(action);
+            showToast('Pushed to CMS!');
+        } catch (err) {
+            showToast('Error pushing to CMS: ' + err.message);
+        } finally {
+            btn.textContent = origText;
+            btn.disabled = false;
         }
     }
 
@@ -2856,8 +2833,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "aboutRole": "",
   "idealExperience": "candidate background, skills, qualifications — as flowing prose",
   "responsibilities": "key responsibilities — as flowing prose",
-  "goodFit": "traits/motivations of someone who'd thrive here, or empty string",
-  "notAFit": "traits of someone who wouldn't enjoy this role, or empty string"
+  "goodFit": "traits/motivations of someone who'd thrive here, or empty string"
 }
 
 Parsing guidance:
@@ -2914,7 +2890,6 @@ Parsing guidance:
                 responsibilities: parsedUploadData.responsibilities || '',
                 idealExperience: parsedUploadData.idealExperience || '',
                 goodFit: parsedUploadData.goodFit || '',
-                notAFit: parsedUploadData.notAFit || '',
             }
         };
 
@@ -2980,7 +2955,6 @@ Parsing guidance:
                 responsibilities: document.getElementById('responsibilities').value,
                 idealExperience: document.getElementById('idealExperience').value,
                 goodFit: document.getElementById('goodFit').value,
-                notAFit: document.getElementById('notAFit').value,
             }
         };
 
@@ -3023,7 +2997,6 @@ Parsing guidance:
                 responsibilities: document.getElementById('responsibilities').value,
                 idealExperience: document.getElementById('idealExperience').value,
                 goodFit: document.getElementById('goodFit').value,
-                notAFit: document.getElementById('notAFit').value,
             }
         };
 
