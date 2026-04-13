@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/api/format", "destination": "/api/format" },
     { "source": "/api/notion", "destination": "/api/notion" },
-    { "source": "/api/templates", "destination": "/api/templates" }
+    { "source": "/api/templates", "destination": "/api/templates" },
+    { "source": "/api/sync-to-framer", "destination": "/api/sync-to-framer" }
   ]
 }

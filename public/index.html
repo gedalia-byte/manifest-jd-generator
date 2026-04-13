@@ -1841,6 +1841,9 @@
         document.getElementById('previewTemplateName').value = title !== 'Untitled Role' ? title : '';
         switchTab('preview');
         showToast('Job description generated');
+
+        // Sync to Framer CMS
+        syncToFramer('create');
     }
 
     // ===== Export =====
@@ -2666,6 +2669,74 @@ Rules:
         } finally {
             btn.textContent = original;
             btn.disabled = false;
+        }
+    }
+
+    // ===== Sync to Framer CMS =====
+    let currentFramerJobId = null;
+
+    function generateJobSlug(title) {
+        return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    async function syncToFramer(action) {
+        const title = document.getElementById('jobTitle').value;
+        if (!title || title === 'Untitled Role') return; // skip if no real title
+
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+        const resp = document.getElementById('responsibilities').value;
+        const reqQual = document.getElementById('qualRequired').value;
+        const niceQual = document.getElementById('qualNice').value;
+
+        // Generate a stable ID from the title slug, or reuse existing
+        if (!currentFramerJobId) {
+            currentFramerJobId = 'jd-' + Date.now().toString(36);
+        }
+
+        const job = {
+            title: title,
+            slug: generateJobSlug(title),
+            location: loc || '',
+            level: type || '',
+            reportsTo: reports || '',
+            idealExperience: reqQual || '',
+            responsibilities: resp || '',
+            goodFit: niceQual || '',
+            notAFit: '',
+            compBand: salary || '',
+        };
+
+        try {
+            const response = await fetch('/api/sync-to-framer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, job, jobId: currentFramerJobId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                console.log('Framer sync:', action, data);
+            } else {
+                console.warn('Framer sync failed:', data.error);
+            }
+        } catch (err) {
+            console.warn('Framer sync error:', err.message);
+        }
+    }
+
+    async function deleteFromFramer() {
+        if (!currentFramerJobId) return;
+        try {
+            await fetch('/api/sync-to-framer', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobId: currentFramerJobId })
+            });
+            currentFramerJobId = null;
+        } catch (err) {
+            console.warn('Framer delete error:', err.message);
         }
     }
 
