@@ -2273,9 +2273,7 @@ Writing principles:
             if (!response.ok) throw new Error(data.error || 'Server error');
 
             let text = data.text || '';
-            text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
-
-            const generated = JSON.parse(text);
+            const generated = safeParseJSON(text);
             applyFieldsToForm(generated);
 
             showToast('JD generated! Review and customize below.');
@@ -2358,6 +2356,22 @@ Writing principles:
             showToast('Error: ' + err.message);
             console.error('Create upload error:', err);
         }
+    }
+
+    // ===== Shared: Safe JSON parse (handles control chars in AI responses) =====
+    function safeParseJSON(text) {
+        // Strip code fences
+        text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
+        // Remove control characters that break JSON.parse (tabs, newlines inside string values)
+        // This replaces literal control chars (0x00-0x1F) inside JSON strings with spaces,
+        // but preserves \n escape sequences
+        text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ' ');
+        // Fix unescaped newlines inside JSON string values by replacing real newlines
+        // between quotes with \\n
+        text = text.replace(/"([^"]*?)"/gs, (match, content) => {
+            return '"' + content.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '"';
+        });
+        return JSON.parse(text);
     }
 
     // ===== Shared: Apply fields to form =====
@@ -2600,9 +2614,7 @@ Rules:
             if (!response.ok) throw new Error(data.error || 'Server error');
 
             let text = data.text || '';
-            text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
-
-            const updated = JSON.parse(text);
+            const updated = safeParseJSON(text);
             applyFieldsToForm(updated);
 
             document.getElementById('aiEditInput').value = '';
@@ -2909,11 +2921,9 @@ Parsing guidance:
         if (!response.ok) throw new Error(data.error || 'AI parsing failed');
 
         let text = data.text || '';
-        // Strip markdown code fences if present (handles ```json\n...\n```)
-        text = text.replace(/^```[a-z]*\s*\n?/i, '').replace(/\n?\s*```\s*$/i, '').trim();
 
         try {
-            return JSON.parse(text);
+            return safeParseJSON(text);
         } catch (e) {
             console.error('AI returned non-JSON:', text);
             throw new Error('AI could not parse this document — try a cleaner file');
