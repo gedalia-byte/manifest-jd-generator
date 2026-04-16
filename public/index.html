@@ -1785,7 +1785,6 @@
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn" style="font-size: 14px; padding: 10px 24px;">Push to CMS</button>
                 <div style="width: 1px; height: 28px; background: var(--stone); flex-shrink: 0;"></div>
-                <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
                 <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
                 <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
                 <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .doc</button>
@@ -2218,7 +2217,13 @@
 
     function copyAsHTML() {
         const el = document.getElementById('previewOutput');
-        const blob = new Blob([el.innerHTML], { type: 'text/html' });
+        // Clone and strip website-only elements (Back button, Apply Now)
+        const clone = el.cloneNode(true);
+        const backBtn = clone.querySelector('.preview-back-btn');
+        if (backBtn) backBtn.remove();
+        const cta = clone.querySelector('.preview-bottom-cta');
+        if (cta) cta.remove();
+        const blob = new Blob([clone.innerHTML], { type: 'text/html' });
         const item = new ClipboardItem({ 'text/html': blob });
         navigator.clipboard.write([item]).then(() => showToast('Copied as rich text'));
     }
