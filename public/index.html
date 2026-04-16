@@ -1458,36 +1458,6 @@
     </div>
 
     <div class="card">
-        <h2>Responsibilities</h2>
-        <p class="subtitle">List them or describe casually — AI can generate or polish</p>
-        <div class="field field-with-ai">
-            <textarea id="responsibilities" rows="6" placeholder="e.g. &quot;they'll design user flows, work with engineers on implementation, do user research, own the design system, present to stakeholders&quot;"></textarea>
-            <div class="ai-bottom-row">
-                <div class="ai-btn-group">
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai btn-ai-primary" onclick="openAiChat('responsibilities','bullets')"><span class="spark">&#9889;</span> AI Suggest</button>
-                        <div class="ai-btn-desc">Click to tell AI what you want</div>
-                    </div>
-                    <div class="ai-btn-wrapper">
-                        <button class="btn-ai" onclick="smartFormat('responsibilities','bullets')"><span class="spark">&#10024;</span> Smart Format</button>
-                        <div class="ai-btn-desc">Turns rough notes into clean bullet points</div>
-                    </div>
-                </div>
-            </div>
-            <div class="ai-chat-popover" id="aiChat-responsibilities">
-                <div class="ai-chat-popover-header">
-                    <div class="ai-chat-popover-title">&#9889; AI Suggest — Responsibilities</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('responsibilities')">&times;</button>
-                </div>
-                <div class="ai-chat-input-row">
-                    <input type="text" id="aiChatInput-responsibilities" placeholder="e.g. &quot;Add something about cross-team collaboration&quot; or &quot;Make these more senior&quot;" onkeydown="if(event.key==='Enter'){runAiChat('responsibilities','bullets'); event.preventDefault();}">
-                    <button class="btn btn-accent" onclick="runAiChat('responsibilities','bullets')" style="white-space: nowrap; padding: 8px 16px;">Go</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
         <h2>Ideal Experience</h2>
         <p class="subtitle">Describe the ideal candidate's background and qualifications</p>
         <div class="field field-with-ai">
@@ -1518,7 +1488,7 @@
     </div>
 
     <div class="card">
-        <h2>This For You If</h2>
+        <h2>This Is For You If...</h2>
         <p class="subtitle">Describe what makes someone a great fit for this role</p>
         <div class="field field-with-ai">
             <textarea id="goodFit" rows="4" placeholder="e.g. &quot;love building 0-to-1 products, thrive in ambiguity, want to own a major product area, enjoy collaborating closely with engineers&quot;"></textarea>
@@ -1548,7 +1518,7 @@
     </div>
 
     <div class="card">
-        <h2>Not For You If</h2>
+        <h2>Not For You If...</h2>
         <p class="subtitle">Describe what might make this role not the right fit</p>
         <div class="field field-with-ai">
             <textarea id="notAFit" rows="4" placeholder="e.g. &quot;prefer highly structured environments, want to manage a large team right away, need detailed specs before starting work&quot;"></textarea>
@@ -1577,6 +1547,9 @@
         </div>
     </div>
 
+
+    <!-- Hidden field for responsibilities — populated by AI/templates, shown in preview -->
+    <textarea id="responsibilities" style="display:none;"></textarea>
 
     <div class="btn-row" style="margin-top: 4px; margin-bottom: 32px;">
         <button class="btn btn-accent" onclick="generatePreview()">Generate Job Description</button>
