@@ -576,13 +576,13 @@
         .preview-meta-label {
             font-family: 'Inter', sans-serif;
             font-size: 17px;
-            color: var(--charcoal);
+            color: #1e1310;
         }
         .preview-meta-value {
             font-family: 'Libre Caslon Display', Georgia, serif;
             font-size: 20px;
             font-weight: 700;
-            color: var(--charcoal);
+            color: #1e1310;
             text-align: right;
         }
         .preview-apply-btn {
@@ -613,7 +613,7 @@
             font-size: 55px;
             font-weight: 400;
             font-style: italic;
-            color: var(--charcoal);
+            color: #1e1310;
             letter-spacing: -1.1px;
             line-height: 1;
             margin-bottom: 40px;
@@ -622,7 +622,7 @@
         .preview-section p {
             font-family: 'Inter', sans-serif;
             font-size: 18px;
-            color: var(--charcoal);
+            color: #1e1310;
             line-height: 1.4;
             margin-bottom: 12px;
         }
@@ -633,7 +633,7 @@
         .preview-section li {
             font-family: 'Inter', sans-serif;
             font-size: 18px;
-            color: var(--charcoal);
+            color: #1e1310;
             line-height: 1.4;
             margin-bottom: 8px;
         }
@@ -2187,8 +2187,8 @@
         if (role) { html += `<div class="preview-section"><h2>About the Role.</h2>${textToParagraphs(role)}</div>`; }
         if (idealExp) { html += `<div class="preview-section"><h2>Ideal Experience.</h2>${textToParagraphs(idealExp)}</div>`; }
         if (resp) { html += `<div class="preview-section"><h2>Responsibilities.</h2>${textToParagraphs(resp)}</div>`; }
-        if (goodFit) { html += `<div class="preview-section"><h2>This Is For You If.</h2>${textToParagraphs(goodFit)}</div>`; }
-        if (notFit) { html += `<div class="preview-section"><h2>Not For You If.</h2>${textToParagraphs(notFit)}</div>`; }
+        if (goodFit) { html += `<div class="preview-section"><h2>This is for you if...</h2>${textToParagraphs(goodFit)}</div>`; }
+        if (notFit) { html += `<div class="preview-section"><h2>Not for you if...</h2>${textToParagraphs(notFit)}</div>`; }
         html += `</div>`; // .preview-content
 
         // Apply Now button
@@ -2252,8 +2252,8 @@
         if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
         if (idealExp) sections.push({ heading: 'Ideal Experience', content: idealExp, type: 'prose' });
         if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'prose' });
-        if (goodFit) sections.push({ heading: 'This Is For You If', content: goodFit, type: 'prose' });
-        if (notFit) sections.push({ heading: 'Not For You If', content: notFit, type: 'prose' });
+        if (goodFit) sections.push({ heading: 'This is for you if...', content: goodFit, type: 'prose' });
+        if (notFit) sections.push({ heading: 'Not for you if...', content: notFit, type: 'prose' });
 
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
