@@ -2417,6 +2417,56 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         showToast('Use "Save as PDF" in the print dialog');
     }
 
+    // Build Google Docs-friendly HTML (inline styles only — GDocs strips <style> blocks)
+    function buildGoogleDocsHTML(payload) {
+        const metaRows = [];
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const lvl = document.getElementById('level').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+        if (loc) metaRows.push(['Location', loc]);
+        if (type) metaRows.push(['Employment Type', type]);
+        if (lvl) metaRows.push(['Level', lvl]);
+        if (reports) metaRows.push(['Reports To', reports]);
+        if (salary) metaRows.push(['Salary Range', salary]);
+
+        let html = '';
+
+        // Title — large serif
+        html += `<h1 style="font-family:Georgia,serif;font-size:28pt;font-weight:normal;color:#1e1310;letter-spacing:-0.5px;margin:0 0 8px;">${escapeHTML(payload.title)}.</h1>`;
+
+        // Metadata as a clean table
+        if (metaRows.length) {
+            html += `<table style="width:100%;border-collapse:collapse;margin-bottom:24px;">`;
+            for (const [label, value] of metaRows) {
+                html += `<tr style="border-bottom:1px solid #e0d8d0;">
+                    <td style="padding:6px 4px;font-family:Calibri,sans-serif;font-size:11pt;color:#1e1310;">${escapeHTML(label)}</td>
+                    <td style="padding:6px 4px;font-family:Georgia,serif;font-size:11pt;font-weight:bold;color:#1e1310;text-align:right;">${escapeHTML(value)}</td>
+                </tr>`;
+            }
+            html += `</table>`;
+        }
+
+        // Sections
+        for (const s of payload.sections) {
+            html += `<h2 style="font-family:Georgia,serif;font-size:16pt;font-style:italic;font-weight:normal;color:#1e1310;letter-spacing:-0.3px;margin:28px 0 10px;padding:0;">${escapeHTML(s.heading)}.</h2>`;
+            if (s.type === 'bullets') {
+                html += '<ul style="padding-left:20px;margin:4px 0 0;">' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l =>
+                    `<li style="font-family:Calibri,sans-serif;font-size:11pt;color:#1e1310;line-height:1.6;margin-bottom:3px;">${escapeHTML(l)}</li>`
+                ).join('') + '</ul>';
+            } else {
+                html += s.content.split(/\n\s*\n/).map(para =>
+                    para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
+                ).filter(p => p).map(p =>
+                    `<p style="font-family:Calibri,sans-serif;font-size:11pt;color:#1e1310;line-height:1.6;margin:0 0 6px;">${escapeHTML(p)}</p>`
+                ).join('');
+            }
+        }
+
+        return html;
+    }
+
     async function openInGoogleDocs() {
         const payload = getExportPayload();
         if (payload.sections.length === 0) {
@@ -2427,8 +2477,8 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         // Open Google Doc FIRST (must be synchronous to avoid popup blocker)
         const newTab = window.open('https://docs.google.com/document/create', '_blank');
 
-        // Then copy rich HTML to clipboard
-        const html = buildBrandedHTML(payload, 'doc');
+        // Copy Google Docs-optimized HTML (inline styles, no Back/Apply Now)
+        const html = buildGoogleDocsHTML(payload);
         try {
             const htmlBlob = new Blob([html], { type: 'text/html' });
             const textContent = buildPlainText(payload);
