@@ -1815,6 +1815,11 @@
         document.querySelectorAll('.tab').forEach(t => {
             if (t.dataset.tab !== 'home') t.classList.add('tab-locked');
         });
+        // If currently on a locked tab, force back to Home
+        const activeTab = document.querySelector('.tab.active');
+        if (activeTab && activeTab.dataset.tab !== 'home') {
+            switchTab('home');
+        }
     }
     function updateTopbarUser() {
         const name = localStorage.getItem('manifest_hiring_manager');
@@ -2354,7 +2359,7 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         const newTab = window.open('https://docs.google.com/document/create', '_blank');
 
         // Then copy rich HTML to clipboard
-        const html = buildStyledHTML(payload);
+        const html = buildBrandedHTML(payload, 'doc');
         try {
             const htmlBlob = new Blob([html], { type: 'text/html' });
             const textContent = buildPlainText(payload);
