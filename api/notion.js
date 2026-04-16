@@ -1,10 +1,15 @@
+export const config = {
+    maxDuration: 60,
+};
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const NOTION_API_KEY = process.env.NOTION_API_KEY;
-    const NOTION_PARENT_PAGE_ID = process.env.NOTION_PARENT_PAGE_ID || '1ca9717da31f806d9fb4d69aa6d03a4a';
+    const NOTION_PARENT_PAGE_ID = process.env.NOTION_PARENT_PAGE_ID;
 
     if (!NOTION_API_KEY) return res.status(500).json({ error: 'NOTION_API_KEY not configured' });
+    if (!NOTION_PARENT_PAGE_ID) return res.status(500).json({ error: 'NOTION_PARENT_PAGE_ID not configured' });
 
     const { title, meta, sections } = req.body;
     if (!title) return res.status(400).json({ error: 'Missing title' });
@@ -19,7 +24,7 @@ export default async function handler(req, res) {
         children.push({ object: 'block', type: 'divider', divider: {} });
     }
 
-    for (const section of sections) {
+    for (const section of (sections || [])) {
         children.push({
             object: 'block', type: 'heading_2',
             heading_2: { rich_text: [{ type: 'text', text: { content: section.heading } }] }
@@ -61,9 +66,9 @@ export default async function handler(req, res) {
         const data = await response.json();
         if (!response.ok) return res.status(response.status).json({ error: data.message || `Notion API error (${response.status})` });
 
-        res.json({ url: data.url, id: data.id });
+        return res.json({ url: data.url, id: data.id });
     } catch (err) {
         console.error('Notion API error:', err);
-        res.status(500).json({ error: 'Failed to reach Notion API' });
+        return res.status(500).json({ error: 'Failed to reach Notion API' });
     }
 }

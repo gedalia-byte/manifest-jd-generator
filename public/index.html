@@ -20,16 +20,20 @@
             --deep: #1A0F0A;
             --amber: #745C44;
             --amber-light: #8D614E;
+            --amber-dark: #A06A3A;
             --amber-glow: #F4EEE5;
             --cream: #FAF7F2;
             --white: #FFFFFF;
             --text: #1A0F0A;
             --text-secondary: rgba(26,15,10,0.6);
             --text-muted: rgba(26,15,10,0.4);
+            --color-error: #C0392B;
             --radius: 10px;
             --radius-sm: 6px;
+            --radius-xs: 4px;
             --shadow-sm: 0 1px 3px rgba(42,40,38,0.04), 0 1px 2px rgba(42,40,38,0.03);
             --shadow-md: 0 4px 16px rgba(42,40,38,0.06), 0 2px 4px rgba(42,40,38,0.04);
+            --shadow-amber: 0 4px 16px rgba(116, 92, 68, 0.25);
             --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -255,8 +259,8 @@
             color: var(--white);
         }
         .btn-accent:hover {
-            background: #A06A3A;
-            box-shadow: 0 2px 8px rgba(180,120,68,0.25);
+            background: var(--amber-dark);
+            box-shadow: var(--shadow-amber);
         }
         .btn-secondary {
             background: transparent;
@@ -849,7 +853,7 @@
             padding: 5px 12px;
             font-size: 11px;
             font-weight: 500;
-            color: #C0392B;
+            color: var(--color-error);
             background: transparent;
             border: 1px solid #E8D5D2;
             border-radius: 4px;
@@ -859,7 +863,7 @@
         }
         .btn-delete:hover {
             background: #FDF2F0;
-            border-color: #C0392B;
+            border-color: var(--color-error);
         }
 
         /* ===== Home page ===== */
@@ -889,6 +893,12 @@
             letter-spacing: -0.5px;
             line-height: 1.2;
             margin-bottom: 16px;
+        }
+        .home-name-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 8px;
         }
         .home-hero p {
             font-size: 16px;
@@ -1197,7 +1207,47 @@
             align-items: flex-start;
         }
 
+        /* ===== Disabled & interaction states ===== */
+        .btn:disabled,
+        .btn-ai:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        textarea:disabled,
+        input[type="text"]:disabled,
+        select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: var(--sand);
+        }
+        .btn:active:not(:disabled),
+        .btn-ai:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        .btn:focus-visible,
+        .btn-ai:focus-visible,
+        .tab:focus-visible,
+        .template-card:focus-visible,
+        .start-mode:focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
+        .ai-chat-input-row input:focus {
+            box-shadow: 0 0 0 3px var(--amber-glow);
+        }
+        .boilerplate-toggle input[type="checkbox"]:focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
+
         /* ===== Responsive ===== */
+        @media (max-width: 1024px) {
+            .preview-body { padding: 60px 80px 80px; }
+            .preview-header h1 { font-size: 64px; }
+            .preview-section h2 { font-size: 40px; }
+            .preview-content { gap: 64px; }
+        }
         @media (max-width: 640px) {
             .field-row { grid-template-columns: 1fr; }
             .container { padding: 0 16px; }
@@ -1235,11 +1285,11 @@
     </div>
 </div>
 
-<div class="tabs">
-    <div class="tab active" data-tab="home">Home</div>
-    <div class="tab" data-tab="builder">Create</div>
-    <div class="tab" data-tab="preview">Preview & Export</div>
-    <div class="tab" data-tab="defaults" style="margin-left: auto;">Admin</div>
+<div class="tabs" role="tablist" aria-label="Main navigation">
+    <div class="tab active" data-tab="home" role="tab" tabindex="0" aria-selected="true">Home</div>
+    <div class="tab" data-tab="builder" role="tab" tabindex="0" aria-selected="false">Create</div>
+    <div class="tab" data-tab="preview" role="tab" tabindex="0" aria-selected="false">Preview & Export</div>
+    <div class="tab" data-tab="defaults" role="tab" tabindex="0" aria-selected="false" style="margin-left: auto;">Admin</div>
 </div>
 
 <!-- ==================== BUILDER PANEL ==================== -->
@@ -1252,7 +1302,11 @@
     <div class="home-hero">
         <h1>Job Description Generator</h1>
         <p>Create polished, on-brand job descriptions in minutes.</p>
-        <button class="home-cta-btn" onclick="switchTab('builder')">
+        <div class="home-name-box">
+            <label for="hiringManagerName" style="text-transform: none; font-size: 13px; font-weight: 500; color: var(--text-secondary); letter-spacing: 0; margin-bottom: 8px;">Who's creating this JD?</label>
+            <input type="text" id="hiringManagerName" placeholder="Your name" style="max-width: 320px; margin: 0 auto; text-align: center; font-size: 15px; padding: 12px 20px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--stone);">
+        </div>
+        <button class="home-cta-btn" id="getStartedBtn" onclick="handleGetStarted()" disabled>
             Get Started
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8h9M8.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -1417,7 +1471,7 @@
             <div class="ai-chat-popover" id="aiChat-aboutTeam">
                 <div class="ai-chat-popover-header">
                     <div class="ai-chat-popover-title">&#9889; AI Suggest — About the Team</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('aboutTeam')">&times;</button>
+                    <button class="ai-chat-popover-close" aria-label="Close AI chat" onclick="closeAiChat('aboutTeam')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <input type="text" id="aiChatInput-aboutTeam" placeholder="e.g. &quot;Write about a small growth team focused on acquisition&quot;" onkeydown="if(event.key==='Enter'){runAiChat('aboutTeam','prose'); event.preventDefault();}">
@@ -1447,7 +1501,7 @@
             <div class="ai-chat-popover" id="aiChat-aboutRole">
                 <div class="ai-chat-popover-header">
                     <div class="ai-chat-popover-title">&#9889; AI Suggest — About the Role</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('aboutRole')">&times;</button>
+                    <button class="ai-chat-popover-close" aria-label="Close AI chat" onclick="closeAiChat('aboutRole')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <input type="text" id="aiChatInput-aboutRole" placeholder="e.g. &quot;This person will own onboarding and have a big impact on retention&quot;" onkeydown="if(event.key==='Enter'){runAiChat('aboutRole','prose'); event.preventDefault();}">
@@ -1477,7 +1531,7 @@
             <div class="ai-chat-popover" id="aiChat-idealExperience">
                 <div class="ai-chat-popover-header">
                     <div class="ai-chat-popover-title">&#9889; AI Suggest — Ideal Experience</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('idealExperience')">&times;</button>
+                    <button class="ai-chat-popover-close" aria-label="Close AI chat" onclick="closeAiChat('idealExperience')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <input type="text" id="aiChatInput-idealExperience" placeholder="e.g. &quot;5+ years design, strong Figma skills&quot; or &quot;Lower the bar a bit&quot;" onkeydown="if(event.key==='Enter'){runAiChat('idealExperience','prose'); event.preventDefault();}">
@@ -1507,7 +1561,7 @@
             <div class="ai-chat-popover" id="aiChat-goodFit">
                 <div class="ai-chat-popover-header">
                     <div class="ai-chat-popover-title">&#9889; AI Suggest — Good Fit</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('goodFit')">&times;</button>
+                    <button class="ai-chat-popover-close" aria-label="Close AI chat" onclick="closeAiChat('goodFit')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <input type="text" id="aiChatInput-goodFit" placeholder="e.g. &quot;Someone who loves ambiguity and building from scratch&quot;" onkeydown="if(event.key==='Enter'){runAiChat('goodFit','prose'); event.preventDefault();}">
@@ -1537,7 +1591,7 @@
             <div class="ai-chat-popover" id="aiChat-notAFit">
                 <div class="ai-chat-popover-header">
                     <div class="ai-chat-popover-title">&#9889; AI Suggest — Not For You</div>
-                    <button class="ai-chat-popover-close" onclick="closeAiChat('notAFit')">&times;</button>
+                    <button class="ai-chat-popover-close" aria-label="Close AI chat" onclick="closeAiChat('notAFit')">&times;</button>
                 </div>
                 <div class="ai-chat-input-row">
                     <input type="text" id="aiChatInput-notAFit" placeholder="e.g. &quot;Someone who needs a lot of structure and doesn't like ambiguity&quot;" onkeydown="if(event.key==='Enter'){runAiChat('notAFit','prose'); event.preventDefault();}">
@@ -1724,9 +1778,34 @@
     });
 
     function switchTab(name) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.querySelectorAll('.tab').forEach(t => {
+            const isActive = t.dataset.tab === name;
+            t.classList.toggle('active', isActive);
+            t.setAttribute('aria-selected', isActive);
+        });
         document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
         window.scrollTo(0, 0);
+    }
+
+    // ===== Hiring Manager Name =====
+    const nameInput = document.getElementById('hiringManagerName');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    // Restore saved name
+    const savedName = localStorage.getItem('manifest_hiring_manager');
+    if (savedName) {
+        nameInput.value = savedName;
+        getStartedBtn.disabled = false;
+    }
+    nameInput.addEventListener('input', () => {
+        const hasName = nameInput.value.trim().length > 0;
+        getStartedBtn.disabled = !hasName;
+        if (hasName) localStorage.setItem('manifest_hiring_manager', nameInput.value.trim());
+    });
+    function handleGetStarted() {
+        const name = nameInput.value.trim();
+        if (!name) return;
+        localStorage.setItem('manifest_hiring_manager', name);
+        switchTab('builder');
     }
 
     // ===== Collapsible sections =====

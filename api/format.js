@@ -1,3 +1,7 @@
+export const config = {
+    maxDuration: 60,
+};
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -32,9 +36,9 @@ export default async function handler(req, res) {
         }
 
         const text = data.content?.[0]?.text?.trim() || '';
-        res.json({ text });
+        return res.json({ text });
     } catch (err) {
         console.error('Claude API error:', err);
-        res.status(500).json({ error: 'Failed to reach Claude API' });
+        return res.status(500).json({ error: 'Failed to reach Claude API' });
     }
 }
