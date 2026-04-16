@@ -2238,22 +2238,23 @@
 
         let html = `<!DOCTYPE html><html${wordNs}><head><meta charset="UTF-8"><title>${escapeHTML(payload.title)}</title><style>
 ${fontImport}
-@page { margin: 0; size: letter; }
+@page { margin: 0.6in 0.75in; size: letter; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: ${sansFont}; margin: 0; padding: 0; color: #2A2826; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.header { background: #1e1310; padding: ${headerPad}; text-align: center; }
+body { font-family: ${sansFont}; margin: 0; padding: 0; color: #1e1310; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* Page break protection */
+.header { background: #1e1310; padding: ${headerPad}; text-align: center; break-after: avoid; page-break-after: avoid; }
 .header h1 { font-family: ${serifFont}; font-size: ${titleSize}; font-weight: 400; color: #FFFFFF; letter-spacing: -0.8px; margin: 0; }
 .body { padding: ${bodyPad}; background: #FFFFFF; }
-.meta-table { width: 100%; border-collapse: collapse; margin-bottom: ${sectionGap}; }
+.meta-table { width: 100%; border-collapse: collapse; margin-bottom: ${sectionGap}; break-inside: avoid; page-break-inside: avoid; }
 .meta-table tr { border-bottom: 1px solid rgba(30,19,16,0.12); }
 .meta-table td { padding: 8px 4px; vertical-align: middle; }
-.meta-label { font-family: ${sansFont}; font-size: ${metaLabelSize}; color: #2A2826; }
-.meta-value { font-family: ${serifFont}; font-size: ${metaValueSize}; font-weight: 700; color: #2A2826; text-align: right; }
-.section { margin-bottom: ${sectionGap}; }
-.section h2 { font-family: ${serifFont}; font-size: ${sectionSize}; font-style: italic; font-weight: 400; color: #2A2826; letter-spacing: -0.4px; margin-bottom: 12px; }
-.section p { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #2A2826; margin-bottom: 6px; }
-.section ul { padding-left: 20px; margin-top: 4px; }
-.section li { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #2A2826; margin-bottom: 4px; }
+.meta-label { font-family: ${sansFont}; font-size: ${metaLabelSize}; color: #1e1310; }
+.meta-value { font-family: ${serifFont}; font-size: ${metaValueSize}; font-weight: 700; color: #1e1310; text-align: right; }
+.section { margin-bottom: ${sectionGap}; break-inside: avoid; page-break-inside: avoid; }
+.section h2 { font-family: ${serifFont}; font-size: ${sectionSize}; font-style: italic; font-weight: 400; color: #1e1310; letter-spacing: -0.4px; margin-bottom: 12px; break-after: avoid; page-break-after: avoid; }
+.section p { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #1e1310; margin-bottom: 6px; orphans: 3; widows: 3; }
+.section ul { padding-left: 20px; margin-top: 4px; break-inside: avoid; page-break-inside: avoid; }
+.section li { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #1e1310; margin-bottom: 4px; }
 </style></head><body>`;
 
         // Header
@@ -2321,22 +2322,26 @@ body { font-family: ${sansFont}; margin: 0; padding: 0; color: #2A2826; -webkit-
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Job Description</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&display=swap');
-@page { margin: 0; size: letter; }
+@page { margin: 0.6in 0.75in; size: letter; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.preview-header { background: #1e1310; padding: 56px 40px; text-align: center; }
+/* Header stays with content below it */
+.preview-header { background: #1e1310; padding: 56px 40px; text-align: center; break-after: avoid; page-break-after: avoid; }
 .preview-header h1 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 32pt; font-weight: 400; color: white; letter-spacing: -0.8px; line-height: 1; margin: 0; }
 .preview-body { display: flex; flex-direction: column; gap: 32px; padding: 40px 56px 56px; background: white; }
-.preview-meta { width: 100%; }
+/* Metadata table never splits */
+.preview-meta { width: 100%; break-inside: avoid; page-break-inside: avoid; }
 .preview-meta-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 4px; border-top: 1px solid rgba(30,19,16,0.15); }
 .preview-meta-row:last-child { border-bottom: 1px solid rgba(30,19,16,0.15); }
 .preview-meta-label { font-family: 'Inter', sans-serif; font-size: 10pt; color: #1e1310; }
 .preview-meta-value { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 11pt; font-weight: 700; color: #1e1310; text-align: right; }
 .preview-content { display: flex; flex-direction: column; gap: 36px; padding-top: 12px; }
-.preview-section { margin-bottom: 0; }
-.preview-section h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 18pt; font-weight: 400; font-style: italic; color: #1e1310; letter-spacing: -0.4px; line-height: 1; margin-bottom: 14px; margin-top: 0; }
-.preview-section p { font-family: 'Inter', sans-serif; font-size: 10.5pt; color: #1e1310; line-height: 1.55; margin-bottom: 5px; }
-.preview-section ul { padding-left: 18px; margin-top: 4px; }
+/* Each section stays together — heading never orphaned from content */
+.preview-section { margin-bottom: 0; break-inside: avoid; page-break-inside: avoid; }
+.preview-section h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 18pt; font-weight: 400; font-style: italic; color: #1e1310; letter-spacing: -0.4px; line-height: 1; margin-bottom: 14px; margin-top: 0; break-after: avoid; page-break-after: avoid; }
+/* Orphan/widow protection — at least 3 lines before/after a break */
+.preview-section p { font-family: 'Inter', sans-serif; font-size: 10.5pt; color: #1e1310; line-height: 1.55; margin-bottom: 5px; orphans: 3; widows: 3; }
+.preview-section ul { padding-left: 18px; margin-top: 4px; break-inside: avoid; page-break-inside: avoid; }
 .preview-section li { font-family: 'Inter', sans-serif; font-size: 10.5pt; color: #1e1310; line-height: 1.55; margin-bottom: 4px; }
 </style></head><body>${clone.innerHTML}</body></html>`;
 
