@@ -1298,6 +1298,7 @@
         <span>Job Description Generator</span>
     </div>
     <div class="topbar-right">
+        <span class="topbar-user" id="topbarUser" style="display: none; font-size: 12px; color: rgba(255,255,255,0.5); cursor: pointer;" onclick="switchTab('home')" title="Click to change"></span>
         <span class="save-status" id="saveStatus">Saved</span>
     </div>
 </div>
@@ -1810,6 +1811,21 @@
     function unlockTabs() {
         document.querySelectorAll('.tab.tab-locked').forEach(t => t.classList.remove('tab-locked'));
     }
+    function lockTabs() {
+        document.querySelectorAll('.tab').forEach(t => {
+            if (t.dataset.tab !== 'home') t.classList.add('tab-locked');
+        });
+    }
+    function updateTopbarUser() {
+        const name = localStorage.getItem('manifest_hiring_manager');
+        const el = document.getElementById('topbarUser');
+        if (name) {
+            el.textContent = name;
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    }
 
     // ===== Hiring Manager Name =====
     const nameInput = document.getElementById('hiringManagerName');
@@ -1819,24 +1835,31 @@
         nameInput.value = savedName;
         unlockTabs();
     }
+    updateTopbarUser();
+
     nameInput.addEventListener('input', () => {
-        if (nameInput.value.trim().length > 0) {
-            localStorage.setItem('manifest_hiring_manager', nameInput.value.trim());
-            nameInput.classList.remove('shake');
+        const name = nameInput.value.trim();
+        nameInput.classList.remove('shake');
+        if (name.length > 0) {
+            localStorage.setItem('manifest_hiring_manager', name);
+        } else {
+            localStorage.removeItem('manifest_hiring_manager');
+            lockTabs();
         }
+        updateTopbarUser();
     });
     function handleGetStarted() {
         const name = nameInput.value.trim();
         if (!name) {
-            // Classy shake + focus on the name input
             nameInput.classList.remove('shake');
-            void nameInput.offsetWidth; // reset animation
+            void nameInput.offsetWidth;
             nameInput.classList.add('shake');
             nameInput.focus();
             return;
         }
         localStorage.setItem('manifest_hiring_manager', name);
         unlockTabs();
+        updateTopbarUser();
         switchTab('builder');
     }
 
@@ -2171,31 +2194,92 @@
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
 
-    function buildStyledHTML(payload) {
-        let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head><meta charset="UTF-8"><style>
-body { font-family: Calibri, sans-serif; max-width: 680px; margin: 48px auto; padding: 0 24px; line-height: 1.75; color: #2A2826; }
-h1 { font-size: 24pt; margin-bottom: 2px; color: #2A2826; }
-.meta { color: #7A746C; font-size: 11pt; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #DCD6CD; }
-h2 { font-size: 10pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #B47844; margin-top: 28px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #DCD6CD; }
-p { color: #4A4540; font-size: 11pt; margin-bottom: 6px; }
-ul { padding-left: 18px; margin-top: 6px; }
-li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
+    // Build branded HTML matching the preview/website design
+    function buildBrandedHTML(payload, format) {
+        const isPrint = format === 'pdf';
+        const isWord = format === 'doc';
+
+        // Scale factors for print vs screen
+        const titleSize = isPrint ? '28pt' : '24pt';
+        const sectionSize = isPrint ? '16pt' : '14pt';
+        const bodySize = isPrint ? '10.5pt' : '11pt';
+        const metaLabelSize = isPrint ? '9.5pt' : '10pt';
+        const metaValueSize = isPrint ? '11pt' : '11pt';
+        const headerPad = isPrint ? '48px 40px' : '36px 32px';
+        const bodyPad = isPrint ? '36px 48px 48px' : '32px 40px 40px';
+        const sectionGap = isPrint ? '36px' : '28px';
+
+        // Parse meta back into key-value pairs for the table
+        const metaRows = [];
+        const loc = document.getElementById('location').value;
+        const type = document.getElementById('employmentType').value;
+        const lvl = document.getElementById('level').value;
+        const reports = document.getElementById('reportsTo').value;
+        const salary = document.getElementById('salaryRange').value;
+        if (loc) metaRows.push(['Location', loc]);
+        if (type) metaRows.push(['Employment Type', type]);
+        if (lvl) metaRows.push(['Level', lvl]);
+        if (reports) metaRows.push(['Reports To', reports]);
+        if (salary) metaRows.push(['Salary Range', salary]);
+
+        let fontImport = '';
+        if (!isWord) {
+            fontImport = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&display=swap');`;
+        }
+
+        const wordNs = isWord ? ` xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"` : '';
+        const serifFont = isWord ? 'Georgia, serif' : "'Libre Caslon Display', Georgia, serif";
+        const sansFont = isWord ? 'Calibri, sans-serif' : "'Inter', -apple-system, sans-serif";
+
+        let html = `<!DOCTYPE html><html${wordNs}><head><meta charset="UTF-8"><title>${escapeHTML(payload.title)}</title><style>
+${fontImport}
+@page { margin: 0; size: letter; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: ${sansFont}; margin: 0; padding: 0; color: #2A2826; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.header { background: #1e1310; padding: ${headerPad}; text-align: center; }
+.header h1 { font-family: ${serifFont}; font-size: ${titleSize}; font-weight: 400; color: #FFFFFF; letter-spacing: -0.8px; margin: 0; }
+.body { padding: ${bodyPad}; background: #FFFFFF; }
+.meta-table { width: 100%; border-collapse: collapse; margin-bottom: ${sectionGap}; }
+.meta-table tr { border-bottom: 1px solid rgba(30,19,16,0.12); }
+.meta-table td { padding: 8px 4px; vertical-align: middle; }
+.meta-label { font-family: ${sansFont}; font-size: ${metaLabelSize}; color: #2A2826; }
+.meta-value { font-family: ${serifFont}; font-size: ${metaValueSize}; font-weight: 700; color: #2A2826; text-align: right; }
+.section { margin-bottom: ${sectionGap}; }
+.section h2 { font-family: ${serifFont}; font-size: ${sectionSize}; font-style: italic; font-weight: 400; color: #2A2826; letter-spacing: -0.4px; margin-bottom: 12px; }
+.section p { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #2A2826; margin-bottom: 6px; }
+.section ul { padding-left: 20px; margin-top: 4px; }
+.section li { font-family: ${sansFont}; font-size: ${bodySize}; line-height: 1.6; color: #2A2826; margin-bottom: 4px; }
 </style></head><body>`;
-        html += `<h1>${escapeHTML(payload.title)}</h1>`;
-        html += `<p class="meta">${escapeHTML(payload.meta)}</p>`;
+
+        // Header
+        html += `<div class="header"><h1>${escapeHTML(payload.title)}.</h1></div>`;
+
+        // Body
+        html += `<div class="body">`;
+
+        // Metadata table
+        if (metaRows.length) {
+            html += `<table class="meta-table">`;
+            for (const [label, value] of metaRows) {
+                html += `<tr><td class="meta-label">${escapeHTML(label)}</td><td class="meta-value">${escapeHTML(value)}</td></tr>`;
+            }
+            html += `</table>`;
+        }
+
+        // Sections
         for (const s of payload.sections) {
-            html += `<h2>${escapeHTML(s.heading)}</h2>`;
+            html += `<div class="section"><h2>${escapeHTML(s.heading)}.</h2>`;
             if (s.type === 'bullets') {
                 html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
             } else {
-                // Join single newlines into flowing text; only double newlines = new paragraph
                 html += s.content.split(/\n\s*\n/).map(para =>
                     para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
                 ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
             }
+            html += `</div>`;
         }
-        html += '</body></html>';
+
+        html += `</div></body></html>`;
         return html;
     }
 
@@ -2205,7 +2289,7 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
             showToast('Nothing to export — fill in the form first');
             return;
         }
-        const html = buildStyledHTML(payload);
+        const html = buildBrandedHTML(payload, 'doc');
         const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' });
         const slug = payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const a = document.createElement('a');
@@ -2216,45 +2300,45 @@ li { color: #4A4540; font-size: 11pt; margin-bottom: 5px; }
     }
 
     function downloadAsPDF() {
-        const payload = getExportPayload();
-        if (payload.sections.length === 0) {
-            showToast('Nothing to export — fill in the form first');
+        const previewEl = document.getElementById('previewOutput');
+        if (!previewEl || !previewEl.querySelector('.preview-header')) {
+            showToast('Nothing to export — generate a preview first');
             return;
         }
 
-        // Build a clean print-ready HTML page
-        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHTML(payload.title)}</title><style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&display=swap');
-@page { margin: 0.75in 1in; size: letter; }
-body { font-family: 'Inter', Calibri, sans-serif; max-width: 100%; margin: 0; padding: 0; line-height: 1.7; color: #2A2826; -webkit-print-color-adjust: exact; }
-h1 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 22pt; font-weight: 400; margin: 0 0 4px; color: #1A0F0A; }
-.meta { color: #7A746C; font-size: 10pt; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid #D4C6B8; }
-h2 { font-size: 9pt; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #8D614E; margin-top: 22px; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid #E8E0D8; }
-p { color: #4A4540; font-size: 10.5pt; margin: 0 0 6px; }
-ul { padding-left: 18px; margin: 4px 0 0; }
-li { color: #4A4540; font-size: 10.5pt; margin-bottom: 3px; }
-</style></head><body>`;
-        html += `<h1>${escapeHTML(payload.title)}</h1>`;
-        html += `<p class="meta">${escapeHTML(payload.meta)}</p>`;
-        for (const s of payload.sections) {
-            html += `<h2>${escapeHTML(s.heading)}</h2>`;
-            if (s.type === 'bullets') {
-                html += '<ul>' + s.content.split('\n').map(l => l.trim()).filter(l => l).map(l => `<li>${escapeHTML(l)}</li>`).join('') + '</ul>';
-            } else {
-                html += s.content.split(/\n\s*\n/).map(para =>
-                    para.split('\n').map(l => l.trim()).filter(l => l).join(' ')
-                ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
-            }
-        }
-        html += '</body></html>';
+        // Clone preview HTML, remove interactive elements and Apply Now
+        const clone = previewEl.cloneNode(true);
+        const backBtn = clone.querySelector('.preview-back-btn');
+        if (backBtn) backBtn.remove();
+        const cta = clone.querySelector('.preview-bottom-cta');
+        if (cta) cta.remove();
 
-        // Open in a new window and trigger print (Save as PDF)
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Job Description</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&display=swap');
+@page { margin: 0; size: letter; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.preview-header { background: #1e1310; padding: 56px 40px; text-align: center; }
+.preview-header h1 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 32pt; font-weight: 400; color: white; letter-spacing: -0.8px; line-height: 1; margin: 0; }
+.preview-body { display: flex; flex-direction: column; gap: 32px; padding: 40px 56px 56px; background: white; }
+.preview-meta { width: 100%; }
+.preview-meta-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 4px; border-top: 1px solid rgba(30,19,16,0.15); }
+.preview-meta-row:last-child { border-bottom: 1px solid rgba(30,19,16,0.15); }
+.preview-meta-label { font-family: 'Inter', sans-serif; font-size: 10pt; color: #1e1310; }
+.preview-meta-value { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 11pt; font-weight: 700; color: #1e1310; text-align: right; }
+.preview-content { display: flex; flex-direction: column; gap: 36px; padding-top: 12px; }
+.preview-section { margin-bottom: 0; }
+.preview-section h2 { font-family: 'Libre Caslon Display', Georgia, serif; font-size: 18pt; font-weight: 400; font-style: italic; color: #1e1310; letter-spacing: -0.4px; line-height: 1; margin-bottom: 14px; margin-top: 0; }
+.preview-section p { font-family: 'Inter', sans-serif; font-size: 10.5pt; color: #1e1310; line-height: 1.55; margin-bottom: 5px; }
+.preview-section ul { padding-left: 18px; margin-top: 4px; }
+.preview-section li { font-family: 'Inter', sans-serif; font-size: 10.5pt; color: #1e1310; line-height: 1.55; margin-bottom: 4px; }
+</style></head><body>${clone.innerHTML}</body></html>`;
+
         const printWin = window.open('', '_blank');
         printWin.document.write(html);
         printWin.document.close();
-        // Wait for fonts to load then trigger print dialog
         printWin.onload = () => { printWin.print(); };
-        // Fallback if onload doesn't fire
         setTimeout(() => { printWin.print(); }, 800);
         showToast('Use "Save as PDF" in the print dialog');
     }
@@ -2941,6 +3025,12 @@ Rules:
     }
 
     async function pushToCMS() {
+        const managerName = localStorage.getItem('manifest_hiring_manager');
+        if (!managerName) {
+            showToast('Enter your name on the Home tab first');
+            switchTab('home');
+            return;
+        }
         const title = document.getElementById('jobTitle').value;
         if (!title || title === 'Untitled Role') {
             showToast('Add a job title first');
