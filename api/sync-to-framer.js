@@ -48,6 +48,7 @@ async function buildFieldData(collection, job) {
         "Reports To": job.reportsTo,
         "About Manifest": job.aboutCompany,
         "About the Team": job.aboutTeam,
+        "About the Role": job.aboutRole,
         "Ideal Experience": job.idealExperience,
         "Responsibilities": job.responsibilities,
         "For You": job.goodFit,

@@ -1678,17 +1678,20 @@
 <div class="panel" id="panel-preview">
 
     <div class="card" style="padding: 16px 24px;">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn" style="font-size: 14px; padding: 10px 24px;">Push to CMS</button>
-            <div style="width: 1px; height: 28px; background: var(--stone); flex-shrink: 0;"></div>
-            <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
-            <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
-            <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
-            <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .doc</button>
-            <button class="btn btn-secondary" onclick="downloadAsPDF()">Download PDF</button>
-            <button class="btn btn-secondary" onclick="openInGoogleDocs()">Google Docs</button>
-            <div style="flex: 1;"></div>
-            <button class="btn btn-primary" onclick="switchTab('builder')" style="font-size: 13px;">Edit</button>
+        <div style="display: inline-flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="btn btn-accent" onclick="pushToCMS()" id="pushCmsBtn" style="font-size: 14px; padding: 10px 24px;">Push to CMS</button>
+                <div style="width: 1px; height: 28px; background: var(--stone); flex-shrink: 0;"></div>
+                <button class="btn btn-secondary" onclick="saveToNotion()" id="notionBtn">Save to Notion</button>
+                <button class="btn btn-secondary" onclick="copyToClipboard()">Copy Text</button>
+                <button class="btn btn-secondary" onclick="copyAsHTML()">Copy Rich Text</button>
+                <button class="btn btn-secondary" onclick="downloadAsDocx()">Download .doc</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="btn btn-secondary" onclick="downloadAsPDF()">Download PDF</button>
+                <button class="btn btn-secondary" onclick="openInGoogleDocs()">Google Docs</button>
+                <button class="btn btn-primary" onclick="switchTab('builder')" style="font-size: 13px; margin-left: auto;">Edit</button>
+            </div>
         </div>
     </div>
 
@@ -1741,6 +1744,7 @@
     function setupDefaultToggle(checkboxId, textareaId, defaultKey) {
         const cb = document.getElementById(checkboxId);
         const ta = document.getElementById(textareaId);
+        if (!cb || !ta) return; // Element doesn't exist on this page
 
         cb.addEventListener('change', () => {
             if (cb.checked) {
@@ -1882,7 +1886,9 @@
             }
 
             // Always restore — autosaved data wins over defaults
+            _skipAutosave = true;
             applyFieldsToForm(data);
+            _skipAutosave = false;
         } catch (err) {
             console.warn('Could not restore autosave:', err.message);
         }
@@ -1980,10 +1986,11 @@
         html += `<div class="preview-content">`;
         if (about) { html += `<div class="preview-section"><h2>About Manifest.</h2>${textToParagraphs(about)}</div>`; }
         if (team) { html += `<div class="preview-section"><h2>About the Team.</h2>${textToParagraphs(team)}</div>`; }
+        if (role) { html += `<div class="preview-section"><h2>About the Role.</h2>${textToParagraphs(role)}</div>`; }
         if (idealExp) { html += `<div class="preview-section"><h2>Ideal Experience.</h2>${textToParagraphs(idealExp)}</div>`; }
         if (resp) { html += `<div class="preview-section"><h2>Responsibilities.</h2>${textToParagraphs(resp)}</div>`; }
-        if (goodFit) { html += `<div class="preview-section"><h2>This for you if</h2>${textToParagraphs(goodFit)}</div>`; }
-        if (notFit) { html += `<div class="preview-section"><h2>Not for you if</h2>${textToParagraphs(notFit)}</div>`; }
+        if (goodFit) { html += `<div class="preview-section"><h2>This Is For You If.</h2>${textToParagraphs(goodFit)}</div>`; }
+        if (notFit) { html += `<div class="preview-section"><h2>Not For You If.</h2>${textToParagraphs(notFit)}</div>`; }
         html += `</div>`; // .preview-content
 
         // Apply Now button
@@ -2036,17 +2043,19 @@
         const sections = [];
         const about = document.getElementById('aboutCompany').value;
         const team = document.getElementById('aboutTeam').value;
+        const role = document.getElementById('aboutRole').value;
         const idealExp = document.getElementById('idealExperience').value;
         const resp = document.getElementById('responsibilities').value;
         const goodFit = document.getElementById('goodFit').value;
+        const notFit = document.getElementById('notAFit').value;
 
         if (about) sections.push({ heading: 'About Manifest', content: about, type: 'prose' });
         if (team) sections.push({ heading: 'About the Team', content: team, type: 'prose' });
+        if (role) sections.push({ heading: 'About the Role', content: role, type: 'prose' });
         if (idealExp) sections.push({ heading: 'Ideal Experience', content: idealExp, type: 'prose' });
         if (resp) sections.push({ heading: 'Responsibilities', content: resp, type: 'prose' });
-        if (goodFit) sections.push({ heading: 'This for you if', content: goodFit, type: 'prose' });
-        const notFit = document.getElementById('notAFit').value;
-        if (notFit) sections.push({ heading: 'Not for you if', content: notFit, type: 'prose' });
+        if (goodFit) sections.push({ heading: 'This Is For You If', content: goodFit, type: 'prose' });
+        if (notFit) sections.push({ heading: 'Not For You If', content: notFit, type: 'prose' });
 
         return { title, meta: metaParts.join('  \u00b7  '), sections };
     }
@@ -2277,7 +2286,7 @@ Generate a complete, professional job description from the user's input. Return 
   "salaryRange": "empty string (leave for the user to fill)",
   "aboutCompany": "",
   "aboutTeam": "2-3 sentences: what the team does, how big it is, what they care about, who they collaborate with. Make it feel real, not templated.",
-  "aboutRole": "",
+  "aboutRole": "2-3 paragraphs: why this role exists, what impact it will have, what makes it a compelling opportunity. Paint a picture of what success looks like and why someone would be excited to take this on.",
   "idealExperience": "2-3 paragraphs describing the ideal candidate's background, skills, and experience. Write in flowing prose, not bullet points.",
   "responsibilities": "2-3 paragraphs describing key responsibilities and what this person will own. Write in flowing prose, not bullet points.",
   "goodFit": "1-2 paragraphs: describe the type of person who would thrive in this role. What traits, working styles, and motivations make someone a great fit.",
@@ -2288,8 +2297,9 @@ Writing principles:
 - Write in natural, confident prose — not bullet points or corporate jargon
 - Be specific to this role and industry
 - aboutCompany should be empty string (the tool has saved company defaults)
-- aboutRole can be empty — about the team covers context
+- aboutRole MUST be filled in — never leave it empty. This is the heart of the JD.
 - goodFit and notAFit should feel honest and conversational, helping candidates self-select
+- Every text field except aboutCompany and salaryRange MUST have substantive content
 - Return ONLY the JSON — no explanation`;
 
         try {
@@ -2405,6 +2415,7 @@ Writing principles:
     }
 
     // ===== Shared: Apply fields to form =====
+    let _skipAutosave = false;
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
                           'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
@@ -2429,10 +2440,12 @@ Writing principles:
                 el.dispatchEvent(new Event('input', { bubbles: true }));
             }
         });
+        // Immediately persist to server so nothing is lost on refresh
+        if (!_skipAutosave) scheduleAutosave();
     }
 
     // ===== AI Suggest Chat (per-field AI with chat interface) =====
-    function openAiChat(fieldId) {
+    function openAiChat(fieldId, mode) {
         // Close any other open chat
         document.querySelectorAll('.ai-chat-popover.active').forEach(el => el.classList.remove('active'));
         const popover = document.getElementById('aiChat-' + fieldId);
@@ -2488,8 +2501,8 @@ Writing principles:
             aboutRole: 'About the Role',
             responsibilities: 'Responsibilities',
             idealExperience: 'Ideal Experience',
-            goodFit: 'This For You If',
-            notAFit: 'Not For You If'
+            goodFit: 'This Is For You If...',
+            notAFit: 'Not For You If...'
         };
 
         const fieldGuidance = {
@@ -2655,19 +2668,21 @@ Rules:
         if (!raw) { showToast('Type something first, then hit Smart Format'); return; }
 
         const jobTitle = document.getElementById('jobTitle').value || 'the role';
-        const dept = document.getElementById('department').value || '';
+        const level = document.getElementById('level').value || '';
 
         // Determine which section this is for smarter formatting
         const sectionContext = {
+            aboutCompany: 'This is the "About Manifest" section — it should read as a confident, warm company overview that makes top talent want to learn more.',
             aboutTeam: 'This is the "About the Team" section — it should read as an inviting description of who the team is, what they do, and why someone would want to join.',
-            aboutRole: 'This is the "About the Role" section — it should read as a compelling pitch for the role, focusing on impact and opportunity.',
+            aboutRole: 'This is the "About the Role" section — it should read as a compelling pitch for why this role exists, what impact it will have, and what makes it an exciting opportunity.',
+            idealExperience: 'This is the "Ideal Experience" section — it should paint a picture of the ideal candidate\'s background, skills, and experience in flowing prose. Be specific and realistic, not a wish list.',
             responsibilities: 'These are job responsibilities — each should start with a strong action verb and describe an outcome or ownership area, not just a task.',
-            qualRequired: 'These are required qualifications — each should be specific, measurable where possible, and genuinely required for success in the role.',
-            qualNice: 'These are nice-to-have qualifications — each should signal what would make someone exceptionally successful beyond the base requirements.'
+            goodFit: 'This is the "This Is For You If..." section — it should describe the traits, working styles, and motivations that make someone a great fit. Be honest and conversational, helping candidates self-select in.',
+            notAFit: 'This is the "Not For You If..." section — it should describe what kind of person would NOT thrive here. Be direct and honest — help people self-select out gracefully.'
         };
 
         const sectionHint = sectionContext[textareaId] || '';
-        const roleContext = [jobTitle, dept].filter(Boolean).join(', ');
+        const roleContext = [jobTitle, level].filter(Boolean).join(', ');
 
         let systemPrompt, userPrompt;
         if (mode === 'bullets') {
@@ -2791,6 +2806,7 @@ Rules:
             reportsTo: document.getElementById('reportsTo').value || 'Leadership',
             aboutCompany: document.getElementById('aboutCompany').value || '',
             aboutTeam: document.getElementById('aboutTeam').value || '',
+            aboutRole: document.getElementById('aboutRole').value || '',
             idealExperience: document.getElementById('idealExperience').value || '',
             responsibilities: document.getElementById('responsibilities').value || '',
             goodFit: document.getElementById('goodFit').value || '',
@@ -2953,7 +2969,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "salaryRange": "salary range, or empty string",
   "aboutCompany": "company description if present, or empty string",
   "aboutTeam": "team description if present, or empty string",
-  "aboutRole": "",
+  "aboutRole": "description of the role itself — why it exists, what impact it has, what makes it compelling — or empty string if not present",
   "idealExperience": "candidate background, skills, qualifications — as flowing prose",
   "responsibilities": "key responsibilities — as flowing prose",
   "goodFit": "traits/motivations of someone who'd thrive here, or empty string",
@@ -2961,6 +2977,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 }
 
 Parsing guidance:
+- "About the Role" / "The Opportunity" / "Overview" → aboutRole
 - "What You'll Do" / "Responsibilities" → responsibilities
 - "Who You Are" / "Qualifications" / "Requirements" → idealExperience
 - "What We Offer" / "Benefits" → ignore (handled separately)
