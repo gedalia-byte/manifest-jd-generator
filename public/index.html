@@ -136,6 +136,33 @@
             pointer-events: none;
             cursor: default;
         }
+        .tab-restart {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+            margin-right: 4px;
+            padding: 14px 16px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+            letter-spacing: 0.2px;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+        }
+        .tab-restart:hover {
+            color: var(--color-error);
+        }
+        .tab-restart:active {
+            transform: scale(0.97);
+        }
+        .tab-restart:focus-visible {
+            outline: 2px solid var(--amber);
+            outline-offset: 2px;
+        }
 
         /* ===== Layout ===== */
         .container {
@@ -1307,7 +1334,11 @@
     <div class="tab active" data-tab="home" role="tab" tabindex="0" aria-selected="true">Home</div>
     <div class="tab tab-locked" data-tab="builder" role="tab" tabindex="0" aria-selected="false">Create</div>
     <div class="tab tab-locked" data-tab="preview" role="tab" tabindex="0" aria-selected="false">Preview & Export</div>
-    <div class="tab tab-locked" data-tab="defaults" role="tab" tabindex="0" aria-selected="false" style="margin-left: auto;">Admin</div>
+    <div class="tab-restart" id="restartBtn" tabindex="0" title="Clear everything and start over" onclick="handleRestart()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><path d="M2.5 8a5.5 5.5 0 0 1 9.3-4l-2.3 2.3h5V1.3L12.7 3A7 7 0 1 0 15 8h-1.5a5.5 5.5 0 0 1-11 0z" fill="currentColor"/></svg>
+        Start Over
+    </div>
+    <div class="tab tab-locked" data-tab="defaults" role="tab" tabindex="0" aria-selected="false">Admin</div>
 </div>
 
 <!-- ==================== BUILDER PANEL ==================== -->
@@ -1853,6 +1884,34 @@
         }
         updateTopbarUser();
     });
+    function handleRestart() {
+        if (!confirm('Start over? This will clear the form and all unsaved work.')) return;
+        // Clear form data
+        localStorage.removeItem('manifest_hiring_manager');
+        localStorage.removeItem('manifest_jd_autosave');
+        // Reset all form fields
+        document.querySelectorAll('#panel-builder textarea, #panel-builder input[type="text"], #panel-builder select').forEach(el => {
+            if (el.tagName === 'SELECT') el.selectedIndex = 0;
+            else el.value = '';
+        });
+        // Reset checkboxes to defaults
+        const useDefaultAbout = document.getElementById('useDefaultAbout');
+        if (useDefaultAbout) useDefaultAbout.checked = true;
+        // Clear preview
+        document.getElementById('previewOutput').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 72px 0; font-size: 14px;">Fill out the form and click "Generate Job Description" to see a preview here.</p>';
+        document.getElementById('saveTemplateCard').style.display = 'none';
+        // Reset name input
+        nameInput.value = '';
+        // Lock tabs and go home
+        lockTabs();
+        updateTopbarUser();
+        switchTab('home');
+        nameInput.focus();
+        // Trigger server-side autosave clear
+        fetch('/api/defaults?type=autosave', { method: 'DELETE' }).catch(() => {});
+        showToast('All cleared — start fresh');
+    }
+
     function handleGetStarted() {
         const name = nameInput.value.trim();
         if (!name) {
