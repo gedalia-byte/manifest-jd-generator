@@ -1869,6 +1869,8 @@
             const el = document.getElementById(id);
             if (el) data[id] = el.value;
         });
+        // Save checkbox state so custom About Manifest text isn't lost on reload
+        data.useDefaultAbout = document.getElementById('useDefaultAbout').checked;
         return data;
     }
 
@@ -1899,10 +1901,14 @@
             if (!data || typeof data !== 'object') return;
             const hasContent = AUTOSAVE_FIELDS.some(id => (data[id] || '').trim().length > 0);
             if (!hasContent) return;
-            // Only restore if current form is empty
-            const currentData = getFormData();
-            const formIsEmpty = AUTOSAVE_FIELDS.every(id => !(currentData[id] || '').trim());
-            if (!formIsEmpty) return;
+
+            // Restore checkbox state BEFORE applying fields so aboutCompany isn't overwritten
+            if (data.useDefaultAbout === false) {
+                document.getElementById('useDefaultAbout').checked = false;
+                document.getElementById('aboutCompany').disabled = false;
+            }
+
+            // Always restore — autosaved data wins over defaults
             applyFieldsToForm(data);
         } catch (err) {
             console.warn('Could not restore autosave:', err.message);
