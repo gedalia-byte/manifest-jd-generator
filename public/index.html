@@ -942,6 +942,18 @@
         .home-cta-btn:hover svg {
             transform: translateX(3px);
         }
+        .home-name-input.shake {
+            animation: gentle-shake 0.5s ease;
+            border-color: var(--amber) !important;
+            box-shadow: 0 0 0 3px rgba(116, 92, 68, 0.15);
+        }
+        @keyframes gentle-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(3px); }
+        }
         .home-features {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1309,9 +1321,9 @@
         <p>Create polished, on-brand job descriptions in minutes.</p>
         <div class="home-name-box">
             <label for="hiringManagerName" style="text-transform: none; font-size: 13px; font-weight: 500; color: var(--text-secondary); letter-spacing: 0; margin-bottom: 8px;">Who's creating this JD?</label>
-            <input type="text" id="hiringManagerName" placeholder="Your name" style="max-width: 320px; margin: 0 auto; text-align: center; font-size: 15px; padding: 12px 20px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--stone);">
+            <input type="text" id="hiringManagerName" class="home-name-input" placeholder="Your name" style="max-width: 320px; margin: 0 auto; text-align: center; font-size: 15px; padding: 12px 20px; border-radius: var(--radius); background: var(--white); border: 1px solid var(--stone); transition: border-color 0.3s ease, box-shadow 0.3s ease;">
         </div>
-        <button class="home-cta-btn" id="getStartedBtn" onclick="handleGetStarted()" disabled>
+        <button class="home-cta-btn" id="getStartedBtn" onclick="handleGetStarted()">
             Get Started
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8h9M8.5 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -1801,22 +1813,28 @@
 
     // ===== Hiring Manager Name =====
     const nameInput = document.getElementById('hiringManagerName');
-    const getStartedBtn = document.getElementById('getStartedBtn');
     // Restore saved name — if already set, unlock tabs immediately
     const savedName = localStorage.getItem('manifest_hiring_manager');
     if (savedName) {
         nameInput.value = savedName;
-        getStartedBtn.disabled = false;
         unlockTabs();
     }
     nameInput.addEventListener('input', () => {
-        const hasName = nameInput.value.trim().length > 0;
-        getStartedBtn.disabled = !hasName;
-        if (hasName) localStorage.setItem('manifest_hiring_manager', nameInput.value.trim());
+        if (nameInput.value.trim().length > 0) {
+            localStorage.setItem('manifest_hiring_manager', nameInput.value.trim());
+            nameInput.classList.remove('shake');
+        }
     });
     function handleGetStarted() {
         const name = nameInput.value.trim();
-        if (!name) return;
+        if (!name) {
+            // Classy shake + focus on the name input
+            nameInput.classList.remove('shake');
+            void nameInput.offsetWidth; // reset animation
+            nameInput.classList.add('shake');
+            nameInput.focus();
+            return;
+        }
         localStorage.setItem('manifest_hiring_manager', name);
         unlockTabs();
         switchTab('builder');
