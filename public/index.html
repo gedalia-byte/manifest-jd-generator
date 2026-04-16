@@ -131,6 +131,11 @@
             color: var(--charcoal);
             border-bottom-color: var(--amber);
         }
+        .tab.tab-locked {
+            opacity: 0.35;
+            pointer-events: none;
+            cursor: default;
+        }
 
         /* ===== Layout ===== */
         .container {
@@ -1287,9 +1292,9 @@
 
 <div class="tabs" role="tablist" aria-label="Main navigation">
     <div class="tab active" data-tab="home" role="tab" tabindex="0" aria-selected="true">Home</div>
-    <div class="tab" data-tab="builder" role="tab" tabindex="0" aria-selected="false">Create</div>
-    <div class="tab" data-tab="preview" role="tab" tabindex="0" aria-selected="false">Preview & Export</div>
-    <div class="tab" data-tab="defaults" role="tab" tabindex="0" aria-selected="false" style="margin-left: auto;">Admin</div>
+    <div class="tab tab-locked" data-tab="builder" role="tab" tabindex="0" aria-selected="false">Create</div>
+    <div class="tab tab-locked" data-tab="preview" role="tab" tabindex="0" aria-selected="false">Preview & Export</div>
+    <div class="tab tab-locked" data-tab="defaults" role="tab" tabindex="0" aria-selected="false" style="margin-left: auto;">Admin</div>
 </div>
 
 <!-- ==================== BUILDER PANEL ==================== -->
@@ -1774,7 +1779,10 @@
 <script>
     // ===== Tab navigation =====
     document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+        tab.addEventListener('click', () => {
+            if (tab.classList.contains('tab-locked')) return;
+            switchTab(tab.dataset.tab);
+        });
     });
 
     function switchTab(name) {
@@ -1787,14 +1795,19 @@
         window.scrollTo(0, 0);
     }
 
+    function unlockTabs() {
+        document.querySelectorAll('.tab.tab-locked').forEach(t => t.classList.remove('tab-locked'));
+    }
+
     // ===== Hiring Manager Name =====
     const nameInput = document.getElementById('hiringManagerName');
     const getStartedBtn = document.getElementById('getStartedBtn');
-    // Restore saved name
+    // Restore saved name — if already set, unlock tabs immediately
     const savedName = localStorage.getItem('manifest_hiring_manager');
     if (savedName) {
         nameInput.value = savedName;
         getStartedBtn.disabled = false;
+        unlockTabs();
     }
     nameInput.addEventListener('input', () => {
         const hasName = nameInput.value.trim().length > 0;
@@ -1805,6 +1818,7 @@
         const name = nameInput.value.trim();
         if (!name) return;
         localStorage.setItem('manifest_hiring_manager', name);
+        unlockTabs();
         switchTab('builder');
     }
 
@@ -2891,6 +2905,7 @@ Rules:
             goodFit: document.getElementById('goodFit').value || '',
             notAFit: document.getElementById('notAFit').value || '',
             compBand: document.getElementById('salaryRange').value || 'Commensurate with experience',
+            createdBy: localStorage.getItem('manifest_hiring_manager') || '',
         };
 
         const response = await fetch('/api/sync-to-framer', {

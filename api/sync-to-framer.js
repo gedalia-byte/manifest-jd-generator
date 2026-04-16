@@ -54,6 +54,7 @@ async function buildFieldData(collection, job) {
         "For You": job.goodFit,
         "Not For You": job.notAFit,
         "Comp Band": job.compBand,
+        "Created By": job.createdBy,
     };
 
     for (const [name, value] of Object.entries(fieldMap)) {
