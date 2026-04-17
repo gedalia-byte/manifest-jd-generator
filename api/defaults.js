@@ -6,7 +6,8 @@ const AUTOSAVE_KEY = 'manifest-jd-autosave.json';
 async function getBlob(key) {
     const { blobs } = await list({ prefix: key });
     if (blobs.length === 0) return null;
-    const response = await fetch(blobs[0].url);
+    // Cache-bust the Blob CDN — addRandomSuffix:false keeps URL constant
+    const response = await fetch(blobs[0].url + '?t=' + Date.now(), { cache: 'no-store' });
     return response.json();
 }
 
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     // Determine which store to use based on ?type= param

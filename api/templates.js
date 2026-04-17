@@ -5,8 +5,9 @@ const TEMPLATES_KEY = 'manifest-jd-templates.json';
 async function getTemplatesBlob() {
     const { blobs } = await list({ prefix: TEMPLATES_KEY });
     if (blobs.length === 0) return [];
-    // Fetch the latest blob
-    const response = await fetch(blobs[0].url);
+    // Fetch the latest blob with cache-busting — the Blob CDN caches by URL
+    // and addRandomSuffix:false keeps URLs constant, so we must bypass cache
+    const response = await fetch(blobs[0].url + '?t=' + Date.now(), { cache: 'no-store' });
     return response.json();
 }
 
@@ -29,6 +30,8 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    // Don't let the browser cache template list — it changes when users add/delete
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
