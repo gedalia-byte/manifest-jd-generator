@@ -90,6 +90,22 @@ export default async function handler(req, res) {
 
     // Health check
     if (req.method === 'GET') {
+        // Debug mode — ?debug=fields returns the actual Framer collection field names
+        if (req.query?.debug === 'fields') {
+            try {
+                const result = await withFramer(async (framer) => {
+                    const collection = await getJobsCollection(framer);
+                    const fields = await collection.getFields();
+                    return {
+                        collectionName: collection.name,
+                        fields: fields.map(f => ({ name: f.name, type: f.type, id: f.id }))
+                    };
+                });
+                return res.json(result);
+            } catch (err) {
+                return res.status(500).json({ error: err.message });
+            }
+        }
         return res.json({
             status: 'ok',
             hasApiKey: !!FRAMER_API_KEY,
