@@ -3391,9 +3391,11 @@ Parsing guidance:
     // ===== Template Library (Server-backed) =====
     let _templatesCache = null;
 
-    async function getTemplates() {
+    async function getTemplates({ bustCache = false } = {}) {
         try {
-            const res = await fetch('/api/templates');
+            // Always bypass browser cache on refresh after mutations
+            const url = bustCache ? `/api/templates?t=${Date.now()}` : '/api/templates';
+            const res = await fetch(url, bustCache ? { cache: 'no-store' } : {});
             if (!res.ok) throw new Error('Failed to fetch');
             _templatesCache = await res.json();
             return _templatesCache;
@@ -3488,23 +3490,66 @@ Parsing guidance:
         }
     }
 
-    async function deleteTemplate(id) {
-        const templates = await getTemplates();
-        const t = templates.find(t => t.id === id);
-        if (!confirm(`Delete template "${t?.name || 'Untitled'}"?`)) return;
+    // Prevent concurrent deletes — each ID can only be in flight once
+    const _deletingIds = new Set();
 
-        try {
+    async function deleteTemplate(id) {
+        if (_deletingIds.has(String(id))) return; // already deleting
+        const templates = await getTemplates();
+        const t = templates.find(t => String(t.id) === String(id));
+        if (!t) { showToast('Template no longer exists'); await renderTemplates(); return; }
+        if (!confirm(`Delete template "${t.name || 'Untitled'}"?`)) return;
+
+        _deletingIds.add(String(id));
+
+        // Disable the button immediately to prevent double-clicks
+        const btn = document.querySelector(`[data-delete-id="${id}"]`);
+        const origText = btn?.textContent;
+        if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+
+        // Optimistic UI — hide the row immediately
+        const row = btn?.closest('.template-admin-item');
+        if (row) row.style.opacity = '0.4';
+
+        const attempt = async () => {
             const res = await fetch('/api/templates', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
                 body: JSON.stringify({ id })
             });
-            if (!res.ok) throw new Error('Delete failed');
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || `Delete failed (${res.status})`);
+            return data;
+        };
+
+        try {
+            // Retry up to 2 times on failure (handles transient blob inconsistency)
+            let lastErr = null;
+            for (let i = 0; i < 3; i++) {
+                try {
+                    await attempt();
+                    lastErr = null;
+                    break;
+                } catch (err) {
+                    lastErr = err;
+                    if (i < 2) await new Promise(r => setTimeout(r, 500 * (i + 1)));
+                }
+            }
+            if (lastErr) throw lastErr;
+
+            // Clear the cache so the next render fetches fresh
+            _templatesCache = null;
             await renderTemplates();
             showToast('Template deleted');
         } catch (err) {
-            showToast('Failed to delete template');
-            console.error(err);
+            console.error('Delete error:', err);
+            showToast('Couldn\u2019t delete — ' + (err.message || 'please try again'));
+            // Revert optimistic UI
+            if (row) row.style.opacity = '';
+            if (btn) { btn.disabled = false; btn.textContent = origText || 'Remove'; }
+        } finally {
+            _deletingIds.delete(String(id));
         }
     }
 
@@ -3536,7 +3581,9 @@ Parsing guidance:
     }
 
     async function renderTemplates() {
-        const templates = await getTemplates();
+        // Always fetch fresh — template list changes from outside (admin deletes,
+        // other users adding) and stale cache causes confusing UX
+        const templates = await getTemplates({ bustCache: true });
 
         // ---- Picker grid on Create tab ----
         const grid = document.getElementById('templateGrid');
@@ -3586,7 +3633,7 @@ Parsing guidance:
                             ${dept ? `<span class="template-card-dept">${escapeHTML(dept)}</span>` : ''}
                             <span style="font-size: 12px; color: var(--text-muted);">${date}</span>
                         </div>
-                        <button class="btn-delete" onclick="deleteTemplate(${t.id})">Remove</button>
+                        <button class="btn-delete" data-delete-id="${t.id}" onclick="deleteTemplate(${t.id})">Remove</button>
                     </div>
                 `;
             }).join('');

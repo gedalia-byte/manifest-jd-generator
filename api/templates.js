@@ -3,26 +3,42 @@ import { put, list, del } from '@vercel/blob';
 const TEMPLATES_KEY = 'manifest-jd-templates.json';
 
 async function getTemplatesBlob() {
-    const { blobs } = await list({ prefix: TEMPLATES_KEY });
-    if (blobs.length === 0) return [];
-    // Fetch the latest blob with cache-busting — the Blob CDN caches by URL
-    // and addRandomSuffix:false keeps URLs constant, so we must bypass cache
-    const response = await fetch(blobs[0].url + '?t=' + Date.now(), { cache: 'no-store' });
-    return response.json();
+    return getLatestTemplatesBlob();
 }
 
 async function saveTemplatesBlob(templates) {
-    // Delete old blob first
-    const { blobs } = await list({ prefix: TEMPLATES_KEY });
-    for (const blob of blobs) {
-        await del(blob.url);
-    }
-    // Save new blob
+    // Atomic write — put() at the same key with addRandomSuffix:false overwrites
+    // in place. Avoids the del→list→put race where eventual consistency in Vercel
+    // Blob can leave stale or duplicate blobs during the window between operations.
     await put(TEMPLATES_KEY, JSON.stringify(templates), {
         access: 'public',
         contentType: 'application/json',
         addRandomSuffix: false,
     });
+
+    // Cleanup: if any orphaned blobs exist from past del→put races, remove them.
+    // We keep the one whose URL matches our canonical key.
+    const { blobs } = await list({ prefix: TEMPLATES_KEY });
+    if (blobs.length > 1) {
+        // Sort by uploadedAt desc — keep the newest, delete the rest
+        const sorted = [...blobs].sort((a, b) =>
+            new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime()
+        );
+        for (let i = 1; i < sorted.length; i++) {
+            try { await del(sorted[i].url); } catch (_) { /* best-effort cleanup */ }
+        }
+    }
+}
+
+async function getLatestTemplatesBlob() {
+    const { blobs } = await list({ prefix: TEMPLATES_KEY });
+    if (blobs.length === 0) return [];
+    // Always pick the most recently uploaded blob — defensive against leaks
+    const latest = blobs.reduce((a, b) =>
+        new Date(a.uploadedAt) > new Date(b.uploadedAt) ? a : b
+    );
+    const response = await fetch(latest.url + '?t=' + Date.now(), { cache: 'no-store' });
+    return response.json();
 }
 
 export default async function handler(req, res) {
@@ -59,13 +75,42 @@ export default async function handler(req, res) {
 
         // DELETE — remove a template by ID
         if (req.method === 'DELETE') {
-            const { id } = req.body || {};
+            // Vercel sometimes gives body as a string for DELETE — handle both
+            let body = req.body;
+            if (typeof body === 'string') {
+                try { body = JSON.parse(body); } catch (_) { body = {}; }
+            }
+            const id = body?.id;
             if (!id) return res.status(400).json({ error: 'Missing template id' });
 
-            let templates = await getTemplatesBlob();
-            templates = templates.filter(t => String(t.id) !== String(id));
-            await saveTemplatesBlob(templates);
-            return res.json({ ok: true });
+            const beforeTemplates = await getTemplatesBlob();
+            const before = beforeTemplates.length;
+            const filtered = beforeTemplates.filter(t => String(t.id) !== String(id));
+            const targetCount = filtered.length;
+
+            if (before === targetCount) {
+                // Not found — treat as success (idempotent)
+                return res.json({ ok: true, deleted: false, remaining: targetCount });
+            }
+
+            await saveTemplatesBlob(filtered);
+
+            // Verify — read back and confirm the ID is gone.
+            // Retry once with small delay to account for Blob eventual consistency.
+            let verify = await getTemplatesBlob();
+            let stillPresent = verify.some(t => String(t.id) === String(id));
+            if (stillPresent) {
+                await new Promise(r => setTimeout(r, 400));
+                await saveTemplatesBlob(filtered); // re-write
+                verify = await getTemplatesBlob();
+                stillPresent = verify.some(t => String(t.id) === String(id));
+            }
+
+            if (stillPresent) {
+                return res.status(500).json({ error: 'Delete did not persist — please retry' });
+            }
+
+            return res.json({ ok: true, deleted: true, remaining: verify.length });
         }
 
         return res.status(405).json({ error: 'Method not allowed' });
