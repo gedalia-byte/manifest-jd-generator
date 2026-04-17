@@ -41,19 +41,22 @@ async function buildFieldData(collection, job) {
     const field = Object.fromEntries(fields.map(f => [f.name, f]))
 
     const data = {};
+    // Field names must match Framer CMS collection EXACTLY (case-sensitive)
     const fieldMap = {
         "Title": job.title,
         "Location": job.location,
+        "Employment type": job.employmentType,
         "Level": job.level,
-        "Reports To": job.reportsTo,
+        "Reports to": job.reportsTo,
+        "Salary range": job.compBand,
         "About Manifest": job.aboutCompany,
-        "About the Team": job.aboutTeam,
-        "About the Role": job.aboutRole,
-        "Ideal Experience": job.idealExperience,
+        "About the team": job.aboutTeam,
+        "About the role": job.aboutRole,
+        "Ideal experience": job.idealExperience,
+        "This for you if": job.goodFit,
+        "Not for you if": job.notAFit,
+        // Fields below don't exist in Framer yet — add them in Framer to sync
         "Responsibilities": job.responsibilities,
-        "For You": job.goodFit,
-        "Not For You": job.notAFit,
-        "Comp Band": job.compBand,
         "Created By": job.createdBy,
     };
 
