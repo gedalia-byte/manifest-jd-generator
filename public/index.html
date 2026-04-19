@@ -294,6 +294,19 @@
             background: var(--amber-dark);
             box-shadow: var(--shadow-amber);
         }
+        /* Pushed-to-CMS success state — same color family, muted, no hover */
+        .btn-accent.pushed,
+        .btn-accent.pushed:hover {
+            background: var(--amber-glow);
+            color: var(--amber);
+            cursor: default;
+            pointer-events: none;
+            box-shadow: none;
+            border: 1px solid var(--amber);
+        }
+        .btn-accent.pushed svg {
+            flex-shrink: 0;
+        }
         .btn-secondary {
             background: transparent;
             color: var(--text-secondary);
@@ -3149,6 +3162,30 @@ Rules:
         return data;
     }
 
+    // Track which slug was last successfully pushed — if the user edits
+    // anything, we re-enable the button so they can push again.
+    let _lastPushedSlug = null;
+
+    function resetPushCmsButton() {
+        const btn = document.getElementById('pushCmsBtn');
+        if (!btn) return;
+        btn.classList.remove('pushed');
+        btn.disabled = false;
+        btn.textContent = 'Push to CMS';
+        _lastPushedSlug = null;
+    }
+
+    function markPushCmsSucceeded() {
+        const btn = document.getElementById('pushCmsBtn');
+        if (!btn) return;
+        btn.classList.add('pushed');
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:6px;">
+                <path d="M3 8l3.5 3.5L13 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>Pushed to CMS — waiting to deploy`;
+    }
+
     async function pushToCMS() {
         const managerName = localStorage.getItem('manifest_hiring_manager');
         if (!managerName) {
@@ -3163,20 +3200,37 @@ Rules:
         }
 
         const btn = document.getElementById('pushCmsBtn');
-        const origText = btn.textContent;
-        btn.textContent = 'Pushing...';
+        btn.textContent = 'Pushing\u2026';
         btn.disabled = true;
+        btn.classList.remove('pushed');
 
         try {
             const result = await syncToFramer();
-            showToast(result.action === 'updated' ? 'CMS updated! \u2705' : 'Pushed to CMS! \u2705');
+            // Verify the server confirmed the write — sync-to-framer only returns
+            // success after Framer's SDK has accepted the create/update operation
+            // and returned an itemId or confirmed update.
+            if (!result || (!result.action && !result.success)) {
+                throw new Error('CMS did not confirm the write');
+            }
+            _lastPushedSlug = result.slug || generateJobSlug(title);
+            markPushCmsSucceeded();
+            showToast(result.action === 'updated' ? 'CMS updated \u2705' : 'Pushed to CMS \u2705');
         } catch (err) {
             showToast('Error pushing to CMS: ' + err.message);
-        } finally {
-            btn.textContent = origText;
+            btn.textContent = 'Push to CMS';
             btn.disabled = false;
+            btn.classList.remove('pushed');
         }
     }
+
+    // When any form field changes after a successful push, re-enable the button
+    // so the user can push the new version.
+    document.addEventListener('input', (e) => {
+        if (!_lastPushedSlug) return;
+        // Only care about the Create-tab form fields
+        if (!e.target.closest('#panel-builder')) return;
+        resetPushCmsButton();
+    });
 
     async function deleteFromFramer() {
         const title = document.getElementById('jobTitle').value;
