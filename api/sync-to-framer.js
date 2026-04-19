@@ -109,6 +109,35 @@ export default async function handler(req, res) {
                 return res.status(500).json({ error: err.message });
             }
         }
+        // ?debug=item&slug=X returns the raw fieldData stored in Framer for
+        // that slug — used to diagnose field-mapping issues (e.g. wrong text
+        // showing up in a field).
+        if (req.query?.debug === 'item' && req.query?.slug) {
+            try {
+                const slug = req.query.slug;
+                const result = await withFramer(async (framer) => {
+                    const collection = await getJobsCollection(framer);
+                    const fields = await collection.getFields();
+                    const item = await findItemBySlug(collection, slug);
+                    if (!item) return { found: false, slug };
+                    // Build a human-readable map of field name → stored value
+                    const byName = {};
+                    for (const f of fields) {
+                        const stored = item.fieldData?.[f.id];
+                        byName[f.name] = stored?.value ?? null;
+                    }
+                    return {
+                        found: true,
+                        slug: item.slug,
+                        itemId: item.id,
+                        fieldsByName: byName,
+                    };
+                });
+                return res.json(result);
+            } catch (err) {
+                return res.status(500).json({ error: err.message });
+            }
+        }
         // ?list=titles returns all existing job titles — used for Job Title
         // autocomplete. Cached briefly by the client.
         if (req.query?.list === 'titles') {
