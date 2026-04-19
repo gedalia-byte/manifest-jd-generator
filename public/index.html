@@ -987,6 +987,15 @@
             border-color: var(--amber) !important;
             box-shadow: 0 0 0 3px rgba(116, 92, 68, 0.15);
         }
+        /* Invalid field — red border + shake, clears when user types */
+        .field-invalid,
+        input.field-invalid,
+        textarea.field-invalid,
+        select.field-invalid {
+            animation: gentle-shake 0.5s ease;
+            border-color: var(--color-error) !important;
+            box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12) !important;
+        }
         @keyframes gentle-shake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
@@ -2163,7 +2172,64 @@
         ).filter(p => p).map(p => `<p>${escapeHTML(p)}</p>`).join('');
     }
 
+    // Required fields — user must fill these before Generate or Push to CMS.
+    // Optional fields (reportsTo, salaryRange, aboutCompany) have sensible
+    // defaults so they're not required. employmentType always has a value.
+    const REQUIRED_FIELDS = [
+        { id: 'jobTitle',        label: 'Job Title' },
+        { id: 'location',        label: 'Location' },
+        { id: 'level',           label: 'Level' },
+        { id: 'aboutTeam',       label: 'About the Team' },
+        { id: 'aboutRole',       label: 'About the Role' },
+        { id: 'idealExperience', label: 'Ideal Experience' },
+        { id: 'goodFit',         label: 'This for you if' },
+        { id: 'notAFit',         label: 'Not for you if' },
+    ];
+
+    // Highlight a field as invalid (red border + shake) and clear after user types
+    function markFieldInvalid(el) {
+        el.classList.remove('field-invalid');
+        void el.offsetWidth; // restart animation
+        el.classList.add('field-invalid');
+        const clear = () => {
+            el.classList.remove('field-invalid');
+            el.removeEventListener('input', clear);
+            el.removeEventListener('change', clear);
+        };
+        el.addEventListener('input', clear);
+        el.addEventListener('change', clear);
+    }
+
+    // Check that all required fields have values. Returns {ok, missing: [labels]}.
+    // Also highlights missing fields and focuses the first one.
+    function validateRequiredFields() {
+        const missing = [];
+        let firstEmpty = null;
+        for (const { id, label } of REQUIRED_FIELDS) {
+            const el = document.getElementById(id);
+            if (!el) continue;
+            const value = (el.value || '').trim();
+            if (!value) {
+                missing.push(label);
+                markFieldInvalid(el);
+                if (!firstEmpty) firstEmpty = el;
+            }
+        }
+        if (firstEmpty) {
+            firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => firstEmpty.focus(), 300);
+        }
+        return { ok: missing.length === 0, missing };
+    }
+
     function generatePreview() {
+        // Validate — don't generate with gaps
+        const { ok, missing } = validateRequiredFields();
+        if (!ok) {
+            const label = missing.length === 1 ? missing[0] : `${missing.length} fields`;
+            showToast(`Please fill in ${label} before generating`);
+            return;
+        }
         const title = document.getElementById('jobTitle').value || 'Untitled Role';
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
@@ -3239,6 +3305,14 @@ Rules:
         if (!managerName) {
             showToast('Enter your name on the Home tab first');
             switchTab('home');
+            return;
+        }
+        // Validate all required fields before hitting Framer
+        const { ok, missing } = validateRequiredFields();
+        if (!ok) {
+            const label = missing.length === 1 ? missing[0] : `${missing.length} fields`;
+            showToast(`Fill in ${label} before pushing to CMS`);
+            switchTab('builder');
             return;
         }
         const title = document.getElementById('jobTitle').value;
