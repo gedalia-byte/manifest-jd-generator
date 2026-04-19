@@ -1479,7 +1479,18 @@
             </div>
             <div class="field">
                 <label>Level</label>
-                <input type="text" id="level" placeholder="e.g. Senior, Mid-Level, Associate">
+                <select id="level">
+                    <option value="">Select level…</option>
+                    <option value="Specialist">Specialist</option>
+                    <option value="Junior Associate">Junior Associate</option>
+                    <option value="Senior Associate">Senior Associate</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Senior Manager">Senior Manager</option>
+                    <option value="Director">Director</option>
+                    <option value="Senior Director">Senior Director</option>
+                    <option value="VP">VP</option>
+                    <option value="C-Team">C-Team</option>
+                </select>
             </div>
         </div>
         <div class="field-row">
@@ -2613,7 +2624,7 @@ Generate a complete, professional job description from the user's input. Return 
   "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
   "location": "location including work arrangement if mentioned (Remote, Hybrid, On-site)",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
-  "level": "seniority level (e.g. Senior, Mid-Level, Associate, Lead, Director)",
+  "level": "seniority level — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match based on the role's responsibilities and seniority signals.",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
   "salaryRange": "empty string (leave for the user to fill)",
   "aboutCompany": "",
@@ -2748,20 +2759,57 @@ Writing principles:
 
     // ===== Shared: Apply fields to form =====
     let _skipAutosave = false;
+    // Map common AI/legacy level values to the canonical dropdown options.
+    // Falls through to exact match (case-insensitive) or returns '' if no match.
+    function normalizeLevel(raw) {
+        if (!raw) return '';
+        const canonical = ['Specialist','Junior Associate','Senior Associate','Manager',
+                           'Senior Manager','Director','Senior Director','VP','C-Team'];
+        const lower = String(raw).trim().toLowerCase();
+        // Exact match (case-insensitive)
+        const exact = canonical.find(c => c.toLowerCase() === lower);
+        if (exact) return exact;
+        // Common variations → canonical
+        const aliases = {
+            'junior': 'Junior Associate', 'jr': 'Junior Associate', 'entry': 'Junior Associate', 'entry-level': 'Junior Associate',
+            'mid': 'Senior Associate', 'mid-level': 'Senior Associate', 'mid level': 'Senior Associate', 'associate': 'Senior Associate',
+            'senior': 'Senior Associate', 'sr': 'Senior Associate', 'sr.': 'Senior Associate',
+            'lead': 'Manager', 'staff': 'Manager',
+            'principal': 'Senior Manager', 'senior lead': 'Senior Manager',
+            'head': 'Director', 'head of': 'Director',
+            'svp': 'Senior Director', 'senior vp': 'VP',
+            'evp': 'VP', 'executive vp': 'VP', 'vice president': 'VP',
+            'c-level': 'C-Team', 'c level': 'C-Team', 'executive': 'C-Team', 'chief': 'C-Team',
+            'ceo': 'C-Team', 'cto': 'C-Team', 'cfo': 'C-Team', 'coo': 'C-Team', 'cmo': 'C-Team',
+        };
+        if (aliases[lower]) return aliases[lower];
+        // If nothing matches, return '' so the select stays on "Select level…"
+        return '';
+    }
+
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
                           'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         // Backwards compat: map old field names to new ones
         if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
         if (data.department && !data.level) data.level = data.department;
+        // Normalize level to one of the canonical dropdown values
+        if (data.level !== undefined) data.level = normalizeLevel(data.level);
         fieldIds.forEach(id => {
             if (data[id] !== undefined && data[id] !== '') {
                 const el = document.getElementById(id);
                 if (!el) return;
-                if (id === 'employmentType') {
+                if (el.tagName === 'SELECT') {
+                    // Generic select handling — works for employmentType, level, etc.
+                    let matched = false;
                     for (let i = 0; i < el.options.length; i++) {
-                        if (el.options[i].value === data[id]) { el.selectedIndex = i; break; }
+                        if (el.options[i].value === data[id]) {
+                            el.selectedIndex = i;
+                            matched = true;
+                            break;
+                        }
                     }
+                    if (!matched) el.selectedIndex = 0;
                 } else {
                     if (id === 'aboutCompany' && data[id]) {
                         document.getElementById('useDefaultAbout').checked = false;
@@ -3345,7 +3393,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "jobTitle": "the job title",
   "location": "location including work arrangement if mentioned, or empty string",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
-  "level": "seniority level if mentioned (Senior, Mid-Level, etc.), or empty string",
+  "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
   "salaryRange": "salary range, or empty string",
   "aboutCompany": "company description if present, or empty string",
