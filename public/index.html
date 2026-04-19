@@ -996,6 +996,15 @@
             border-color: var(--color-error) !important;
             box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12) !important;
         }
+        /* Combobox indicator — inputs with a datalist get a subtle chevron so
+           users know suggestions are available. Native datalists don't
+           render an arrow in Chrome by default. */
+        input[list] {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1L5 5L9 1' stroke='%236B6259' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 34px;
+        }
         @keyframes gentle-shake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
@@ -1469,7 +1478,8 @@
         <div class="field-row">
             <div class="field">
                 <label>Job Title</label>
-                <input type="text" id="jobTitle" placeholder="e.g. Senior Product Designer">
+                <input type="text" id="jobTitle" list="jobTitleOptions" placeholder="e.g. Senior Product Designer" autocomplete="off">
+                <datalist id="jobTitleOptions"></datalist>
             </div>
             <div class="field">
                 <label>Location</label>
@@ -1488,18 +1498,18 @@
             </div>
             <div class="field">
                 <label>Level</label>
-                <select id="level">
-                    <option value="">Select level…</option>
-                    <option value="Specialist">Specialist</option>
-                    <option value="Junior Associate">Junior Associate</option>
-                    <option value="Senior Associate">Senior Associate</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Senior Manager">Senior Manager</option>
-                    <option value="Director">Director</option>
-                    <option value="Senior Director">Senior Director</option>
-                    <option value="VP">VP</option>
-                    <option value="C-Team">C-Team</option>
-                </select>
+                <input type="text" id="level" list="levelOptions" placeholder="Pick one or type a custom level…" autocomplete="off">
+                <datalist id="levelOptions">
+                    <option value="Specialist"></option>
+                    <option value="Junior Associate"></option>
+                    <option value="Senior Associate"></option>
+                    <option value="Manager"></option>
+                    <option value="Senior Manager"></option>
+                    <option value="Director"></option>
+                    <option value="Senior Director"></option>
+                    <option value="VP"></option>
+                    <option value="C-Team"></option>
+                </datalist>
             </div>
         </div>
         <div class="field-row">
@@ -1873,6 +1883,90 @@
     function autosaveURL() {
         const u = getCurrentUserId();
         return `/api/defaults?type=autosave${u ? `&user=${encodeURIComponent(u)}` : ''}`;
+    }
+
+    // ===== Autocomplete datalists =====
+    // Job Title suggestions come from two sources:
+    //   1. Templates (loaded with the page)
+    //   2. Framer CMS items (fetched lazily on first focus, cached for session)
+    let _cmsTitlesCache = null;
+    let _cmsTitlesPromise = null;
+    const _extraJobTitles = new Set(); // user-typed titles persist in datalist
+
+    function refreshJobTitleDatalist(templates = []) {
+        const dl = document.getElementById('jobTitleOptions');
+        if (!dl) return;
+        const titles = new Set();
+        // From templates
+        for (const t of templates) {
+            const title = t?.fields?.jobTitle;
+            if (title && title.trim()) titles.add(title.trim());
+        }
+        // From CMS (if loaded)
+        if (Array.isArray(_cmsTitlesCache)) {
+            for (const t of _cmsTitlesCache) if (t && t.trim()) titles.add(t.trim());
+        }
+        // User-added titles this session
+        for (const t of _extraJobTitles) if (t && t.trim()) titles.add(t.trim());
+        // Sorted
+        const sorted = Array.from(titles).sort((a, b) => a.localeCompare(b));
+        dl.innerHTML = sorted.map(t =>
+            `<option value="${t.replace(/"/g, '&quot;')}"></option>`
+        ).join('');
+    }
+
+    async function fetchCmsTitles() {
+        if (_cmsTitlesCache) return _cmsTitlesCache;
+        if (_cmsTitlesPromise) return _cmsTitlesPromise;
+        _cmsTitlesPromise = (async () => {
+            try {
+                const res = await fetch('/api/sync-to-framer?list=titles');
+                if (!res.ok) return [];
+                const data = await res.json();
+                _cmsTitlesCache = Array.isArray(data.titles) ? data.titles : [];
+                return _cmsTitlesCache;
+            } catch {
+                return [];
+            } finally {
+                _cmsTitlesPromise = null;
+            }
+        })();
+        return _cmsTitlesPromise;
+    }
+
+    // Level datalist — preload any custom levels the user has typed before.
+    // Stored per-user in localStorage since levels can be team/role specific.
+    function customLevelsKey() {
+        const u = getCurrentUserId() || 'guest';
+        return `manifest_custom_levels__${u}`;
+    }
+    function getCustomLevels() {
+        try { return JSON.parse(localStorage.getItem(customLevelsKey()) || '[]'); }
+        catch { return []; }
+    }
+    function addCustomLevel(value) {
+        const v = String(value || '').trim();
+        if (!v) return;
+        const canonical = ['Specialist','Junior Associate','Senior Associate','Manager',
+                           'Senior Manager','Director','Senior Director','VP','C-Team'];
+        if (canonical.some(c => c.toLowerCase() === v.toLowerCase())) return; // already in list
+        const current = getCustomLevels();
+        if (current.some(c => c.toLowerCase() === v.toLowerCase())) return;
+        current.push(v);
+        localStorage.setItem(customLevelsKey(), JSON.stringify(current));
+        refreshLevelDatalist();
+    }
+    function refreshLevelDatalist() {
+        const dl = document.getElementById('levelOptions');
+        if (!dl) return;
+        const custom = getCustomLevels();
+        // Keep canonical options first, then custom
+        const canonical = ['Specialist','Junior Associate','Senior Associate','Manager',
+                           'Senior Manager','Director','Senior Director','VP','C-Team'];
+        const combined = [...canonical, ...custom];
+        dl.innerHTML = combined.map(l =>
+            `<option value="${l.replace(/"/g, '&quot;')}"></option>`
+        ).join('');
     }
 
     // ===== Tab navigation =====
@@ -2875,8 +2969,9 @@ Writing principles:
             'ceo': 'C-Team', 'cto': 'C-Team', 'cfo': 'C-Team', 'coo': 'C-Team', 'cmo': 'C-Team',
         };
         if (aliases[lower]) return aliases[lower];
-        // If nothing matches, return '' so the select stays on "Select level…"
-        return '';
+        // No canonical match — return as-is (the Level field now accepts
+        // any custom value, not just the 9 canonical options).
+        return String(raw).trim();
     }
 
     function applyFieldsToForm(data) {
@@ -3787,6 +3882,9 @@ Parsing guidance:
         // other users adding) and stale cache causes confusing UX
         const templates = await getTemplates({ bustCache: true });
 
+        // Feed Job Title autocomplete with titles harvested from templates
+        refreshJobTitleDatalist(templates);
+
         // ---- Picker grid on Create tab ----
         const grid = document.getElementById('templateGrid');
         const empty = document.getElementById('templateEmpty');
@@ -3880,6 +3978,37 @@ Parsing guidance:
         await restoreAutosave();
         setupAutosave();
         renderTemplates(); // async — fires and renders when API responds
+
+        // ===== Autocomplete wiring =====
+        // Level — populate datalist with custom levels, persist new entries on blur
+        refreshLevelDatalist();
+        const levelEl = document.getElementById('level');
+        if (levelEl) {
+            levelEl.addEventListener('blur', () => {
+                const v = levelEl.value.trim();
+                if (v) addCustomLevel(v);
+            });
+        }
+        // Job Title — fetch CMS titles on first focus (lazy, cached for session)
+        const titleEl = document.getElementById('jobTitle');
+        if (titleEl) {
+            let cmsFetched = false;
+            const onFirstFocus = async () => {
+                if (cmsFetched) return;
+                cmsFetched = true;
+                await fetchCmsTitles();
+                refreshJobTitleDatalist(_templatesCache || []);
+            };
+            titleEl.addEventListener('focus', onFirstFocus);
+            // Also remember user's typed titles in-session so they re-appear
+            titleEl.addEventListener('blur', () => {
+                const v = titleEl.value.trim();
+                if (v) {
+                    _extraJobTitles.add(v);
+                    refreshJobTitleDatalist(_templatesCache || []);
+                }
+            });
+        }
     })();
 </script>
 

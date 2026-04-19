@@ -91,9 +91,9 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Health check
+    // Health check + debug/list endpoints
     if (req.method === 'GET') {
-        // Debug mode — ?debug=fields returns the actual Framer collection field names
+        // ?debug=fields returns the actual Framer collection field names
         if (req.query?.debug === 'fields') {
             try {
                 const result = await withFramer(async (framer) => {
@@ -107,6 +107,29 @@ export default async function handler(req, res) {
                 return res.json(result);
             } catch (err) {
                 return res.status(500).json({ error: err.message });
+            }
+        }
+        // ?list=titles returns all existing job titles — used for Job Title
+        // autocomplete. Cached briefly by the client.
+        if (req.query?.list === 'titles') {
+            try {
+                const result = await withFramer(async (framer) => {
+                    const collection = await getJobsCollection(framer);
+                    const fields = await collection.getFields();
+                    const titleField = fields.find(f => f.name === 'Title');
+                    if (!titleField) return { titles: [] };
+                    const items = await collection.getItems();
+                    const titles = items
+                        .map(item => item.fieldData?.[titleField.id]?.value)
+                        .filter(t => t && typeof t === 'string');
+                    // De-dupe and sort
+                    return { titles: Array.from(new Set(titles)).sort() };
+                });
+                // Cache for 60s on CDN since titles don't change constantly
+                res.setHeader('Cache-Control', 'public, max-age=60');
+                return res.json(result);
+            } catch (err) {
+                return res.status(500).json({ error: err.message, titles: [] });
             }
         }
         return res.json({
