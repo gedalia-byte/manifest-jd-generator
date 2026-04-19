@@ -3455,14 +3455,65 @@ Rules:
             if (!result || (!result.action && !result.success)) {
                 throw new Error('CMS did not confirm the write');
             }
-            _lastPushedSlug = result.slug || generateJobSlug(title);
+            const slug = result.slug || generateJobSlug(title);
+            _lastPushedSlug = slug;
             markPushCmsSucceeded();
-            showToast(result.action === 'updated' ? 'CMS updated \u2705' : 'Pushed to CMS \u2705');
+
+            // Auto-save as a template so the current version is always
+            // available in the template library. Keyed by slug so repeat
+            // pushes of the same role update the same template instead of
+            // piling up duplicates.
+            const templateSaved = await autoSaveTemplateFromPush(slug, title);
+
+            const cmsMsg = result.action === 'updated' ? 'CMS updated' : 'Pushed to CMS';
+            showToast(templateSaved ? `${cmsMsg} · saved to templates \u2705` : `${cmsMsg} \u2705`);
         } catch (err) {
             showToast('Error pushing to CMS: ' + err.message);
             btn.textContent = 'Push to CMS';
             btn.disabled = false;
             btn.classList.remove('pushed');
+        }
+    }
+
+    // Save the current form state as a template, keyed by slug. Returns
+    // true on success, false otherwise (non-blocking — CMS push is the
+    // primary action and shouldn't fail if templates fail to save).
+    async function autoSaveTemplateFromPush(slug, title) {
+        const template = {
+            id: `cms-${slug}`, // deterministic ID → upsert on repeat pushes
+            name: title,
+            createdAt: new Date().toISOString(),
+            source: 'cms-push',
+            fields: {
+                jobTitle: document.getElementById('jobTitle').value,
+                location: document.getElementById('location').value,
+                employmentType: document.getElementById('employmentType').value,
+                level: document.getElementById('level').value,
+                reportsTo: document.getElementById('reportsTo').value,
+                salaryRange: document.getElementById('salaryRange').value,
+                aboutCompany: document.getElementById('aboutCompany').value,
+                aboutTeam: document.getElementById('aboutTeam').value,
+                aboutRole: document.getElementById('aboutRole').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                idealExperience: document.getElementById('idealExperience').value,
+                goodFit: document.getElementById('goodFit').value,
+                notAFit: document.getElementById('notAFit').value,
+            }
+        };
+        try {
+            const res = await fetch('/api/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(template)
+            });
+            if (!res.ok) throw new Error(`Template save failed (${res.status})`);
+            _templatesCache = null;
+            // Re-render templates in the background so the new/updated entry shows up
+            renderTemplates().catch(() => {});
+            return true;
+        } catch (err) {
+            console.warn('Auto-save to templates failed:', err.message);
+            return false;
         }
     }
 

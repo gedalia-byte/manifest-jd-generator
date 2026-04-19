@@ -77,13 +77,26 @@ export default async function handler(req, res) {
             template.id = template.id || Date.now();
             template.createdAt = template.createdAt || new Date().toISOString();
 
-            // Concurrent-safe: if another user added a template between our
-            // read and write, we retry with the latest list to preserve both
-            // additions.
+            // Upsert: if a template with the same ID already exists, replace
+            // it (preserving original createdAt). Otherwise append. This lets
+            // clients re-POST the same id to update in place — used by the
+            // auto-save-on-CMS-push flow so repeat pushes don't create
+            // duplicates.
+            //
+            // Concurrent-safe: mutateWithRetry re-applies against the latest
+            // list if another user wrote between our read and write.
             const result = await mutateWithRetry(
                 (list) => {
-                    // De-dupe by id in case of retry reading our own already-added template
-                    if (list.some(t => String(t.id) === String(template.id))) return list;
+                    const idx = list.findIndex(t => String(t.id) === String(template.id));
+                    if (idx >= 0) {
+                        const updated = [...list];
+                        updated[idx] = {
+                            ...template,
+                            createdAt: list[idx].createdAt || template.createdAt,
+                            updatedAt: new Date().toISOString(),
+                        };
+                        return updated;
+                    }
                     return [...list, template];
                 },
                 (after) => after.some(t => String(t.id) === String(template.id)),
