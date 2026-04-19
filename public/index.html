@@ -1853,6 +1853,28 @@
 <div class="toast" id="toast"></div>
 
 <script>
+    // ===== Multi-user scoping =====
+    // Every user's autosave is isolated by their hiring manager name.
+    // Sanitize must match the server's sanitizeUser() in api/defaults.js.
+    function sanitizeUserForAPI(raw) {
+        if (!raw) return '';
+        return String(raw)
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 64);
+    }
+    function getCurrentUserId() {
+        return sanitizeUserForAPI(localStorage.getItem('manifest_hiring_manager') || '');
+    }
+    // Build an API URL with the current user attached. Falls back to 'guest'
+    // on the server side when no name is set yet.
+    function autosaveURL() {
+        const u = getCurrentUserId();
+        return `/api/defaults?type=autosave${u ? `&user=${encodeURIComponent(u)}` : ''}`;
+    }
+
     // ===== Tab navigation =====
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -1918,7 +1940,10 @@
     });
     function handleRestart() {
         if (!confirm('Start over? This will clear the form and all unsaved work.')) return;
-        // Clear form data
+        // Delete THIS user's server-side autosave first (uses current name before clearing it)
+        const deleteURL = autosaveURL();
+        fetch(deleteURL, { method: 'DELETE' }).catch(() => {});
+        // Clear client-side identity + autosave
         localStorage.removeItem('manifest_hiring_manager');
         localStorage.removeItem('manifest_jd_autosave');
         // Reset all form fields
@@ -1926,21 +1951,16 @@
             if (el.tagName === 'SELECT') el.selectedIndex = 0;
             else el.value = '';
         });
-        // Reset checkboxes to defaults
         const useDefaultAbout = document.getElementById('useDefaultAbout');
         if (useDefaultAbout) useDefaultAbout.checked = true;
-        // Clear preview
         document.getElementById('previewOutput').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 72px 0; font-size: 14px;">Fill out the form and click "Generate Job Description" to see a preview here.</p>';
         document.getElementById('saveTemplateCard').style.display = 'none';
-        // Reset name input
         nameInput.value = '';
-        // Lock tabs and go home
         lockTabs();
         updateTopbarUser();
+        resetPushCmsButton();
         switchTab('home');
         nameInput.focus();
-        // Trigger server-side autosave clear
-        fetch('/api/defaults?type=autosave', { method: 'DELETE' }).catch(() => {});
         showToast('All cleared — start fresh');
     }
 
@@ -1951,6 +1971,15 @@
             void nameInput.offsetWidth;
             nameInput.classList.add('shake');
             nameInput.focus();
+            return;
+        }
+        const newUserId = sanitizeUserForAPI(name);
+        // If switching identity mid-session, force a full reload so init
+        // restores the NEW user's autosave cleanly (prevents data cross-over
+        // between users sharing a browser).
+        if (window._activeUserId && newUserId !== window._activeUserId) {
+            localStorage.setItem('manifest_hiring_manager', name);
+            window.location.reload();
             return;
         }
         localStorage.setItem('manifest_hiring_manager', name);
@@ -2089,9 +2118,10 @@
             const hasContent = AUTOSAVE_FIELDS.some(id => (data[id] || '').trim().length > 0);
             if (!hasContent) return;
             try {
-                await fetch('/api/defaults?type=autosave', {
+                await fetch(autosaveURL(), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    cache: 'no-store',
                     body: JSON.stringify(data)
                 });
             } catch (err) {
@@ -2102,7 +2132,7 @@
 
     async function restoreAutosave() {
         try {
-            const res = await fetch('/api/defaults?type=autosave');
+            const res = await fetch(autosaveURL(), { cache: 'no-store' });
             if (!res.ok) return;
             const data = await res.json();
             if (!data || typeof data !== 'object') return;
@@ -2624,12 +2654,8 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         document.getElementById('useDefaultAbout').checked = true;
         document.getElementById('aboutCompany').value = getDefault('about');
         document.getElementById('aboutCompany').disabled = true;
-        // Clear server autosave
-        fetch('/api/defaults?type=autosave', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        }).catch(() => {});
+        // Clear server-side autosave for this user
+        fetch(autosaveURL(), { method: 'DELETE' }).catch(() => {});
         showToast('Form cleared');
     }
 
@@ -3843,6 +3869,10 @@ Parsing guidance:
 
     // ===== Init =====
     (async function init() {
+        // Snapshot the user identity at session start. handleGetStarted()
+        // compares against this to detect an identity switch and triggers
+        // a reload so the new user's autosave loads cleanly.
+        window._activeUserId = getCurrentUserId();
         await loadDefaultsIntoAdmin();
         setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
         setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
