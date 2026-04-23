@@ -1527,18 +1527,14 @@
     <div class="card">
         <div class="section-header" data-section="aboutCompany">
             <div>
-                <h2>About Manifest <span class="default-badge">Default</span></h2>
-                <p class="subtitle">Company overview — uses your saved default unless you edit it here</p>
+                <h2>About Manifest <span class="default-badge">Locked</span></h2>
+                <p class="subtitle">This is the standard company overview used on every JD. To change it, edit it in the <a href="#" onclick="switchTab('defaults'); return false;" style="color: var(--amber); text-decoration: underline;">Admin tab</a>.</p>
             </div>
             <span class="chevron open">&#9654;</span>
         </div>
         <div class="section-body" id="section-aboutCompany">
-            <div class="boilerplate-toggle">
-                <input type="checkbox" id="useDefaultAbout" checked>
-                <label for="useDefaultAbout">Use saved default</label>
-            </div>
             <div class="field">
-                <textarea id="aboutCompany" rows="5" disabled></textarea>
+                <textarea id="aboutCompany" rows="5" disabled readonly></textarea>
             </div>
         </div>
     </div>
@@ -2045,8 +2041,7 @@
             if (el.tagName === 'SELECT') el.selectedIndex = 0;
             else el.value = '';
         });
-        const useDefaultAbout = document.getElementById('useDefaultAbout');
-        if (useDefaultAbout) useDefaultAbout.checked = true;
+        refreshLockedAboutManifest();
         document.getElementById('previewOutput').innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 72px 0; font-size: 14px;">Fill out the form and click "Generate Job Description" to see a preview here.</p>';
         document.getElementById('saveTemplateCard').style.display = 'none';
         nameInput.value = '';
@@ -2115,6 +2110,20 @@
         }
     }
 
+    // Lock a field to always reflect the saved admin default.
+    // Used for About Manifest — there's no checkbox anymore; users can only
+    // change this field via the Admin tab, and the Create form mirrors it.
+    function lockFieldToDefault(textareaId, defaultKey) {
+        const ta = document.getElementById(textareaId);
+        if (!ta) return;
+        ta.disabled = true;
+        ta.readOnly = true;
+        ta.value = getDefault(defaultKey) || '';
+    }
+    function refreshLockedAboutManifest() {
+        lockFieldToDefault('aboutCompany', 'about');
+    }
+
     // ===== Server-backed defaults =====
     let _defaultsCache = {};
 
@@ -2166,8 +2175,9 @@
             // Also keep localStorage as fast cache
             localStorage.setItem('manifest_jd_defaults', JSON.stringify(defaults));
 
-            if (document.getElementById('useDefaultAbout').checked)
-                document.getElementById('aboutCompany').value = defaults.about;
+            // About Manifest is locked to the admin default — mirror the new
+            // value onto the Create form immediately.
+            refreshLockedAboutManifest();
 
             showToast('Defaults saved to server');
             flashSaveStatus();
@@ -2199,8 +2209,6 @@
             const el = document.getElementById(id);
             if (el) data[id] = el.value;
         });
-        // Save checkbox state so custom About Manifest text isn't lost on reload
-        data.useDefaultAbout = document.getElementById('useDefaultAbout').checked;
         return data;
     }
 
@@ -2233,13 +2241,12 @@
             const hasContent = AUTOSAVE_FIELDS.some(id => (data[id] || '').trim().length > 0);
             if (!hasContent) return;
 
-            // Restore checkbox state BEFORE applying fields so aboutCompany isn't overwritten
-            if (data.useDefaultAbout === false) {
-                document.getElementById('useDefaultAbout').checked = false;
-                document.getElementById('aboutCompany').disabled = false;
-            }
+            // About Manifest is now locked to the admin default — ignore any
+            // legacy aboutCompany or useDefaultAbout values in the autosave blob.
+            delete data.aboutCompany;
+            delete data.useDefaultAbout;
 
-            // Always restore — autosaved data wins over defaults
+            // Always restore — autosaved data wins over defaults (except aboutCompany)
             _skipAutosave = true;
             applyFieldsToForm(data);
             _skipAutosave = false;
@@ -2745,9 +2752,7 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         ['jobTitle','location','level','reportsTo','salaryRange','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit']
             .forEach(id => document.getElementById(id).value = '');
         document.getElementById('employmentType').selectedIndex = 0;
-        document.getElementById('useDefaultAbout').checked = true;
-        document.getElementById('aboutCompany').value = getDefault('about');
-        document.getElementById('aboutCompany').disabled = true;
+        refreshLockedAboutManifest();
         // Clear server-side autosave for this user
         fetch(autosaveURL(), { method: 'DELETE' }).catch(() => {});
         showToast('Form cleared');
@@ -2998,10 +3003,9 @@ Writing principles:
                     }
                     if (!matched) el.selectedIndex = 0;
                 } else {
-                    if (id === 'aboutCompany' && data[id]) {
-                        document.getElementById('useDefaultAbout').checked = false;
-                        el.disabled = false;
-                    }
+                    // About Manifest is locked to the admin default — never
+                    // overwrite from AI output, templates, or uploads.
+                    if (id === 'aboutCompany') return;
                     el.value = data[id];
                 }
                 el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -4023,10 +4027,15 @@ Parsing guidance:
         // a reload so the new user's autosave loads cleanly.
         window._activeUserId = getCurrentUserId();
         await loadDefaultsIntoAdmin();
-        setupDefaultToggle('useDefaultAbout', 'aboutCompany', 'about');
+        // About Manifest is locked — only editable from the Admin tab.
+        // The Create form field always mirrors whatever is saved in defaults.
+        refreshLockedAboutManifest();
         setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
         setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
         await restoreAutosave();
+        // Re-apply the lock after autosave restore in case it briefly wrote
+        // an old value to the field.
+        refreshLockedAboutManifest();
         setupAutosave();
         renderTemplates(); // async — fires and renders when API responds
 
