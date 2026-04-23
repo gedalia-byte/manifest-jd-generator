@@ -2119,6 +2119,37 @@
         ta.disabled = true;
         ta.readOnly = true;
         ta.value = getDefault(defaultKey) || '';
+
+        // Belt-and-suspenders: block any attempt to type, paste, or drag into
+        // the field. If a user or stale script bypasses the disabled attribute
+        // (e.g. via DevTools or an old cached JS), these event handlers catch it.
+        if (!ta.dataset.lockInstalled) {
+            const block = (e) => { e.preventDefault(); e.stopPropagation(); };
+            ta.addEventListener('beforeinput', block);
+            ta.addEventListener('keydown', (e) => {
+                // Allow copy, select-all, tab navigation
+                if (e.metaKey || e.ctrlKey || e.key === 'Tab' || e.key === 'Shift') return;
+                e.preventDefault();
+            });
+            ta.addEventListener('paste', block);
+            ta.addEventListener('cut', block);
+            ta.addEventListener('drop', block);
+            // If the value ever drifts from the canonical default (e.g. stale
+            // code wrote to it), snap it back on the next frame.
+            const snapBack = () => {
+                const expected = getDefault(defaultKey) || '';
+                if (ta.value !== expected) ta.value = expected;
+            };
+            ta.addEventListener('input', snapBack);
+            // Watch the attribute for tampering — restore disabled/readOnly
+            // if anything removes them.
+            const observer = new MutationObserver(() => {
+                if (!ta.disabled) ta.disabled = true;
+                if (!ta.readOnly) ta.readOnly = true;
+            });
+            observer.observe(ta, { attributes: true, attributeFilter: ['disabled', 'readonly'] });
+            ta.dataset.lockInstalled = '1';
+        }
     }
     function refreshLockedAboutManifest() {
         lockFieldToDefault('aboutCompany', 'about');
@@ -2200,8 +2231,11 @@
 
     // ===== Auto-save Create form to server =====
     let _autosaveTimer = null;
+    // aboutCompany is NOT autosaved — it's locked to the admin default and
+    // always re-populated from there on load. Saving it would just pollute
+    // the blob with copies of the admin text.
     const AUTOSAVE_FIELDS = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                              'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+                              'aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
 
     function getFormData() {
         const data = {};
