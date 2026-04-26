@@ -1005,6 +1005,132 @@
             background-position: right 14px center;
             padding-right: 34px;
         }
+        /* ===== Location builder ===== */
+        .loc-builder {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .loc-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .loc-slots:empty { display: none; }
+        .loc-slot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .loc-slot .loc-city-input {
+            flex: 1;
+            min-width: 0;
+        }
+        .loc-slot[data-type="remote"] {
+            padding: 11px 14px;
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-sm);
+            background: var(--amber-glow);
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 14px;
+            color: var(--charcoal);
+            font-weight: 500;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .loc-slot[data-type="remote"] .loc-remote-icon {
+            color: var(--amber);
+            font-size: 12px;
+        }
+        .loc-remove-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 18px;
+            line-height: 1;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--stone);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .loc-remove-btn:hover {
+            color: var(--color-error);
+            border-color: var(--color-error);
+            background: rgba(192, 57, 43, 0.05);
+        }
+        .loc-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .loc-add-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 14px;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px dashed var(--stone);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .loc-add-btn:hover:not(:disabled) {
+            color: var(--amber);
+            border-color: var(--amber);
+            border-style: solid;
+        }
+        .loc-add-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .loc-arrangement {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 12px;
+            background: var(--cream);
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+        }
+        .loc-arrangement-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .loc-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--charcoal);
+            cursor: pointer;
+        }
+        .loc-radio input[type="radio"] {
+            margin: 0;
+            accent-color: var(--amber);
+            cursor: pointer;
+        }
+        .loc-builder.field-invalid {
+            border: 1px solid var(--color-error);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.12);
+            animation: gentle-shake 0.5s ease;
+        }
         @keyframes gentle-shake {
             0%, 100% { transform: translateX(0); }
             20% { transform: translateX(-6px); }
@@ -1483,7 +1609,20 @@
             </div>
             <div class="field">
                 <label>Location</label>
-                <input type="text" id="location" placeholder="e.g. New York, NY (Hybrid)">
+                <input type="hidden" id="location">
+                <div class="loc-builder" id="locationBuilder">
+                    <div class="loc-slots" id="locSlots"></div>
+                    <div class="loc-actions">
+                        <button type="button" class="loc-add-btn" id="locAddCityBtn">+ Add city</button>
+                        <button type="button" class="loc-add-btn" id="locAddRemoteBtn">+ Add Remote</button>
+                    </div>
+                    <div class="loc-arrangement" id="locArrangement" style="display:none;">
+                        <span class="loc-arrangement-label">Arrangement:</span>
+                        <label class="loc-radio"><input type="radio" name="locArrangementRadio" value="Hybrid"> Hybrid</label>
+                        <label class="loc-radio"><input type="radio" name="locArrangementRadio" value="In-person"> In-person</label>
+                    </div>
+                </div>
+                <datalist id="cityOptions"></datalist>
             </div>
         </div>
         <div class="field-row">
@@ -1879,6 +2018,236 @@
     function autosaveURL() {
         const u = getCurrentUserId();
         return `/api/defaults?type=autosave${u ? `&user=${encodeURIComponent(u)}` : ''}`;
+    }
+
+    // ===== City list (curated, ~400 major business hubs worldwide) =====
+    // Keeps the app self-contained: no API key, no network call, instant typeahead.
+    // Format: "City, Region/Country" — the same format gets pushed to Framer.
+    const CITIES = [
+        // United States
+        "New York, NY","Brooklyn, NY","Manhattan, NY","Los Angeles, CA","San Francisco, CA","San Jose, CA","Palo Alto, CA","Mountain View, CA","Sunnyvale, CA","Santa Clara, CA","Redwood City, CA","Oakland, CA","Berkeley, CA","San Diego, CA","Sacramento, CA","Long Beach, CA","Anaheim, CA","Irvine, CA","Pasadena, CA","Santa Monica, CA","Chicago, IL","Boston, MA","Cambridge, MA","Washington, DC","Arlington, VA","Alexandria, VA","Seattle, WA","Bellevue, WA","Redmond, WA","Tacoma, WA","Austin, TX","Dallas, TX","Houston, TX","San Antonio, TX","Fort Worth, TX","El Paso, TX","Plano, TX","Denver, CO","Boulder, CO","Colorado Springs, CO","Miami, FL","Tampa, FL","Orlando, FL","Jacksonville, FL","Fort Lauderdale, FL","St. Petersburg, FL","Atlanta, GA","Savannah, GA","Philadelphia, PA","Pittsburgh, PA","Phoenix, AZ","Tucson, AZ","Mesa, AZ","Scottsdale, AZ","Las Vegas, NV","Reno, NV","Henderson, NV","Portland, OR","Eugene, OR","Detroit, MI","Ann Arbor, MI","Grand Rapids, MI","Minneapolis, MN","St. Paul, MN","Charlotte, NC","Raleigh, NC","Durham, NC","Charlotte, NC","Nashville, TN","Memphis, TN","Knoxville, TN","Indianapolis, IN","Columbus, OH","Cleveland, OH","Cincinnati, OH","Baltimore, MD","Bethesda, MD","St. Louis, MO","Kansas City, MO","Milwaukee, WI","Madison, WI","New Orleans, LA","Baton Rouge, LA","Salt Lake City, UT","Provo, UT","Honolulu, HI","Anchorage, AK","Albuquerque, NM","Santa Fe, NM","Omaha, NE","Lincoln, NE","Des Moines, IA","Wichita, KS","Oklahoma City, OK","Tulsa, OK","Little Rock, AR","Birmingham, AL","Huntsville, AL","Louisville, KY","Lexington, KY","Richmond, VA","Norfolk, VA","Virginia Beach, VA","Buffalo, NY","Rochester, NY","Albany, NY","Syracuse, NY","Hartford, CT","New Haven, CT","Stamford, CT","Providence, RI","Burlington, VT","Manchester, NH","Portland, ME","Newark, NJ","Jersey City, NJ","Princeton, NJ","Trenton, NJ","Wilmington, DE","Charleston, SC","Columbia, SC","Boise, ID","Billings, MT","Cheyenne, WY","Sioux Falls, SD","Fargo, ND","Spokane, WA",
+        // Canada
+        "Toronto, ON","Vancouver, BC","Montreal, QC","Calgary, AB","Edmonton, AB","Ottawa, ON","Mississauga, ON","Winnipeg, MB","Quebec City, QC","Hamilton, ON","Kitchener, ON","Halifax, NS","Victoria, BC","Saskatoon, SK","Regina, SK","St. John's, NL","Markham, ON","Burnaby, BC","Richmond, BC","Surrey, BC","Waterloo, ON",
+        // United Kingdom
+        "London, UK","Manchester, UK","Birmingham, UK","Edinburgh, UK","Glasgow, UK","Liverpool, UK","Leeds, UK","Bristol, UK","Cambridge, UK","Oxford, UK","Sheffield, UK","Newcastle, UK","Belfast, UK","Cardiff, UK","Brighton, UK","Nottingham, UK","Aberdeen, UK","Reading, UK",
+        // Ireland
+        "Dublin, Ireland","Cork, Ireland","Galway, Ireland","Limerick, Ireland",
+        // Western Europe
+        "Paris, France","Lyon, France","Marseille, France","Toulouse, France","Nice, France","Bordeaux, France","Lille, France","Berlin, Germany","Munich, Germany","Frankfurt, Germany","Hamburg, Germany","Cologne, Germany","Stuttgart, Germany","Düsseldorf, Germany","Leipzig, Germany","Dresden, Germany","Amsterdam, Netherlands","Rotterdam, Netherlands","The Hague, Netherlands","Utrecht, Netherlands","Eindhoven, Netherlands","Brussels, Belgium","Antwerp, Belgium","Ghent, Belgium","Madrid, Spain","Barcelona, Spain","Valencia, Spain","Seville, Spain","Bilbao, Spain","Málaga, Spain","Lisbon, Portugal","Porto, Portugal","Rome, Italy","Milan, Italy","Naples, Italy","Turin, Italy","Florence, Italy","Bologna, Italy","Venice, Italy","Vienna, Austria","Salzburg, Austria","Zurich, Switzerland","Geneva, Switzerland","Basel, Switzerland","Bern, Switzerland","Lausanne, Switzerland","Luxembourg, Luxembourg","Athens, Greece","Thessaloniki, Greece",
+        // Northern Europe
+        "Stockholm, Sweden","Gothenburg, Sweden","Malmö, Sweden","Copenhagen, Denmark","Aarhus, Denmark","Oslo, Norway","Bergen, Norway","Helsinki, Finland","Espoo, Finland","Tampere, Finland","Reykjavik, Iceland",
+        // Eastern Europe
+        "Warsaw, Poland","Krakow, Poland","Wroclaw, Poland","Gdansk, Poland","Poznan, Poland","Prague, Czech Republic","Brno, Czech Republic","Budapest, Hungary","Bucharest, Romania","Cluj-Napoca, Romania","Sofia, Bulgaria","Belgrade, Serbia","Zagreb, Croatia","Ljubljana, Slovenia","Bratislava, Slovakia","Tallinn, Estonia","Riga, Latvia","Vilnius, Lithuania","Kyiv, Ukraine","Lviv, Ukraine","Minsk, Belarus","Moscow, Russia","St. Petersburg, Russia",
+        // Israel
+        "Tel Aviv, Israel","Jerusalem, Israel","Haifa, Israel","Ramat Gan, Israel","Herzliya, Israel","Petah Tikva, Israel","Rishon LeZion, Israel","Beer Sheva, Israel","Netanya, Israel","Ashdod, Israel","Modiin, Israel","Raanana, Israel",
+        // Middle East
+        "Dubai, UAE","Abu Dhabi, UAE","Sharjah, UAE","Doha, Qatar","Riyadh, Saudi Arabia","Jeddah, Saudi Arabia","Kuwait City, Kuwait","Manama, Bahrain","Muscat, Oman","Amman, Jordan","Beirut, Lebanon","Cairo, Egypt","Alexandria, Egypt","Istanbul, Turkey","Ankara, Turkey","Izmir, Turkey","Tehran, Iran",
+        // Asia-Pacific
+        "Tokyo, Japan","Osaka, Japan","Yokohama, Japan","Kyoto, Japan","Nagoya, Japan","Fukuoka, Japan","Sapporo, Japan","Singapore","Hong Kong","Macau","Seoul, South Korea","Busan, South Korea","Incheon, South Korea","Beijing, China","Shanghai, China","Shenzhen, China","Guangzhou, China","Hangzhou, China","Chengdu, China","Tianjin, China","Wuhan, China","Xi'an, China","Suzhou, China","Nanjing, China","Taipei, Taiwan","Kaohsiung, Taiwan","Taichung, Taiwan","Bangkok, Thailand","Chiang Mai, Thailand","Ho Chi Minh City, Vietnam","Hanoi, Vietnam","Da Nang, Vietnam","Manila, Philippines","Cebu City, Philippines","Quezon City, Philippines","Jakarta, Indonesia","Bandung, Indonesia","Surabaya, Indonesia","Kuala Lumpur, Malaysia","Penang, Malaysia","Johor Bahru, Malaysia","Mumbai, India","Delhi, India","Bangalore, India","Hyderabad, India","Chennai, India","Pune, India","Kolkata, India","Ahmedabad, India","Gurgaon, India","Noida, India","Karachi, Pakistan","Lahore, Pakistan","Islamabad, Pakistan","Dhaka, Bangladesh","Colombo, Sri Lanka","Kathmandu, Nepal",
+        // Australia / New Zealand
+        "Sydney, Australia","Melbourne, Australia","Brisbane, Australia","Perth, Australia","Adelaide, Australia","Canberra, Australia","Gold Coast, Australia","Hobart, Australia","Auckland, New Zealand","Wellington, New Zealand","Christchurch, New Zealand","Hamilton, New Zealand",
+        // Latin America
+        "Mexico City, Mexico","Guadalajara, Mexico","Monterrey, Mexico","Tijuana, Mexico","Puebla, Mexico","Querétaro, Mexico","São Paulo, Brazil","Rio de Janeiro, Brazil","Brasília, Brazil","Belo Horizonte, Brazil","Curitiba, Brazil","Porto Alegre, Brazil","Salvador, Brazil","Recife, Brazil","Buenos Aires, Argentina","Córdoba, Argentina","Rosario, Argentina","Santiago, Chile","Valparaíso, Chile","Bogotá, Colombia","Medellín, Colombia","Cali, Colombia","Lima, Peru","Cusco, Peru","Quito, Ecuador","Guayaquil, Ecuador","Caracas, Venezuela","Montevideo, Uruguay","Asunción, Paraguay","La Paz, Bolivia","Panama City, Panama","San José, Costa Rica","Guatemala City, Guatemala","San Salvador, El Salvador","Tegucigalpa, Honduras","Managua, Nicaragua","Havana, Cuba","Santo Domingo, Dominican Republic","San Juan, Puerto Rico",
+        // Africa
+        "Johannesburg, South Africa","Cape Town, South Africa","Durban, South Africa","Pretoria, South Africa","Lagos, Nigeria","Abuja, Nigeria","Nairobi, Kenya","Mombasa, Kenya","Accra, Ghana","Addis Ababa, Ethiopia","Casablanca, Morocco","Rabat, Morocco","Marrakech, Morocco","Tunis, Tunisia","Algiers, Algeria","Dakar, Senegal","Kigali, Rwanda","Dar es Salaam, Tanzania","Kampala, Uganda","Khartoum, Sudan","Luanda, Angola","Maputo, Mozambique"
+    ];
+
+    function refreshCityDatalist() {
+        const dl = document.getElementById('cityOptions');
+        if (!dl) return;
+        // De-dupe (a few cities appear in multiple regions) and sort
+        const unique = Array.from(new Set(CITIES)).sort((a, b) => a.localeCompare(b));
+        dl.innerHTML = unique.map(c => `<option value="${c.replace(/"/g, '&quot;')}"></option>`).join('');
+    }
+
+    // ===== Location builder controller =====
+    // State: locations array of { type: 'city', value: string } | { type: 'remote' }
+    //        plus arrangement: 'Hybrid' | 'In-person' | null (null when no city)
+    let _locationState = { slots: [], arrangement: null };
+
+    function formatLocations(state) {
+        const { slots, arrangement } = state;
+        if (!slots.length) return '';
+        const cities = slots.filter(s => s.type === 'city' && s.value && s.value.trim())
+                            .map(s => s.value.trim());
+        const hasRemote = slots.some(s => s.type === 'remote');
+        const parts = [...cities];
+        if (cities.length > 0 && arrangement) parts.push(arrangement);
+        if (hasRemote) parts.push('Remote');
+        return parts.join(' \u00b7 ');
+    }
+
+    function syncLocationHiddenInput() {
+        const hidden = document.getElementById('location');
+        if (!hidden) return;
+        const formatted = formatLocations(_locationState);
+        if (hidden.value !== formatted) {
+            hidden.value = formatted;
+            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+            hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function renderLocationSlots() {
+        const container = document.getElementById('locSlots');
+        const addCityBtn = document.getElementById('locAddCityBtn');
+        const addRemoteBtn = document.getElementById('locAddRemoteBtn');
+        const arrangementBox = document.getElementById('locArrangement');
+        if (!container) return;
+
+        // Clean up empty city slots that have no value (visual placeholders)
+        // We keep them so users can type — but for state they're just empty.
+        container.innerHTML = '';
+        _locationState.slots.forEach((slot, idx) => {
+            const row = document.createElement('div');
+            row.className = 'loc-slot';
+            row.dataset.type = slot.type;
+            row.dataset.index = String(idx);
+
+            if (slot.type === 'city') {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'loc-city-input';
+                input.placeholder = 'Type a city…';
+                input.setAttribute('list', 'cityOptions');
+                input.setAttribute('autocomplete', 'off');
+                input.value = slot.value || '';
+                input.addEventListener('input', () => {
+                    _locationState.slots[idx].value = input.value;
+                    syncLocationHiddenInput();
+                });
+                input.addEventListener('change', () => {
+                    _locationState.slots[idx].value = input.value;
+                    syncLocationHiddenInput();
+                });
+                row.appendChild(input);
+            } else if (slot.type === 'remote') {
+                const label = document.createElement('div');
+                label.className = 'loc-remote-label';
+                label.innerHTML = '<span class="loc-remote-icon">\u25CF</span> Remote';
+                row.appendChild(label);
+            }
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'loc-remove-btn';
+            removeBtn.title = 'Remove';
+            removeBtn.setAttribute('aria-label', 'Remove location');
+            removeBtn.textContent = '\u00d7';
+            removeBtn.addEventListener('click', () => {
+                _locationState.slots.splice(idx, 1);
+                renderLocationSlots();
+                syncLocationHiddenInput();
+            });
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+        });
+
+        // Update add buttons
+        const atMax = _locationState.slots.length >= 2;
+        const hasRemote = _locationState.slots.some(s => s.type === 'remote');
+        if (addCityBtn) addCityBtn.disabled = atMax;
+        if (addRemoteBtn) addRemoteBtn.disabled = atMax || hasRemote;
+
+        // Show arrangement only when at least one city slot exists
+        const hasCity = _locationState.slots.some(s => s.type === 'city');
+        if (arrangementBox) arrangementBox.style.display = hasCity ? '' : 'none';
+        if (!hasCity) _locationState.arrangement = null;
+
+        // Reflect arrangement in radios
+        document.querySelectorAll('input[name="locArrangementRadio"]').forEach(r => {
+            r.checked = r.value === _locationState.arrangement;
+        });
+    }
+
+    function setupLocationBuilder() {
+        const addCityBtn = document.getElementById('locAddCityBtn');
+        const addRemoteBtn = document.getElementById('locAddRemoteBtn');
+        if (!addCityBtn || !addRemoteBtn) return;
+
+        addCityBtn.addEventListener('click', () => {
+            if (_locationState.slots.length >= 2) return;
+            _locationState.slots.push({ type: 'city', value: '' });
+            renderLocationSlots();
+            syncLocationHiddenInput();
+            // Focus the new input
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('#locSlots .loc-city-input');
+                if (inputs.length) inputs[inputs.length - 1].focus();
+            }, 0);
+        });
+        addRemoteBtn.addEventListener('click', () => {
+            if (_locationState.slots.length >= 2) return;
+            if (_locationState.slots.some(s => s.type === 'remote')) return;
+            _locationState.slots.push({ type: 'remote' });
+            renderLocationSlots();
+            syncLocationHiddenInput();
+        });
+        document.querySelectorAll('input[name="locArrangementRadio"]').forEach(r => {
+            r.addEventListener('change', () => {
+                if (r.checked) {
+                    _locationState.arrangement = r.value;
+                    syncLocationHiddenInput();
+                }
+            });
+        });
+        refreshCityDatalist();
+        renderLocationSlots();
+    }
+
+    // Parse a free-text or formatted location string back into structured state.
+    // Used for: legacy autosaved values, AI-generated strings, template loads.
+    function parseLocationString(raw) {
+        const state = { slots: [], arrangement: null };
+        if (!raw || typeof raw !== 'string') return state;
+        const text = raw.trim();
+        if (!text) return state;
+
+        // Split on common separators (· | / and ,, when used as multi-loc)
+        // Be careful: "New York, NY" has a comma inside it, so we don't split on ','.
+        const tokens = text.split(/\s*[\u00b7|]\s+|\s+\/\s+|\s+\u2013\s+|\s+-\s+/g)
+                           .map(t => t.trim()).filter(Boolean);
+
+        // Inline arrangement detection
+        const arrRegex = /^(hybrid|in[\s-]?person|onsite|on[\s-]?site)$/i;
+        const remoteRegex = /^remote(?:[\s-]friendly)?(?:[\s-]ok)?$/i;
+
+        for (const tok of tokens) {
+            if (arrRegex.test(tok)) {
+                const lower = tok.toLowerCase();
+                if (lower === 'hybrid') state.arrangement = 'Hybrid';
+                else state.arrangement = 'In-person';
+            } else if (remoteRegex.test(tok)) {
+                if (!state.slots.some(s => s.type === 'remote')) {
+                    state.slots.push({ type: 'remote' });
+                }
+            } else {
+                // Treat as a city — strip parenthetical arrangement if embedded
+                const cleaned = tok.replace(/\s*\((hybrid|remote|in[\s-]?person|onsite|on[\s-]?site)\)\s*$/i, (m, kind) => {
+                    const k = kind.toLowerCase();
+                    if (k === 'hybrid') state.arrangement = 'Hybrid';
+                    else if (k.startsWith('in') || k.startsWith('on')) state.arrangement = 'In-person';
+                    else if (k === 'remote') {
+                        if (!state.slots.some(s => s.type === 'remote')) {
+                            state.slots.push({ type: 'remote' });
+                        }
+                    }
+                    return '';
+                }).trim();
+                if (cleaned && state.slots.filter(s => s.type === 'city').length < 2) {
+                    state.slots.push({ type: 'city', value: cleaned });
+                }
+            }
+            // Don't break early — we still want to capture trailing
+            // arrangement/Remote tokens after 2 cities have been added.
+        }
+        return state;
+    }
+
+    function setLocationFromString(raw) {
+        _locationState = parseLocationString(raw);
+        renderLocationSlots();
+        syncLocationHiddenInput();
     }
 
     // ===== Autocomplete datalists =====
@@ -2374,6 +2743,19 @@
             const el = document.getElementById(id);
             if (!el) continue;
             const value = (el.value || '').trim();
+            // Location is special — its visible UI is the builder; the hidden
+            // <input id="location"> only becomes invalid if the builder is in
+            // an invalid state (no slots, or city without arrangement).
+            if (id === 'location') {
+                const issue = locationValidationError();
+                if (issue) {
+                    missing.push(label);
+                    const builder = document.getElementById('locationBuilder');
+                    if (builder) markFieldInvalid(builder);
+                    if (!firstEmpty) firstEmpty = builder || el;
+                }
+                continue;
+            }
             if (!value) {
                 missing.push(label);
                 markFieldInvalid(el);
@@ -2382,9 +2764,22 @@
         }
         if (firstEmpty) {
             firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => firstEmpty.focus(), 300);
+            setTimeout(() => {
+                if (typeof firstEmpty.focus === 'function') firstEmpty.focus();
+            }, 300);
         }
         return { ok: missing.length === 0, missing };
+    }
+
+    // Returns null if location is valid, else a short reason string.
+    function locationValidationError() {
+        const { slots, arrangement } = _locationState;
+        // Drop city slots that the user added but never typed into
+        const populatedCities = slots.filter(s => s.type === 'city' && s.value && s.value.trim());
+        const hasRemote = slots.some(s => s.type === 'remote');
+        if (populatedCities.length === 0 && !hasRemote) return 'No location selected';
+        if (populatedCities.length > 0 && !arrangement) return 'Pick Hybrid or In-person';
+        return null;
     }
 
     function generatePreview() {
@@ -2847,7 +3242,7 @@ Generate a complete, professional job description from the user's input. Return 
 
 {
   "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
-  "location": "location including work arrangement if mentioned (Remote, Hybrid, On-site)",
+  "location": "location string in this exact format: city or cities followed by arrangement, separated by ' \u00b7 '. ALLOWED forms: 'Remote' (fully remote, no city), 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid' (max 2 cities, same arrangement), 'New York, NY \u00b7 Hybrid \u00b7 Remote' (city + remote OK). Use 'Hybrid' or 'In-person' (NOT 'On-site'). Cities must include region/country. Max 2 locations total.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
   "level": "seniority level — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match based on the role's responsibilities and seniority signals.",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
@@ -3040,6 +3435,13 @@ Writing principles:
                     // About Manifest is locked to the admin default — never
                     // overwrite from AI output, templates, or uploads.
                     if (id === 'aboutCompany') return;
+                    // Location is a hidden input driven by the structured
+                    // builder — feed the string through the parser so the
+                    // visible UI reflects the stored value.
+                    if (id === 'location') {
+                        setLocationFromString(data[id]);
+                        return;
+                    }
                     el.value = data[id];
                 }
                 el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -3675,7 +4077,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
   "jobTitle": "the job title",
-  "location": "location including work arrangement if mentioned, or empty string",
+  "location": "location in canonical format. Examples: 'Remote', 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid', 'New York, NY \u00b7 Hybrid \u00b7 Remote'. Use 'Hybrid' or 'In-person' (not 'On-site'). Max 2 cities. Empty string if not mentioned.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
@@ -4066,6 +4468,10 @@ Parsing guidance:
         refreshLockedAboutManifest();
         setupDefaultToggle('useDefaultBenefits', 'benefits', 'benefits');
         setupDefaultToggle('useDefaultEEO', 'eeo', 'eeo');
+        // Initialise the Location builder BEFORE restoreAutosave so that
+        // the autosave restore can drive the structured component via its
+        // hidden #location field.
+        setupLocationBuilder();
         await restoreAutosave();
         // Re-apply the lock after autosave restore in case it briefly wrote
         // an old value to the field.
