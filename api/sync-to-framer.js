@@ -137,19 +137,17 @@ export default async function handler(req, res) {
                                 id: f.id,
                             };
                             if (f.cases) {
-                                // Dump every property — the SDK might use
-                                // any of name/key/label/id for case fields
-                                out.cases = f.cases.map(c => {
-                                    const obj = {};
-                                    for (const k of Object.getOwnPropertyNames(c)) obj[k] = c[k];
-                                    return obj;
-                                });
-                                out.caseKeys = f.cases.length
-                                    ? Object.getOwnPropertyNames(f.cases[0])
-                                    : [];
+                                // Properties are getters — probe known names
+                                out.cases = f.cases.map(c => ({
+                                    id: c.id,
+                                    name: c.name,
+                                    key: c.key,
+                                    label: c.label,
+                                    value: c.value,
+                                    title: c.title,
+                                    str: String(c),
+                                }));
                             }
-                            // Dump all enumerable + own properties on the field too
-                            out._allFieldKeys = Object.getOwnPropertyNames(f);
                             return out;
                         })
                     };
