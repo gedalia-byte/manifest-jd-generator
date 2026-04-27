@@ -131,22 +131,9 @@ export default async function handler(req, res) {
                     return {
                         collectionName: collection.name,
                         fields: fields.map(f => {
-                            const out = {
-                                name: f.name,
-                                type: f.type,
-                                id: f.id,
-                            };
+                            const out = { name: f.name, type: f.type, id: f.id };
                             if (f.cases) {
-                                // Properties are getters — probe known names
-                                out.cases = f.cases.map(c => ({
-                                    id: c.id,
-                                    name: c.name,
-                                    key: c.key,
-                                    label: c.label,
-                                    value: c.value,
-                                    title: c.title,
-                                    str: String(c),
-                                }));
+                                out.cases = f.cases.map(c => ({ id: c.id, name: c.name }));
                             }
                             return out;
                         })
