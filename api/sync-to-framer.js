@@ -130,12 +130,28 @@ export default async function handler(req, res) {
                     const fields = await collection.getFields();
                     return {
                         collectionName: collection.name,
-                        fields: fields.map(f => ({
-                            name: f.name,
-                            type: f.type,
-                            id: f.id,
-                            cases: f.cases || undefined,
-                        }))
+                        fields: fields.map(f => {
+                            const out = {
+                                name: f.name,
+                                type: f.type,
+                                id: f.id,
+                            };
+                            if (f.cases) {
+                                // Dump every property — the SDK might use
+                                // any of name/key/label/id for case fields
+                                out.cases = f.cases.map(c => {
+                                    const obj = {};
+                                    for (const k of Object.getOwnPropertyNames(c)) obj[k] = c[k];
+                                    return obj;
+                                });
+                                out.caseKeys = f.cases.length
+                                    ? Object.getOwnPropertyNames(f.cases[0])
+                                    : [];
+                            }
+                            // Dump all enumerable + own properties on the field too
+                            out._allFieldKeys = Object.getOwnPropertyNames(f);
+                            return out;
+                        })
                     };
                 });
                 return res.json(result);
