@@ -61,11 +61,39 @@ async function buildFieldData(collection, job) {
         "Created By": job.createdBy,
     };
 
-    for (const [name, value] of Object.entries(fieldMap)) {
-        if (field[name]) {
-            data[field[name].id] = { type: "string", value: value || '' };
-        } else {
+    for (const [name, rawValue] of Object.entries(fieldMap)) {
+        const f = field[name];
+        if (!f) {
             console.warn(`Field "${name}" not found in Framer collection`);
+            continue;
+        }
+        const value = rawValue || '';
+
+        if (f.type === 'enum') {
+            // Enum fields require the case id, not the case name. Look up the
+            // case whose name matches our value (case-insensitive).
+            const cases = f.cases || [];
+            if (!value) {
+                // Empty enum — skip the write rather than guessing a default
+                console.warn(`Skipping empty enum value for "${name}"`);
+                continue;
+            }
+            const match = cases.find(c =>
+                String(c.name || '').toLowerCase() === String(value).toLowerCase()
+            );
+            if (!match) {
+                console.warn(
+                    `Enum value "${value}" not found in cases for "${name}". ` +
+                    `Available cases: ${cases.map(c => c.name).join(', ')}`
+                );
+                continue;
+            }
+            data[f.id] = { type: 'enum', value: match.id };
+        } else if (f.type === 'string') {
+            data[f.id] = { type: 'string', value };
+        } else {
+            // Unknown type — try the value as-is and let Framer complain
+            data[f.id] = { type: f.type, value };
         }
     }
 
@@ -102,7 +130,12 @@ export default async function handler(req, res) {
                     const fields = await collection.getFields();
                     return {
                         collectionName: collection.name,
-                        fields: fields.map(f => ({ name: f.name, type: f.type, id: f.id }))
+                        fields: fields.map(f => ({
+                            name: f.name,
+                            type: f.type,
+                            id: f.id,
+                            cases: f.cases || undefined,
+                        }))
                     };
                 });
                 return res.json(result);
