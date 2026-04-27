@@ -1691,8 +1691,21 @@
                 <input type="text" id="reportsTo" placeholder="e.g. VP of Design (defaults to Leadership)">
             </div>
             <div class="field">
-                <label>Salary Range <span class="optional">(optional)</span></label>
-                <input type="text" id="salaryRange" placeholder="e.g. $120k–$150k (defaults to Commensurate with experience)">
+                <label>Salary Band <span class="optional">(optional)</span></label>
+                <select id="salaryRange">
+                    <option value="">Select a band…</option>
+                    <optgroup label="Non-Tech roles">
+                        <option value="$130k - $160k">Junior &middot; $130k - $160k</option>
+                        <option value="$160k - $190k">Mid &middot; $160k - $190k</option>
+                        <option value="$190k - $230k">Senior &middot; $190k - $230k</option>
+                    </optgroup>
+                    <optgroup label="Tech roles">
+                        <option value="$160k - $200k">Junior &middot; $160k - $200k</option>
+                        <option value="$200k - $250k">Mid &middot; $200k - $250k</option>
+                        <option value="$250k - $350k">Senior &middot; $250k - $350k</option>
+                    </optgroup>
+                    <option value="Commensurate with experience">Commensurate with experience</option>
+                </select>
             </div>
         </div>
     </div>
@@ -4145,7 +4158,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
-  "salaryRange": "salary range, or empty string",
+  "salaryRange": "salary range — MUST be one of these exact strings: '$130k - $160k', '$160k - $190k', '$190k - $230k' (non-tech junior/mid/senior), '$160k - $200k', '$200k - $250k', '$250k - $350k' (tech junior/mid/senior), 'Commensurate with experience', or empty string. If JD specifies numbers, pick the closest band; otherwise empty.",
   "aboutCompany": "company description if present, or empty string",
   "aboutTeam": "team description if present, or empty string",
   "aboutRole": "description of the role itself — why it exists, what impact it has, what makes it compelling — or empty string if not present",
