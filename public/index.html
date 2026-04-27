@@ -1687,9 +1687,24 @@
         </div>
         <div class="field-row">
             <div class="field">
+                <label>Function</label>
+                <select id="jobFunction">
+                    <option value="">Select function…</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Product">Product</option>
+                    <option value="Strategy & Operations">Strategy & Operations</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Other">Other (specify)</option>
+                </select>
+                <input type="text" id="jobFunctionOther" placeholder="Enter function…" autocomplete="off" style="display:none; margin-top: 8px;">
+            </div>
+            <div class="field">
                 <label>Reports To <span class="optional">(optional)</span></label>
                 <input type="text" id="reportsTo" placeholder="e.g. VP of Design (defaults to Leadership)">
             </div>
+        </div>
+        <div class="field-row">
             <div class="field">
                 <label>Salary Band <span class="optional">(optional)</span></label>
                 <select id="salaryRange">
@@ -2681,7 +2696,64 @@
     // always re-populated from there on load. Saving it would just pollute
     // the blob with copies of the admin text.
     const AUTOSAVE_FIELDS = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
+                              'jobFunction','jobFunctionOther',
                               'aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
+
+    // Returns the resolved Function value: either a canonical option, or the
+    // free-text "Other" value if the user picked "Other".
+    function resolveFunctionValue() {
+        const sel = document.getElementById('jobFunction');
+        const other = document.getElementById('jobFunctionOther');
+        if (!sel) return '';
+        if (sel.value === 'Other') return (other?.value || '').trim();
+        return sel.value;
+    }
+
+    // Show / hide the "Other" free-text input based on the select's value.
+    function syncFunctionOtherVisibility() {
+        const sel = document.getElementById('jobFunction');
+        const other = document.getElementById('jobFunctionOther');
+        if (!sel || !other) return;
+        if (sel.value === 'Other') {
+            other.style.display = '';
+            other.focus();
+        } else {
+            other.style.display = 'none';
+            other.value = '';
+        }
+    }
+
+    function setupFunctionField() {
+        const sel = document.getElementById('jobFunction');
+        const other = document.getElementById('jobFunctionOther');
+        if (!sel || !other) return;
+        sel.addEventListener('change', syncFunctionOtherVisibility);
+        // Trigger autosave when the free-text changes
+        other.addEventListener('input', () => scheduleAutosave());
+    }
+
+    // Apply a Function value to the UI: pick the canonical option if it
+    // matches, else flip to "Other" and put the value in the free-text input.
+    function applyFunctionValue(value) {
+        const sel = document.getElementById('jobFunction');
+        const other = document.getElementById('jobFunctionOther');
+        if (!sel || !other) return;
+        const v = (value || '').trim();
+        const canonical = ['Engineering','Product','Strategy & Operations','Marketing','Sales'];
+        if (canonical.includes(v)) {
+            sel.value = v;
+            other.value = '';
+            other.style.display = 'none';
+        } else if (v) {
+            sel.value = 'Other';
+            other.value = v;
+            other.style.display = '';
+        } else {
+            sel.value = '';
+            other.value = '';
+            other.style.display = 'none';
+        }
+    }
 
     function getFormData() {
         const data = {};
@@ -2689,6 +2761,8 @@
             const el = document.getElementById(id);
             if (el) data[id] = el.value;
         });
+        // Convenience: also include the resolved Function for AI/CMS
+        data.functionResolved = resolveFunctionValue();
         return data;
     }
 
@@ -2789,6 +2863,7 @@
     const REQUIRED_FIELDS = [
         { id: 'jobTitle',        label: 'Job Title' },
         { id: 'location',        label: 'Location' },
+        { id: 'jobFunction',     label: 'Function' },
         { id: 'level',           label: 'Level' },
         { id: 'aboutTeam',       label: 'About the Team' },
         { id: 'aboutRole',       label: 'About the Role' },
@@ -2830,6 +2905,23 @@
                     const builder = document.getElementById('locationBuilder');
                     if (builder) markFieldInvalid(builder);
                     if (!firstEmpty) firstEmpty = builder || el;
+                }
+                continue;
+            }
+            // Function: required AND if "Other" is picked the free-text must be filled
+            if (id === 'jobFunction') {
+                const resolved = resolveFunctionValue();
+                if (!resolved) {
+                    missing.push(label);
+                    markFieldInvalid(el);
+                    // If they picked Other but didn't type, also mark the text input
+                    if (el.value === 'Other') {
+                        const other = document.getElementById('jobFunctionOther');
+                        if (other) markFieldInvalid(other);
+                    }
+                    if (!firstEmpty) firstEmpty = el.value === 'Other'
+                        ? document.getElementById('jobFunctionOther')
+                        : el;
                 }
                 continue;
             }
@@ -3323,6 +3415,7 @@ Generate a complete, professional job description from the user's input. Return 
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
   "level": "seniority level — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match based on the role's responsibilities and seniority signals.",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
+  "jobFunction": "the role's function — MUST be one of exactly: Engineering, Product, Strategy & Operations, Marketing, Sales. Pick the closest match for the role.",
   "salaryRange": "empty string (leave for the user to fill)",
   "aboutCompany": "",
   "aboutTeam": "2-3 sentences: what the team does, how big it is, what they care about, who they collaborate with. Make it feel real, not templated.",
@@ -3487,12 +3580,25 @@ Writing principles:
 
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
+                          'jobFunction','jobFunctionOther',
                           'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         // Backwards compat: map old field names to new ones
         if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
         if (data.department && !data.level) data.level = data.department;
         // Normalize level to one of the canonical dropdown values
         if (data.level !== undefined) data.level = normalizeLevel(data.level);
+        // Function: AI returns it under "function" or "jobFunction" — normalise
+        // and route through applyFunctionValue so the select+Other UI is in sync.
+        const functionInput = data.jobFunction !== undefined ? data.jobFunction
+                            : data.function !== undefined ? data.function
+                            : undefined;
+        if (functionInput !== undefined) {
+            applyFunctionValue(functionInput);
+            // Don't process via the generic loop — applyFunctionValue handled it
+            delete data.jobFunction;
+            delete data.jobFunctionOther;
+            delete data.function;
+        }
         fieldIds.forEach(id => {
             if (data[id] !== undefined && data[id] !== '') {
                 const el = document.getElementById(id);
@@ -3676,6 +3782,7 @@ ${mode === 'bullets' ? '- Return one item per line, no bullet characters or dash
                           'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         const currentData = {};
         fieldIds.forEach(id => { currentData[id] = document.getElementById(id).value; });
+        currentData.jobFunction = resolveFunctionValue();
 
         // Check if form has content
         const hasContent = fieldIds.some(id => currentData[id].trim().length > 0);
@@ -3698,6 +3805,7 @@ Return ONLY valid JSON with these exact keys (no markdown, no code fences):
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
   "level": "...",
   "reportsTo": "...",
+  "jobFunction": "Engineering, Product, Strategy & Operations, Marketing, or Sales (or a custom function name if the role doesn't fit one)",
   "salaryRange": "...",
   "aboutCompany": "...",
   "aboutTeam": "...",
@@ -3888,6 +3996,7 @@ Rules:
             location: document.getElementById('location').value || '',
             employmentType: document.getElementById('employmentType').value || '',
             level: document.getElementById('level').value || '',
+            jobFunction: resolveFunctionValue(),
             reportsTo: document.getElementById('reportsTo').value || 'Leadership',
             aboutCompany: document.getElementById('aboutCompany').value || '',
             aboutTeam: document.getElementById('aboutTeam').value || '',
@@ -4006,6 +4115,7 @@ Rules:
                 location: document.getElementById('location').value,
                 employmentType: document.getElementById('employmentType').value,
                 level: document.getElementById('level').value,
+                jobFunction: resolveFunctionValue(),
                 reportsTo: document.getElementById('reportsTo').value,
                 salaryRange: document.getElementById('salaryRange').value,
                 aboutCompany: document.getElementById('aboutCompany').value,
@@ -4158,6 +4268,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
+  "jobFunction": "the role's function — pick from Engineering, Product, Strategy & Operations, Marketing, Sales. If the JD describes a role outside these, use the most appropriate label as free text. Empty string if not inferable.",
   "salaryRange": "salary range — MUST be one of these exact strings: '$130k - $160k', '$160k - $190k', '$190k - $230k' (non-tech junior/mid/senior), '$160k - $200k', '$200k - $250k', '$250k - $350k' (tech junior/mid/senior), 'Commensurate with experience', or empty string. If JD specifies numbers, pick the closest band; otherwise empty.",
   "aboutCompany": "company description if present, or empty string",
   "aboutTeam": "team description if present, or empty string",
@@ -4215,6 +4326,7 @@ Parsing guidance:
                 location: parsedUploadData.location || '',
                 employmentType: parsedUploadData.employmentType || 'Full-Time',
                 level: parsedUploadData.level || '',
+                jobFunction: parsedUploadData.jobFunction || parsedUploadData.function || '',
                 reportsTo: parsedUploadData.reportsTo || '',
                 salaryRange: parsedUploadData.salaryRange || '',
                 aboutCompany: parsedUploadData.aboutCompany || '',
@@ -4283,6 +4395,7 @@ Parsing guidance:
                 location: document.getElementById('location').value,
                 employmentType: document.getElementById('employmentType').value,
                 level: document.getElementById('level').value,
+                jobFunction: resolveFunctionValue(),
                 reportsTo: document.getElementById('reportsTo').value,
                 salaryRange: document.getElementById('salaryRange').value,
                 aboutCompany: document.getElementById('aboutCompany').value,
@@ -4326,6 +4439,7 @@ Parsing guidance:
                 location: document.getElementById('location').value,
                 employmentType: document.getElementById('employmentType').value,
                 level: document.getElementById('level').value,
+                jobFunction: resolveFunctionValue(),
                 reportsTo: document.getElementById('reportsTo').value,
                 salaryRange: document.getElementById('salaryRange').value,
                 aboutCompany: document.getElementById('aboutCompany').value,
@@ -4549,6 +4663,8 @@ Parsing guidance:
         // the autosave restore can drive the structured component via its
         // hidden #location field.
         setupLocationBuilder();
+        // Function field: toggle the "Other" text input based on select value
+        setupFunctionField();
         await restoreAutosave();
         // Re-apply the lock after autosave restore in case it briefly wrote
         // an old value to the field.

@@ -46,6 +46,7 @@ async function buildFieldData(collection, job) {
         "Title": job.title,
         "Location": job.location,
         "Employment type": job.employmentType,
+        "Function": job.jobFunction,
         "Level": job.level,
         "Reports to": job.reportsTo,
         "Salary range": job.compBand,
