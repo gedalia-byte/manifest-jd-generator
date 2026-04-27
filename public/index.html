@@ -1636,11 +1636,6 @@
                         <button type="button" class="loc-add-btn" id="locAddCityBtn">+ Add city</button>
                         <button type="button" class="loc-add-btn" id="locAddRemoteBtn">+ Add Remote</button>
                     </div>
-                    <div class="loc-arrangement" id="locArrangement" style="display:none;">
-                        <span class="loc-arrangement-label">Arrangement:</span>
-                        <label class="loc-radio"><input type="radio" name="locArrangementRadio" value="Hybrid"> Hybrid</label>
-                        <label class="loc-radio"><input type="radio" name="locArrangementRadio" value="In-person"> In-person</label>
-                    </div>
                 </div>
                 <datalist id="cityOptions"></datalist>
                 <datalist id="remoteRegionOptions">
@@ -2122,18 +2117,17 @@
     }
 
     // ===== Location builder controller =====
-    // State: locations array of { type: 'city', value: string } | { type: 'remote' }
-    //        plus arrangement: 'Hybrid' | 'In-person' | null (null when no city)
+    // State: locations array of { type: 'city', value: string } | { type: 'remote', region: string }
+    // No arrangement concept — picking a city implies in-person, that's it.
     let _locationState = { slots: [], arrangement: null };
 
     function formatLocations(state) {
-        const { slots, arrangement } = state;
+        const { slots } = state;
         if (!slots.length) return '';
         const cities = slots.filter(s => s.type === 'city' && s.value && s.value.trim())
                             .map(s => s.value.trim());
         const remoteSlot = slots.find(s => s.type === 'remote');
         const parts = [...cities];
-        if (cities.length > 0 && arrangement) parts.push(arrangement);
         if (remoteSlot) {
             const region = (remoteSlot.region || '').trim();
             // "Anywhere" or empty region renders as just "Remote"
@@ -2161,7 +2155,6 @@
         const container = document.getElementById('locSlots');
         const addCityBtn = document.getElementById('locAddCityBtn');
         const addRemoteBtn = document.getElementById('locAddRemoteBtn');
-        const arrangementBox = document.getElementById('locArrangement');
         if (!container) return;
 
         // Clean up empty city slots that have no value (visual placeholders)
@@ -2236,15 +2229,8 @@
         if (addCityBtn) addCityBtn.disabled = atMax;
         if (addRemoteBtn) addRemoteBtn.disabled = atMax || hasRemote;
 
-        // Show arrangement only when at least one city slot exists
-        const hasCity = _locationState.slots.some(s => s.type === 'city');
-        if (arrangementBox) arrangementBox.style.display = hasCity ? '' : 'none';
-        if (!hasCity) _locationState.arrangement = null;
-
-        // Reflect arrangement in radios
-        document.querySelectorAll('input[name="locArrangementRadio"]').forEach(r => {
-            r.checked = r.value === _locationState.arrangement;
-        });
+        // No arrangement UI anymore — picking a city is in-person by default.
+        _locationState.arrangement = null;
     }
 
     function setupLocationBuilder() {
@@ -2270,14 +2256,7 @@
             renderLocationSlots();
             syncLocationHiddenInput();
         });
-        document.querySelectorAll('input[name="locArrangementRadio"]').forEach(r => {
-            r.addEventListener('change', () => {
-                if (r.checked) {
-                    _locationState.arrangement = r.value;
-                    syncLocationHiddenInput();
-                }
-            });
-        });
+        // No arrangement listeners — Hybrid/In-person concept removed.
         refreshCityDatalist();
         renderLocationSlots();
     }
@@ -2295,7 +2274,8 @@
         const tokens = text.split(/\s*[\u00b7|]\s+|\s+\/\s+|\s+\u2013\s+|\s+-\s+/g)
                            .map(t => t.trim()).filter(Boolean);
 
-        // Inline arrangement detection
+        // Hybrid/In-person/On-site tokens are dropped — picking a city is
+        // implicitly in-person, and the concept of "Hybrid" was removed.
         const arrRegex = /^(hybrid|in[\s-]?person|onsite|on[\s-]?site)$/i;
         // Match "Remote", "Remote (US)", "Remote in US", "Remote — US", etc.
         const remoteRegex = /^remote(?:[\s-]friendly|[\s-]ok)?(?:\s*[\(\[\u2014\-]\s*([^\)\]]+?)\s*[\)\]]?|\s+in\s+(.+))?$/i;
@@ -2303,11 +2283,9 @@
         for (const tok of tokens) {
             const remoteMatch = tok.match(remoteRegex);
             if (arrRegex.test(tok)) {
-                const lower = tok.toLowerCase();
-                if (lower === 'hybrid') state.arrangement = 'Hybrid';
-                else state.arrangement = 'In-person';
+                // Drop — no longer represented
+                continue;
             } else if (remoteMatch) {
-                // remoteMatch[1] = parenthetical region, remoteMatch[2] = "in <region>"
                 const region = (remoteMatch[1] || remoteMatch[2] || '').trim();
                 if (!state.slots.some(s => s.type === 'remote') && state.slots.length < 2) {
                     state.slots.push({ type: 'remote', region: region });
@@ -2316,13 +2294,12 @@
                 // Treat as a city — strip parenthetical arrangement if embedded
                 const cleaned = tok.replace(/\s*\((hybrid|remote|in[\s-]?person|onsite|on[\s-]?site)\)\s*$/i, (m, kind) => {
                     const k = kind.toLowerCase();
-                    if (k === 'hybrid') state.arrangement = 'Hybrid';
-                    else if (k.startsWith('in') || k.startsWith('on')) state.arrangement = 'In-person';
-                    else if (k === 'remote') {
+                    if (k === 'remote') {
                         if (!state.slots.some(s => s.type === 'remote') && state.slots.length < 2) {
                             state.slots.push({ type: 'remote', region: '' });
                         }
                     }
+                    // hybrid / in-person / onsite are dropped
                     return '';
                 }).trim();
                 if (cleaned && state.slots.filter(s => s.type === 'city').length < 2) {
@@ -2890,12 +2867,10 @@
 
     // Returns null if location is valid, else a short reason string.
     function locationValidationError() {
-        const { slots, arrangement } = _locationState;
-        // Drop city slots that the user added but never typed into
+        const { slots } = _locationState;
         const populatedCities = slots.filter(s => s.type === 'city' && s.value && s.value.trim());
         const hasRemote = slots.some(s => s.type === 'remote');
         if (populatedCities.length === 0 && !hasRemote) return 'No location selected';
-        if (populatedCities.length > 0 && !arrangement) return 'Pick Hybrid or In-person';
         return null;
     }
 
@@ -3359,7 +3334,7 @@ Generate a complete, professional job description from the user's input. Return 
 
 {
   "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
-  "location": "location string in this exact format: city or cities followed by arrangement, separated by ' \u00b7 '. ALLOWED forms: 'Remote' (fully remote, anywhere), 'Remote (US)' or 'Remote (Europe)' or 'Remote (EMEA)' (remote in a region — use US, Canada, North America, UK, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, or Worldwide), 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid' (max 2 cities, same arrangement), 'New York, NY \u00b7 Hybrid \u00b7 Remote (US)' (city + remote OK). Use 'Hybrid' or 'In-person' (NOT 'On-site'). Cities must include region/country. Max 2 locations total.",
+  "location": "location string. ALLOWED forms: 'Remote' (fully remote, anywhere), 'Remote (US)' / 'Remote (Europe)' / 'Remote (EMEA)' (region in parens — pick from US, Canada, North America, UK, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, Worldwide), 'New York, NY' (single city, in-person implied), 'New York, NY \u00b7 London, UK' (two cities), 'New York, NY \u00b7 Remote (US)' (city + remote, separated by ' \u00b7 '). Cities must include region/country. Max 2 locations. NEVER include 'Hybrid', 'In-person', or 'On-site' \u2014 picking a city implies in-person.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
   "level": "seniority level — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match based on the role's responsibilities and seniority signals.",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
@@ -4211,7 +4186,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
   "jobTitle": "the job title",
-  "location": "location in canonical format. Examples: 'Remote', 'Remote (US)', 'Remote (Europe)', 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid', 'New York, NY \u00b7 Hybrid \u00b7 Remote (US)'. Use 'Hybrid' or 'In-person' (not 'On-site'). For remote, prefer regional restriction in parens (US, Canada, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, Worldwide) when JD specifies. Max 2 cities. Empty string if not mentioned.",
+  "location": "location in canonical format. Examples: 'Remote', 'Remote (US)', 'Remote (Europe)', 'New York, NY', 'New York, NY \u00b7 London, UK' (two cities), 'New York, NY \u00b7 Remote (US)'. Cities are in-person by default; do NOT add 'Hybrid', 'In-person', or 'On-site' to the string. For remote, include the regional restriction in parens (US, Canada, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, Worldwide) when the JD specifies one. Max 2 cities. Empty string if not mentioned.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
