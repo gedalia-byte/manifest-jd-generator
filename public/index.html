@@ -1695,9 +1695,8 @@
                     <option value="Strategy & Operations">Strategy & Operations</option>
                     <option value="Marketing">Marketing</option>
                     <option value="Sales">Sales</option>
-                    <option value="Other">Other (specify)</option>
+                    <option value="Other">Other</option>
                 </select>
-                <input type="text" id="jobFunctionOther" placeholder="Enter function…" autocomplete="off" style="display:none; margin-top: 8px;">
             </div>
             <div class="field">
                 <label>Reports To <span class="optional">(optional)</span></label>
@@ -2696,62 +2695,28 @@
     // always re-populated from there on load. Saving it would just pollute
     // the blob with copies of the admin text.
     const AUTOSAVE_FIELDS = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                              'jobFunction','jobFunctionOther',
+                              'jobFunction',
                               'aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
 
-    // Returns the resolved Function value: either a canonical option, or the
-    // free-text "Other" value if the user picked "Other".
+    // Function is a plain dropdown — value is whatever option is selected.
     function resolveFunctionValue() {
         const sel = document.getElementById('jobFunction');
-        const other = document.getElementById('jobFunctionOther');
-        if (!sel) return '';
-        if (sel.value === 'Other') return (other?.value || '').trim();
-        return sel.value;
+        return sel ? sel.value : '';
     }
 
-    // Show / hide the "Other" free-text input based on the select's value.
-    function syncFunctionOtherVisibility() {
-        const sel = document.getElementById('jobFunction');
-        const other = document.getElementById('jobFunctionOther');
-        if (!sel || !other) return;
-        if (sel.value === 'Other') {
-            other.style.display = '';
-            other.focus();
-        } else {
-            other.style.display = 'none';
-            other.value = '';
-        }
-    }
-
-    function setupFunctionField() {
-        const sel = document.getElementById('jobFunction');
-        const other = document.getElementById('jobFunctionOther');
-        if (!sel || !other) return;
-        sel.addEventListener('change', syncFunctionOtherVisibility);
-        // Trigger autosave when the free-text changes
-        other.addEventListener('input', () => scheduleAutosave());
-    }
-
-    // Apply a Function value to the UI: pick the canonical option if it
-    // matches, else flip to "Other" and put the value in the free-text input.
+    // Apply a Function value: pick the matching option, else "Other" if the
+    // value is non-empty but unrecognised (covers legacy templates / AI output).
     function applyFunctionValue(value) {
         const sel = document.getElementById('jobFunction');
-        const other = document.getElementById('jobFunctionOther');
-        if (!sel || !other) return;
+        if (!sel) return;
         const v = (value || '').trim();
-        const canonical = ['Engineering','Product','Strategy & Operations','Marketing','Sales'];
+        const canonical = ['Engineering','Product','Strategy & Operations','Marketing','Sales','Other'];
         if (canonical.includes(v)) {
             sel.value = v;
-            other.value = '';
-            other.style.display = 'none';
         } else if (v) {
             sel.value = 'Other';
-            other.value = v;
-            other.style.display = '';
         } else {
             sel.value = '';
-            other.value = '';
-            other.style.display = 'none';
         }
     }
 
@@ -2905,23 +2870,6 @@
                     const builder = document.getElementById('locationBuilder');
                     if (builder) markFieldInvalid(builder);
                     if (!firstEmpty) firstEmpty = builder || el;
-                }
-                continue;
-            }
-            // Function: required AND if "Other" is picked the free-text must be filled
-            if (id === 'jobFunction') {
-                const resolved = resolveFunctionValue();
-                if (!resolved) {
-                    missing.push(label);
-                    markFieldInvalid(el);
-                    // If they picked Other but didn't type, also mark the text input
-                    if (el.value === 'Other') {
-                        const other = document.getElementById('jobFunctionOther');
-                        if (other) markFieldInvalid(other);
-                    }
-                    if (!firstEmpty) firstEmpty = el.value === 'Other'
-                        ? document.getElementById('jobFunctionOther')
-                        : el;
                 }
                 continue;
             }
@@ -3580,7 +3528,7 @@ Writing principles:
 
     function applyFieldsToForm(data) {
         const fieldIds = ['jobTitle','location','employmentType','level','reportsTo','salaryRange',
-                          'jobFunction','jobFunctionOther',
+                          'jobFunction',
                           'aboutCompany','aboutTeam','aboutRole','responsibilities','idealExperience','goodFit','notAFit'];
         // Backwards compat: map old field names to new ones
         if (data.qualRequired && !data.idealExperience) data.idealExperience = data.qualRequired;
@@ -3596,7 +3544,6 @@ Writing principles:
             applyFunctionValue(functionInput);
             // Don't process via the generic loop — applyFunctionValue handled it
             delete data.jobFunction;
-            delete data.jobFunctionOther;
             delete data.function;
         }
         fieldIds.forEach(id => {
@@ -4663,8 +4610,6 @@ Parsing guidance:
         // the autosave restore can drive the structured component via its
         // hidden #location field.
         setupLocationBuilder();
-        // Function field: toggle the "Other" text input based on select value
-        setupFunctionField();
         await restoreAutosave();
         // Re-apply the lock after autosave restore in case it briefly wrote
         // an old value to the field.
