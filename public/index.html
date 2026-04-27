@@ -1027,22 +1027,42 @@
             min-width: 0;
         }
         .loc-slot[data-type="remote"] {
-            padding: 11px 14px;
+            padding: 8px 14px;
             border: 1px solid var(--stone);
             border-radius: var(--radius-sm);
             background: var(--amber-glow);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .loc-slot[data-type="remote"] .loc-remote-label {
             font-family: 'Inter', -apple-system, sans-serif;
             font-size: 14px;
             color: var(--charcoal);
             font-weight: 500;
-            flex: 1;
-            display: flex;
+            white-space: nowrap;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .loc-slot[data-type="remote"] .loc-remote-icon {
             color: var(--amber);
-            font-size: 12px;
+            font-size: 10px;
+        }
+        .loc-slot[data-type="remote"] .loc-region-input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 28px 6px 10px;
+            font-size: 13px;
+            background-color: var(--white);
+            border: 1px solid var(--stone);
+            border-radius: var(--radius-xs);
+            background-position: right 8px center;
+        }
+        .loc-slot[data-type="remote"] .loc-region-input:focus {
+            border-color: var(--amber);
+            outline: none;
         }
         .loc-remove-btn {
             display: inline-flex;
@@ -1623,6 +1643,20 @@
                     </div>
                 </div>
                 <datalist id="cityOptions"></datalist>
+                <datalist id="remoteRegionOptions">
+                    <option value="Anywhere"></option>
+                    <option value="US"></option>
+                    <option value="Canada"></option>
+                    <option value="North America"></option>
+                    <option value="UK"></option>
+                    <option value="Europe"></option>
+                    <option value="EMEA"></option>
+                    <option value="Israel"></option>
+                    <option value="LATAM"></option>
+                    <option value="APAC"></option>
+                    <option value="Australia & NZ"></option>
+                    <option value="Worldwide"></option>
+                </datalist>
             </div>
         </div>
         <div class="field-row">
@@ -2070,10 +2104,18 @@
         if (!slots.length) return '';
         const cities = slots.filter(s => s.type === 'city' && s.value && s.value.trim())
                             .map(s => s.value.trim());
-        const hasRemote = slots.some(s => s.type === 'remote');
+        const remoteSlot = slots.find(s => s.type === 'remote');
         const parts = [...cities];
         if (cities.length > 0 && arrangement) parts.push(arrangement);
-        if (hasRemote) parts.push('Remote');
+        if (remoteSlot) {
+            const region = (remoteSlot.region || '').trim();
+            // "Anywhere" or empty region renders as just "Remote"
+            if (region && region.toLowerCase() !== 'anywhere') {
+                parts.push(`Remote (${region})`);
+            } else {
+                parts.push('Remote');
+            }
+        }
         return parts.join(' \u00b7 ');
     }
 
@@ -2122,10 +2164,28 @@
                 });
                 row.appendChild(input);
             } else if (slot.type === 'remote') {
-                const label = document.createElement('div');
+                // Remote chip: "● Remote in [region typeahead]"
+                const label = document.createElement('span');
                 label.className = 'loc-remote-label';
-                label.innerHTML = '<span class="loc-remote-icon">\u25CF</span> Remote';
+                label.innerHTML = '<span class="loc-remote-icon">\u25CF</span> Remote in';
                 row.appendChild(label);
+
+                const regionInput = document.createElement('input');
+                regionInput.type = 'text';
+                regionInput.className = 'loc-region-input';
+                regionInput.setAttribute('list', 'remoteRegionOptions');
+                regionInput.setAttribute('autocomplete', 'off');
+                regionInput.placeholder = 'Anywhere';
+                regionInput.value = slot.region || '';
+                regionInput.addEventListener('input', () => {
+                    _locationState.slots[idx].region = regionInput.value;
+                    syncLocationHiddenInput();
+                });
+                regionInput.addEventListener('change', () => {
+                    _locationState.slots[idx].region = regionInput.value;
+                    syncLocationHiddenInput();
+                });
+                row.appendChild(regionInput);
             }
 
             const removeBtn = document.createElement('button');
@@ -2210,16 +2270,20 @@
 
         // Inline arrangement detection
         const arrRegex = /^(hybrid|in[\s-]?person|onsite|on[\s-]?site)$/i;
-        const remoteRegex = /^remote(?:[\s-]friendly)?(?:[\s-]ok)?$/i;
+        // Match "Remote", "Remote (US)", "Remote in US", "Remote — US", etc.
+        const remoteRegex = /^remote(?:[\s-]friendly|[\s-]ok)?(?:\s*[\(\[\u2014\-]\s*([^\)\]]+?)\s*[\)\]]?|\s+in\s+(.+))?$/i;
 
         for (const tok of tokens) {
+            const remoteMatch = tok.match(remoteRegex);
             if (arrRegex.test(tok)) {
                 const lower = tok.toLowerCase();
                 if (lower === 'hybrid') state.arrangement = 'Hybrid';
                 else state.arrangement = 'In-person';
-            } else if (remoteRegex.test(tok)) {
-                if (!state.slots.some(s => s.type === 'remote')) {
-                    state.slots.push({ type: 'remote' });
+            } else if (remoteMatch) {
+                // remoteMatch[1] = parenthetical region, remoteMatch[2] = "in <region>"
+                const region = (remoteMatch[1] || remoteMatch[2] || '').trim();
+                if (!state.slots.some(s => s.type === 'remote') && state.slots.length < 2) {
+                    state.slots.push({ type: 'remote', region: region });
                 }
             } else {
                 // Treat as a city — strip parenthetical arrangement if embedded
@@ -2228,8 +2292,8 @@
                     if (k === 'hybrid') state.arrangement = 'Hybrid';
                     else if (k.startsWith('in') || k.startsWith('on')) state.arrangement = 'In-person';
                     else if (k === 'remote') {
-                        if (!state.slots.some(s => s.type === 'remote')) {
-                            state.slots.push({ type: 'remote' });
+                        if (!state.slots.some(s => s.type === 'remote') && state.slots.length < 2) {
+                            state.slots.push({ type: 'remote', region: '' });
                         }
                     }
                     return '';
@@ -3242,7 +3306,7 @@ Generate a complete, professional job description from the user's input. Return 
 
 {
   "jobTitle": "the job title — use the standard market title, not an inflated or quirky one",
-  "location": "location string in this exact format: city or cities followed by arrangement, separated by ' \u00b7 '. ALLOWED forms: 'Remote' (fully remote, no city), 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid' (max 2 cities, same arrangement), 'New York, NY \u00b7 Hybrid \u00b7 Remote' (city + remote OK). Use 'Hybrid' or 'In-person' (NOT 'On-site'). Cities must include region/country. Max 2 locations total.",
+  "location": "location string in this exact format: city or cities followed by arrangement, separated by ' \u00b7 '. ALLOWED forms: 'Remote' (fully remote, anywhere), 'Remote (US)' or 'Remote (Europe)' or 'Remote (EMEA)' (remote in a region — use US, Canada, North America, UK, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, or Worldwide), 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid' (max 2 cities, same arrangement), 'New York, NY \u00b7 Hybrid \u00b7 Remote (US)' (city + remote OK). Use 'Hybrid' or 'In-person' (NOT 'On-site'). Cities must include region/country. Max 2 locations total.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship",
   "level": "seniority level — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match based on the role's responsibilities and seniority signals.",
   "reportsTo": "who this role reports to, or empty string if not mentioned",
@@ -4077,7 +4141,7 @@ Return ONLY valid JSON (no markdown, no code fences) with these exact keys:
 
 {
   "jobTitle": "the job title",
-  "location": "location in canonical format. Examples: 'Remote', 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid', 'New York, NY \u00b7 Hybrid \u00b7 Remote'. Use 'Hybrid' or 'In-person' (not 'On-site'). Max 2 cities. Empty string if not mentioned.",
+  "location": "location in canonical format. Examples: 'Remote', 'Remote (US)', 'Remote (Europe)', 'New York, NY \u00b7 Hybrid', 'New York, NY \u00b7 In-person', 'New York, NY \u00b7 London, UK \u00b7 Hybrid', 'New York, NY \u00b7 Hybrid \u00b7 Remote (US)'. Use 'Hybrid' or 'In-person' (not 'On-site'). For remote, prefer regional restriction in parens (US, Canada, Europe, EMEA, Israel, LATAM, APAC, Australia & NZ, Worldwide) when JD specifies. Max 2 cities. Empty string if not mentioned.",
   "employmentType": "Full-Time, Part-Time, Contract, or Internship — default to Full-Time if not specified",
   "level": "seniority level if mentioned — MUST be one of exactly: Specialist, Junior Associate, Senior Associate, Manager, Senior Manager, Director, Senior Director, VP, C-Team. Pick the closest match. If the JD doesn't indicate a level at all, use empty string.",
   "reportsTo": "who this role reports to, or empty string",
