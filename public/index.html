@@ -2885,6 +2885,7 @@
         const title = document.getElementById('jobTitle').value || 'Untitled Role';
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const fn = resolveFunctionValue();
         const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value || 'Leadership';
         const salary = document.getElementById('salaryRange').value || 'Commensurate with experience';
@@ -2907,6 +2908,7 @@
         const metaRows = [
             ['Location', loc],
             ['Employment Type', type],
+            ['Function', fn],
             ['Level', lvl],
             ['Reports To', reports],
             ['Salary Range', salary],
@@ -2975,6 +2977,7 @@
         const title = document.getElementById('jobTitle').value || 'Untitled Role';
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const fn = resolveFunctionValue();
         const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value || 'Leadership';
         const salary = document.getElementById('salaryRange').value || 'Commensurate with experience';
@@ -3024,11 +3027,13 @@
         const metaRows = [];
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const fn = resolveFunctionValue();
         const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value;
         const salary = document.getElementById('salaryRange').value;
         if (loc) metaRows.push(['Location', loc]);
         if (type) metaRows.push(['Employment Type', type]);
+        if (fn) metaRows.push(['Function', fn]);
         if (lvl) metaRows.push(['Level', lvl]);
         if (reports) metaRows.push(['Reports To', reports]);
         if (salary) metaRows.push(['Salary Range', salary]);
@@ -3164,11 +3169,13 @@ body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adj
         const metaRows = [];
         const loc = document.getElementById('location').value;
         const type = document.getElementById('employmentType').value;
+        const fn = resolveFunctionValue();
         const lvl = document.getElementById('level').value;
         const reports = document.getElementById('reportsTo').value;
         const salary = document.getElementById('salaryRange').value;
         if (loc) metaRows.push(['Location', loc]);
         if (type) metaRows.push(['Employment Type', type]);
+        if (fn) metaRows.push(['Function', fn]);
         if (lvl) metaRows.push(['Level', lvl]);
         if (reports) metaRows.push(['Reports To', reports]);
         if (salary) metaRows.push(['Salary Range', salary]);
